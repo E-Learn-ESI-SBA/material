@@ -18,11 +18,7 @@ func DBHandler(uri string) *mongo.Client {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer func() {
-		if err = client.Disconnect(context.TODO()); err != nil {
-			panic(err)
-		}
-	}()
+
 	err = client.Ping(context.TODO(), nil)
 	if err != nil {
 		log.Println("failed to connect to mongodb")
@@ -58,4 +54,25 @@ func VideoCollection(client *mongo.Client, CollectionName string) *mongo.Collect
 func ContentCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
 	collection := client.Database("materials").Collection(CollectionName)
 	return collection
+}
+
+type Application struct {
+	ContentCollection *mongo.Collection
+	VideoCollection   *mongo.Collection
+	LectureCollection *mongo.Collection
+	SectionCollection *mongo.Collection
+	CourseCollection  *mongo.Collection
+	ModuleCollection  *mongo.Collection
+}
+
+func (app *Application) CreateApp(client *mongo.Client) {
+	app = &Application{
+		VideoCollection:   VideoCollection(client, "videos"),
+		LectureCollection: LectureCollection(client, "lectures"),
+		ContentCollection: ContentCollection(client, "contents"),
+		SectionCollection: SectionCollection(client, "sections"),
+		CourseCollection:  CourseCollection(client, "courses"),
+		ModuleCollection:  ModuleCollection(client, "modules"),
+	}
+
 }

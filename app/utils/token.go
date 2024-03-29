@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"errors"
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"time"
 )
@@ -10,27 +12,30 @@ type UserDetails struct {
 	Username string `json:"username"`
 	Role     string `json:"role"`
 	Uid      string `json:"uid"`
+	ID       string `json:"id"`
 	jwt.Claims
 }
 
-func ValidateToken(signedtoken string, secretKey string) (claims *UserDetails, msg string) {
+func ValidateToken(signedtoken string, secretKey string) (claims *UserDetails, err error) {
 	token, err := jwt.ParseWithClaims(signedtoken, &UserDetails{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secretKey), nil
 	})
 
 	if err != nil {
-		msg = err.Error()
-		return
+
+		return nil, gin.Error{Err: err}
 	}
 	claims, ok := token.Claims.(*UserDetails)
 	if !ok {
-		msg = "The Token is invalid"
-		return
+		return nil, gin.Error{
+			Err: errors.New("the Token is invalid"),
+		}
 	}
 	expTime, _ := claims.GetExpirationTime()
 	if expTime.Unix() < time.Now().Local().Unix() {
-		msg = "Expired Token"
-		return
+		return nil, gin.Error{
+			Err: errors.New("expired Token"),
+		}
 	}
-	return claims, msg
+	return claims, nil
 }
