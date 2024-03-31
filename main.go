@@ -17,6 +17,8 @@ import (
 
 func main() {
 	k := koanf.New("/")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+
 	err := k.Load(file.Provider("config/secrets/env.yaml"), yaml.Parser())
 	if err != nil {
 		log.Fatal("Env file not found")

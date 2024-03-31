@@ -55,24 +55,49 @@ func ContentCollection(client *mongo.Client, CollectionName string) *mongo.Colle
 	collection := client.Database("materials").Collection(CollectionName)
 	return collection
 }
+func CommentCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
+	collection := client.Database("materials").Collection(CollectionName)
+	return collection
+}
+func RatingCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
+	collection := client.Database("materials").Collection(CollectionName)
+	return collection
+}
 
 type Application struct {
-	ContentCollection *mongo.Collection
-	VideoCollection   *mongo.Collection
-	LectureCollection *mongo.Collection
-	SectionCollection *mongo.Collection
-	CourseCollection  *mongo.Collection
-	ModuleCollection  *mongo.Collection
+	ContentCollection  *mongo.Collection
+	VideoCollection    *mongo.Collection
+	LectureCollection  *mongo.Collection
+	SectionCollection  *mongo.Collection
+	CourseCollection   *mongo.Collection
+	ModuleCollection   *mongo.Collection
+	CommentsCollection *mongo.Collection
+	RatingCollection   *mongo.Collection
 }
 
 func (app *Application) CreateApp(client *mongo.Client) {
 	app = &Application{
-		VideoCollection:   VideoCollection(client, "videos"),
-		LectureCollection: LectureCollection(client, "lectures"),
-		ContentCollection: ContentCollection(client, "contents"),
-		SectionCollection: SectionCollection(client, "sections"),
-		CourseCollection:  CourseCollection(client, "courses"),
-		ModuleCollection:  ModuleCollection(client, "modules"),
+		VideoCollection:    VideoCollection(client, "videos"),
+		LectureCollection:  LectureCollection(client, "lectures"),
+		ContentCollection:  ContentCollection(client, "contents"),
+		SectionCollection:  SectionCollection(client, "sections"),
+		CourseCollection:   CourseCollection(client, "courses"),
+		ModuleCollection:   ModuleCollection(client, "modules"),
+		CommentsCollection: CommentCollection(client, "comments"),
+		RatingCollection:   RatingCollection(client, "ratings"),
 	}
 
 }
+
+/*
+
+indexModel := mongo.IndexModel{
+		Keys:    bson.D{{"_id", 1}},
+		Options: options.Index().SetUnique(true),
+	}
+	_, err := collection.Indexes().CreateOne(context.Background(), indexModel)
+	if err != nil {
+		log.Fatal(err)
+
+	}
+*/

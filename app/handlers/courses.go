@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
+	"madaurus/dev/material/app/services"
 	"madaurus/dev/material/app/utils"
 	"time"
 )
@@ -31,8 +32,9 @@ func CreateCourse(course models.Course, collection *mongo.Collection) gin.Handle
 func UpdateCourse(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var course models.Course
-
 		err := c.BindJSON(&course)
+		updatedAt := time.Now()
+		course.UpdatedAt = &updatedAt
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
@@ -68,29 +70,29 @@ func GetCoursesByAdmin(collection *mongo.Collection) gin.HandlerFunc {
 
 func GetCoursesByTeacher(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 		claims, errClaim := c.Get("user")
 		if errClaim != false {
-			c.JSON(400, gin.H{"error": errors.New("User Details Claims not Found")})
+			c.JSON(400, gin.H{"error": errors.New("user Details Claims not Found")})
+			cancel()
 			return
-
 		}
 		user, err := claims.(*utils.UserDetails)
 		if err == true {
 			c.JSON(400, gin.H{"error": errors.New("user Details are not Compatible")})
+			cancel()
 			return
 		}
-		cursor, errMongo := collection.Find(context.TODO(), bson.D{{"teacher_id", user.ID}})
-		if errMongo != nil {
-			c.JSON(400, gin.H{"error": errMongo.Error()})
-			return
-		}
-		var courses []models.Course
-		errMongo = cursor.All(c.Request.Context(), &courses)
-		if errMongo != nil {
-			c.JSON(400, gin.H{"error": errMongo.Error()})
+		courses, errCourses := services.GetCoursesByTeacher(ctx, collection, user.ID)
+		if errCourses != nil {
+			c.JSON(400, gin.H{"error": errCourses.Error()})
+			cancel()
 			return
 		}
 		c.JSON(200, gin.H{"courses": courses})
+		defer func() {
+			cancel()
+		}()
 	}
 
 }
@@ -107,32 +109,24 @@ func GetCourse(collection *mongo.Collection) gin.HandlerFunc {
 	}
 }
 
-func GetFilteredCourse(collection *mongo.Collection) gin.HandlerFunc {
+func GetPublicFilteredModules(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-		var filterCourse interfaces.CourseFilter
-		err := c.BindJSON(&filterCourse)
+		var filterModule interfaces.ModuleFilter
+		err := c.BindJSON(&filterModule)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
+			cancel()
 			return
 		}
-		filter := bson.D{{"year", filterCourse.Year}, {"speciality", filterCourse.Speciality}}
-		var courses models.Course
-		cursor, collectionErr := collection.Find(ctx, filter)
-		if collectionErr != nil {
-			c.JSON(400, gin.H{"error": collectionErr.Error()})
+		modules, CursorErr := services.GetModulesByFilter(ctx, collection, filterModule, "public", nil)
+		if CursorErr != nil {
+			c.JSON(400, gin.H{"error": CursorErr.Error()})
+			cancel()
 			return
-		}
-		errCursor := cursor.All(ctx, &courses)
-		if err != nil {
-			c.JSON(400, gin.H{"error": errCursor.Error()})
-		}
-		defer func() {
-			err := cursor.Close(ctx)
-			if err != nil {
 
-			}
-		}()
+		}
+		c.JSON(200, gin.H{"modules": modules})
 		defer cancel()
 	}
 }

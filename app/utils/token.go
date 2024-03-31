@@ -7,12 +7,15 @@ import (
 	"time"
 )
 
-type UserDetails struct {
+type LightUser struct {
 	Email    string `json:"email"`
 	Username string `json:"username"`
 	Role     string `json:"role"`
-	Uid      string `json:"uid"`
 	ID       string `json:"id"`
+}
+type UserDetails struct {
+	LightUser
+	Uid string `json:"uid"`
 	jwt.Claims
 }
 
