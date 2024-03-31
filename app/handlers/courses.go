@@ -33,15 +33,16 @@ func UpdateCourse(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var course models.Course
 		err := c.BindJSON(&course)
-		updatedAt := time.Now()
-		course.UpdatedAt = &updatedAt
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
+		updatedAt := time.Now()
+		course.UpdatedAt = &updatedAt
+
 		filter := bson.D{{"_id", c.Params.Get("id")}}
 		update := bson.D{{"$set", course}}
-		_, err = collection.UpdateOne(context.TODO(), filter, update)
+		_, err = collection.UpdateOne(c.Request.Context(), filter, update)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return

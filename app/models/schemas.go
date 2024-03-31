@@ -68,9 +68,10 @@ type Files struct {
 }
 
 type Comments struct {
-	ID      primitive.ObjectID `json:"id" bson:"_id"`
-	Content string             `json:"content" bson:"content" validate:"required"`
-	UserId  int                `json:"user_id" bson:"user_id" validate:"required"`
+	ID       primitive.ObjectID `json:"id" bson:"_id"`
+	Content  string             `json:"content" bson:"content" validate:"required"`
+	UserId   int                `json:"user_id" bson:"user_id" validate:"required"`
+	CourseId primitive.ObjectID `json:"course_id" bson:"course_id" validate:"required"`
 	Date
 }
 type Rating struct {
@@ -78,6 +79,7 @@ type Rating struct {
 	StudentID int                `json:"teacher_id" bson:"teacher_id" validate:"required"`
 	Rating    int8               `json:"rating" bson:"rating" validate:"required , min=1,max=5"`
 	User      utils.LightUser    `json:"user" bson:"user"`
+	Course    primitive.ObjectID `json:"course_id" bson:"course_id" validate:"required"`
 	Date
 }
 type Reply struct {
@@ -87,4 +89,11 @@ type Reply struct {
 	UserId    string             `json:"user_id" bson:"user_id" validate:"required"`
 	User      utils.LightUser    `json:"user" bson:"user"`
 	Date
+}
+
+type StudentNote struct {
+	ID        primitive.ObjectID `json:"id" bson:"_id"`
+	StudentID int                `json:"student_id" bson:"student_id" validate:"required"`
+	SectionId primitive.ObjectID `json:"section_id" bson:"section_id" validate:"required"`
+	Content   string             `json:"content" bson:"content" validate:"required"`
 }

@@ -2,71 +2,114 @@ package services
 
 import (
 	"context"
-	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
-	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
 )
 
-func GetCoursesByTeacher(ctx context.Context, collection *mongo.Collection, teacherId string) ([]models.Course, error) {
+// GetCoursesByInstructor is a function that returns a list of courses that an instructor is teaching
+func GetCoursesByInstructor(ctx context.Context, collection mongo.Collection, instructorID string) ([]models.Course, error) {
+	// Logic to get courses by instructor
 	var courses []models.Course
-	cursor, err := collection.Find(ctx, bson.D{{"teacher_id", teacherId}})
+	cursor, err := collection.Find(ctx, bson.D{{"instructor_id", instructorID}})
 	if err != nil {
+		log.Printf("Error While Getting Courses By Instructor: %v\n", err)
 		return nil, err
 	}
 	cursorError := cursor.All(ctx, &courses)
 	if cursorError != nil {
+		log.Printf("Error While Parsing Courses By Instructor: %v\n", cursorError)
 		return nil, cursorError
 	}
 	return courses, nil
 }
 
-func GetCoursesByAdmin(ctx context.Context, collection *mongo.Collection) ([]models.Course, error) {
-	var courses []models.Course
-	cursor, err := collection.Find(ctx, nil)
+type ExtendedCourse struct {
+	models.Course
+	Sections []models.Section `json:"sections"`
+}
+
+func FetchCourseSectionsByModule(ctx context.Context, collection mongo.Collection, moduleID string) ([]ExtendedSection, error) {
+	var extendedSections []ExtendedSection
+	pipeline := bson.A{
+		bson.M{
+			"$match": bson.M{"module_id": moduleID},
+		},
+		bson.M{
+			"$lookup": bson.M{
+				"from":         "sections",
+				"localField":   "_id",
+				"foreignField": "course_id",
+				"as":           "sections",
+			},
+		},
+	}
+	cursor, err := collection.Aggregate(ctx, pipeline)
 	if err != nil {
+		log.Printf("Error While Getting Sections By Module: %v\n", err)
 		return nil, err
+	}
+	cursorError := cursor.All(ctx, &extendedSections)
+	if cursorError != nil {
+		log.Printf("Error While Parsing Sections By Module: %v\n", cursorError)
+		return nil, cursorError
+	}
+	return extendedSections, nil
+
+}
+
+/*
+func GetCoursesByModule(ctx context.Context, collectionCourse mongo.Collection, collectionSection mongo.Collection, moduleID string) (ExtendedCourse, error) {
+	var courses []models.Course
+	filter := bson.D{{"module_id", moduleID}}
+	cursor, err := collectionCourse.Find(ctx, filter)
+	if err != nil {
+		log.Printf("Error While Getting Course By Module: %v\n", err)
+		return ExtendedCourse{}, err
 	}
 	cursorError := cursor.All(ctx, &courses)
 	if cursorError != nil {
-		return nil, cursorError
-	}
-	return courses, nil
-}
+		log.Printf("Error While Parsing Course By Module: %v\n", cursorError)
+		return ExtendedCourse{}, cursorError
 
-// GetModulesByFilter Basic Usage  : GetModulesByFilter(ctx, collection, filterStruct, "public", nil) for public endpoints
-// Advanced Usage: GetModulesByFilter(ctx, collection, filterStruct, "private", &teacherId) for private endpoints
-func GetModulesByFilter(ctx context.Context, collection *mongo.Collection, filterStruct interfaces.ModuleFilter, usage string, teacherId *string) ([]models.Module, error) {
-	var modules []models.Module
-	var filter bson.D
-	if usage == "public" {
-		filter = bson.D{{"year", filterStruct.Year}, {"semester", filterStruct.Semester}, {"speciality", filterStruct.Speciality}, {
-			"isPublic", true}}
+	}
+	populateContext, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	var course models.Course
+	var extendedCourse = ExtendedCourse{Course: course}
+	var section models.Section
+	for cursor.Next(populateContext) {
+		err := cursor.Decode(&course)
+		if err != nil {
+			log.Printf("Error While Decoding Course By Module: %v\n", err)
+			return extendedCourse, err
+		}
+		sectionCursor, err := collectionSection.Find(populateContext, bson.D{{"course_id", course.ID}})
+		if err != nil {
+			log.Printf("Error While Getting Sections By Course: %v\n", err)
+			return extendedCourse, err
+		}
+		sectionCursorError := sectionCursor.All(populateContext, &section)
+		if sectionCursorError != nil {
+			log.Printf("Error While Parsing Sections By Course: %v\n", sectionCursorError)
+			return extendedCourse, sectionCursorError
 
-	} else if teacherId != nil {
-		filter = bson.D{{"year", filterStruct.Year}, {"semester", filterStruct.Semester}, {"speciality", filterStruct.Speciality}, {
-			"teacher_id", *teacherId}}
-	} else {
-		return nil, errors.New("teacher Id is required for this operation")
+		}
+		extendedCourse.Sections = append(extendedCourse.Sections, section)
+		err := sectionCursor.Close(populateContext)
+		if err != nil {
+			return ExtendedCourse{}, err
+		}
+
 	}
-	cursor, err := collection.Find(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-	cursorError := cursor.All(ctx, &modules)
-	if cursorError != nil {
-		return nil, cursorError
-	}
-	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
+	defer func() {
+		err := cursor.Close(populateContext)
 		if err != nil {
 			log.Println("failed to close cursor")
 		}
-	}(cursor, ctx)
-	return modules, nil
+	}()
+	return extendedCourse, nil
 
 }
-
-
+*/
