@@ -34,6 +34,7 @@ type Course struct {
 	Description string             `json:"description"`
 	Plan        []string           `json:"plan" validate:"required,min=1" bson:"plan"`
 	ModuleId    primitive.ObjectID `json:"module_id" bson:"module_id"`
+	Sections    *[]Section         `json:"sections" bson:"sections"`
 	Date
 }
 
@@ -41,7 +42,10 @@ type Section struct {
 	ID       primitive.ObjectID `json:"id" bson:"_id"`
 	Name     string             `json:"name" validate:"required" `
 	CourseID string             `json:"course_id" validate:"required"`
-	Order    int8               `json:"order",bson:"order",validate:"min=1"`
+	Order    int8               `json:"order" bson:"order" validate:"min=1"`
+	Videos   *[]Video           `json:"videos" bson:"videos"`
+	Lectures *[]Lecture         `json:"lectures" bson:"lectures"`
+	Files    *[]Files           `json:"files" bson:"files"`
 	Date
 }
 
@@ -74,14 +78,6 @@ type Comments struct {
 	CourseId primitive.ObjectID `json:"course_id" bson:"course_id" validate:"required"`
 	Date
 	Replays *[]Reply `json:"replays" bson:"replays"`
-}
-type Rating struct {
-	ID        primitive.ObjectID `json:"id" bson:"_id"`
-	StudentID int                `json:"teacher_id" bson:"teacher_id" validate:"required"`
-	Rating    int8               `json:"rating" bson:"rating" validate:"required , min=1,max=5"`
-	User      utils.LightUser    `json:"user" bson:"user"`
-	Course    primitive.ObjectID `json:"course_id" bson:"course_id" validate:"required"`
-	Date
 }
 
 type Reply struct {
