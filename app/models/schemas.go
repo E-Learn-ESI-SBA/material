@@ -82,6 +82,7 @@ type Rating struct {
 	Course    primitive.ObjectID `json:"course_id" bson:"course_id" validate:"required"`
 	Date
 }
+
 type Reply struct {
 	ID        primitive.ObjectID `json:"id" bson:"_id"`
 	Content   string             `json:"content" bson:"content" validate:"required"`

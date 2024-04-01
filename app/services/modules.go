@@ -67,3 +67,13 @@ func GetModulesByFilter(ctx context.Context, collection *mongo.Collection, filte
 	}(cursor, ctx)
 	return modules, nil
 }
+
+func EditModuleVisibility(ctx context.Context, collection *mongo.Collection, moduleId string, visibility bool) error {
+	filter := bson.D{{"_id", moduleId}}
+	update := bson.D{{"$set", bson.D{{"isPublic", visibility}}}}
+	_, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	return nil
+}

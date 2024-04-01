@@ -4,23 +4,22 @@ import (
 	"context"
 	"errors"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/services"
 	"madaurus/dev/material/app/utils"
 	"time"
 )
 
-func CreateCourse(course models.Course, collection *mongo.Collection) gin.HandlerFunc {
+func CreateCourse(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		err := utils.Validator(course)
+		var course models.Course
+		err := c.BindJSON(&course)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		_, err = collection.InsertOne(c.Request.Context(), course)
+		err = services.CreateCourse(c.Request.Context(), collection, course)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
@@ -39,10 +38,7 @@ func UpdateCourse(collection *mongo.Collection) gin.HandlerFunc {
 		}
 		updatedAt := time.Now()
 		course.UpdatedAt = &updatedAt
-
-		filter := bson.D{{"_id", c.Params.Get("id")}}
-		update := bson.D{{"$set", course}}
-		_, err = collection.UpdateOne(c.Request.Context(), filter, update)
+		err = services.UpdateCourse(c.Request.Context(), collection, course)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
@@ -52,6 +48,22 @@ func UpdateCourse(collection *mongo.Collection) gin.HandlerFunc {
 
 }
 
+func DeleteCourse(collection *mongo.Collection) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user := c.MustGet("user").(*utils.UserDetails)
+		courseId, errP := c.Params.Get("id")
+		if errP != true {
+			c.JSON(400, gin.H{"error": errors.New("course ID is Required")})
+			return
+		}
+		err := services.DeleteCourse(c.Request.Context(), collection, courseId, user.ID)
+		if err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(200, gin.H{"message": "Course Deleted Successfully"})
+	}
+}
 func GetCoursesByAdmin(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		cursor, err := collection.Find(context.TODO(), nil)
@@ -84,7 +96,7 @@ func GetCoursesByTeacher(collection *mongo.Collection) gin.HandlerFunc {
 			cancel()
 			return
 		}
-		courses, errCourses := services.GetCoursesByTeacher(ctx, collection, user.ID)
+		courses, errCourses := services.GetCoursesByInstructor(ctx, collection, user.ID)
 		if errCourses != nil {
 			c.JSON(400, gin.H{"error": errCourses.Error()})
 			cancel()
@@ -96,38 +108,4 @@ func GetCoursesByTeacher(collection *mongo.Collection) gin.HandlerFunc {
 		}()
 	}
 
-}
-func GetCourse(collection *mongo.Collection) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		filter := bson.D{{"_id", c.Params.Get("id")}}
-		var course []models.Course
-		err := collection.FindOne(context.TODO(), filter).Decode(course)
-		if err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(200, gin.H{"course": course})
-	}
-}
-
-func GetPublicFilteredModules(collection *mongo.Collection) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-		var filterModule interfaces.ModuleFilter
-		err := c.BindJSON(&filterModule)
-		if err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
-			cancel()
-			return
-		}
-		modules, CursorErr := services.GetModulesByFilter(ctx, collection, filterModule, "public", nil)
-		if CursorErr != nil {
-			c.JSON(400, gin.H{"error": CursorErr.Error()})
-			cancel()
-			return
-
-		}
-		c.JSON(200, gin.H{"modules": modules})
-		defer cancel()
-	}
 }
