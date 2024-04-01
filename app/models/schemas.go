@@ -73,6 +73,7 @@ type Comments struct {
 	UserId   int                `json:"user_id" bson:"user_id" validate:"required"`
 	CourseId primitive.ObjectID `json:"course_id" bson:"course_id" validate:"required"`
 	Date
+	Replays *[]Reply `json:"replays" bson:"replays"`
 }
 type Rating struct {
 	ID        primitive.ObjectID `json:"id" bson:"_id"`
@@ -84,11 +85,10 @@ type Rating struct {
 }
 
 type Reply struct {
-	ID        primitive.ObjectID `json:"id" bson:"_id"`
-	Content   string             `json:"content" bson:"content" validate:"required"`
-	CommentID primitive.ObjectID `json:"comment_id" bson:"comment_id" validate:"required"`
-	UserId    string             `json:"user_id" bson:"user_id" validate:"required"`
-	User      utils.LightUser    `json:"user" bson:"user"`
+	ID      primitive.ObjectID `json:"id" bson:"_id"`
+	Content string             `json:"content" bson:"content" validate:"required"`
+	UserId  string             `json:"user_id" bson:"user_id" validate:"required"`
+	User    utils.LightUser    `json:"user" bson:"user"`
 	Date
 }
 

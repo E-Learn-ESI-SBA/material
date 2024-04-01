@@ -4,6 +4,7 @@ import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"madaurus/dev/material/app/models"
 )
@@ -89,5 +90,11 @@ func DeleteReplyByUser(ctx context.Context, collection *mongo.Collection, replyI
 		return err
 	}
 	return nil
+
+}
+func ReplayToComment(ctx context.Context, collection *mongo.Collection, commendId string, userId int) error {
+	var reply models.Reply
+	opts := options.InsertOne()
+	_, err := collection.InsertOne()
 
 }
