@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func DBHandler(uri string) *mongo.Client {
+func DBHandler(uri string, ctx context.Context) *mongo.Client {
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
 	opts.SetConnectTimeout(10 * time.Second)
@@ -19,7 +19,7 @@ func DBHandler(uri string) *mongo.Client {
 		log.Fatal(err)
 	}
 
-	err = client.Ping(context.TODO(), nil)
+	err = client.Ping(ctx, nil)
 	if err != nil {
 		log.Println("failed to connect to mongodb")
 		return nil
@@ -72,7 +72,6 @@ type Application struct {
 	CourseCollection   *mongo.Collection
 	ModuleCollection   *mongo.Collection
 	CommentsCollection *mongo.Collection
-	RatingCollection   *mongo.Collection
 }
 
 func (app *Application) CreateApp(client *mongo.Client) {
@@ -84,7 +83,6 @@ func (app *Application) CreateApp(client *mongo.Client) {
 		CourseCollection:   CourseCollection(client, "courses"),
 		ModuleCollection:   ModuleCollection(client, "modules"),
 		CommentsCollection: CommentCollection(client, "comments"),
-		RatingCollection:   RatingCollection(client, "ratings"),
 	}
 
 }

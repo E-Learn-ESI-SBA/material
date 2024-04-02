@@ -7,11 +7,11 @@ type ModuleFilter struct {
 }
 
 type PaginationQuery struct {
-	Page  int8 `json:"page,omitempty" validate:"min=1 ,default=1"`
-	Items int8 `json:"items" validate:"min=1, default=10"`
+	Page  int `json:"page,omitempty" validate:"min=1 ,default=1"`
+	Items int `json:"items" validate:"min=1, default=10"`
 }
 
-func (p *PaginationQuery) newPagination(page int8, items int8) {
+func (p *PaginationQuery) newPagination(page int, items int) {
 	p.Page = page
 	p.Items = items
 }
