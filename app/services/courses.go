@@ -16,8 +16,8 @@ func CreateCourse(ctx context.Context, collection *mongo.Collection, course mode
 	}
 	return nil
 }
-func UpdateCourse(ctx context.Context, collection *mongo.Collection, course models.Course) error {
-	_, err := collection.UpdateOne(ctx, bson.D{{"_id", course.ID}}, bson.D{{"$set", course}})
+func UpdateCourse(ctx context.Context, collection *mongo.Collection, course models.Course, teacherId int) error {
+	_, err := collection.UpdateOne(ctx, bson.D{{"_id", course.ID}, {"teacher_id", teacherId}}, bson.D{{"$set", course}})
 	if err != nil {
 		log.Printf("Error While Updating Course: %v\n", err)
 		return err
@@ -26,7 +26,7 @@ func UpdateCourse(ctx context.Context, collection *mongo.Collection, course mode
 }
 
 // GetCoursesByInstructor is a function that returns a list of courses that an instructor is teaching
-func GetCoursesByInstructor(ctx context.Context, collection *mongo.Collection, instructorID string) ([]models.Course, error) {
+func GetCoursesByInstructor(ctx context.Context, collection *mongo.Collection, instructorID int) ([]models.Course, error) {
 	// Logic to get courses by instructor
 	var courses []models.Course
 	cursor, err := collection.Find(ctx, bson.D{{"instructor_id", instructorID}})
@@ -42,7 +42,7 @@ func GetCoursesByInstructor(ctx context.Context, collection *mongo.Collection, i
 	return courses, nil
 }
 
-func DeleteCourse(ctx context.Context, collection *mongo.Collection, courseID string, teacherId string) error {
+func DeleteCourse(ctx context.Context, collection *mongo.Collection, courseID string, teacherId int) error {
 	_, err := collection.DeleteOne(ctx, bson.D{{"_id", courseID}, {"teacher_id", teacherId}})
 	if err != nil {
 		log.Printf("Error While Deleting Course: %v\n", err)

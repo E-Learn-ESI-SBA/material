@@ -32,6 +32,7 @@ func CreateCourse(collection *mongo.Collection) gin.HandlerFunc {
 func UpdateCourse(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var course models.Course
+		user := c.MustGet("user").(*utils.UserDetails)
 		err := c.BindJSON(&course)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
@@ -39,7 +40,7 @@ func UpdateCourse(collection *mongo.Collection) gin.HandlerFunc {
 		}
 		updatedAt := time.Now()
 		course.UpdatedAt = &updatedAt
-		err = services.UpdateCourse(c.Request.Context(), collection, course)
+		err = services.UpdateCourse(c.Request.Context(), collection, course, user.ID)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
