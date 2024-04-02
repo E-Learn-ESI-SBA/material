@@ -52,3 +52,25 @@ func GetStudentNotes(ctx context.Context, collection *mongo.Collection, studentI
 	}(cursor, ctx)
 	return note, nil
 }
+
+func GetNoteById(ctx context.Context, collection *mongo.Collection, noteId string) (models.StudentNote, error) {
+	var note models.StudentNote
+	filter := bson.D{{"_id", noteId}}
+	err := collection.FindOne(ctx, filter).Decode(&note)
+	if err != nil {
+		log.Printf("Error While Getting Note: %v\n", err)
+		return note, err
+	}
+	return note, nil
+}
+
+func UpdateStudentNote(ctx context.Context, collection *mongo.Collection, note models.StudentNote) error {
+	filter := bson.D{{"_id", note.ID}}
+	update := bson.D{{"$set", note}}
+	_, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		log.Printf("Error While Updating Student Note: %v\n", err)
+		return err
+	}
+	return nil
+}

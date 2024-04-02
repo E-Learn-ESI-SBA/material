@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func DBHandler(uri string) *mongo.Client {
+func DBHandler(uri string, ctx context.Context) *mongo.Client {
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
 	opts.SetConnectTimeout(10 * time.Second)
@@ -19,7 +19,7 @@ func DBHandler(uri string) *mongo.Client {
 		log.Fatal(err)
 	}
 
-	err = client.Ping(context.TODO(), nil)
+	err = client.Ping(ctx, nil)
 	if err != nil {
 		log.Println("failed to connect to mongodb")
 		return nil

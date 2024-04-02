@@ -13,7 +13,7 @@ import (
 
 // GetModulesByFilter Basic Usage  : GetModulesByFilter(ctx, collection, filterStruct, "public", nil) for public endpoints
 // Advanced Usage: GetModulesByFilter(ctx, collection, filterStruct, "private", &teacherId) for private endpoints
-func GetModulesByFilter(ctx context.Context, collection *mongo.Collection, filterStruct interfaces.ModuleFilter, usage string, teacherId *string) ([]models.Module, error) {
+func GetModulesByFilter(ctx context.Context, collection *mongo.Collection, filterStruct interfaces.ModuleFilter, usage string, teacherId *int) ([]models.Module, error) {
 	var modules []models.Module
 	var filter bson.D
 	opts := options.Find().SetProjection(bson.D{{"courses", 0}})
@@ -54,7 +54,7 @@ func EditModuleVisibility(ctx context.Context, collection *mongo.Collection, mod
 	return nil
 }
 
-func DeleteModule(ctx context.Context, collection *mongo.Collection, moduleId string, teacherId string) error {
+func DeleteModule(ctx context.Context, collection *mongo.Collection, moduleId string, teacherId int) error {
 	filter := bson.D{{"_id", moduleId}, {"teacher_id", teacherId}}
 	err := collection.FindOneAndDelete(ctx, filter)
 	if err != nil {

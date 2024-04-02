@@ -11,7 +11,7 @@ type LightUser struct {
 	Email    string `json:"email"`
 	Username string `json:"username"`
 	Role     string `json:"role"`
-	ID       string `json:"id"`
+	ID       int    `json:"id"`
 }
 type UserDetails struct {
 	LightUser

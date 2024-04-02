@@ -115,3 +115,33 @@ func GetSectionFromStudent(ctx context.Context, SectionCollection *mongo.Collect
 	extendedSection.Notes = &filteredNotes
 	return extendedSection, nil
 }
+
+func EditSection(ctx context.Context, collection *mongo.Collection, section models.Section, sectionId string) error {
+	filter := bson.D{{"_id", sectionId}}
+	update := bson.D{{"$set", section}}
+	_, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		log.Printf("Error While Updating Section: %v\n", err)
+		return err
+	}
+	return nil
+}
+
+func CreateSection(ctx context.Context, collection *mongo.Collection, section models.Section) error {
+	_, err := collection.InsertOne(ctx, section)
+	if err != nil {
+		log.Printf("Error While Creating Section: %v\n", err)
+		return err
+	}
+	return nil
+}
+
+func DeleteSection(ctx context.Context, collection *mongo.Collection, sectionId string) error {
+	filter := bson.D{{"_id", sectionId}}
+	_, err := collection.DeleteOne(ctx, filter)
+	if err != nil {
+		log.Printf("Error While Deleting Section: %v\n", err)
+		return err
+	}
+	return nil
+}

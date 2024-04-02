@@ -4,10 +4,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"madaurus/dev/material/app/utils"
 	"net/http"
+	"os"
 )
 
-func Authentication(secretKey string) gin.HandlerFunc {
+func Authentication() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		secretKey := os.Getenv("JWT_SECRET")
 		ClientToken := c.Request.Header.Get("Authorization")
 		var err error
 		if ClientToken == "" {
