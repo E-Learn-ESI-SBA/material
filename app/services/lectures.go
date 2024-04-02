@@ -4,32 +4,47 @@ import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"madaurus/dev/material/app/models"
 )
 
-func GetStudentNotes(ctx context.Context, collection *mongo.Collection, studentId string, sectionId string) (models.StudentNote, error) {
-	var note models.StudentNote
-	filter := bson.D{{"student_id", studentId}, {"section_id", sectionId}}
-	// select only the title
-	opts := options.Find().SetProjection(bson.D{{"title", 1}, {"_id", 1}})
-	cursor, err := collection.Find(ctx, filter, opts)
+func GetTeacherLecture(collection *mongo.Collection, ctx context.Context, lectureId string) (models.Lecture, error) {
+	var lecture models.Lecture
+	filter := bson.D{{"_id", lectureId}}
+	err := collection.FindOne(ctx, filter).Decode(&lecture)
 	if err != nil {
-		log.Printf("Error While Getting Student Note: %v\n", err)
-		return note, err
+		log.Printf("Error While Getting Lecture: %v\n", err)
+		return models.Lecture{}, err
 	}
-	cursorError := cursor.All(ctx, &note)
-	if cursorError != nil {
-		log.Printf("Error While Parsing Student Note: %v\n", cursorError)
-		return note, cursorError
+	return lecture, nil
+}
 
+func CreateLecture(collection *mongo.Collection, ctx context.Context, lecture models.Lecture) error {
+	_, err := collection.InsertOne(ctx, lecture)
+	if err != nil {
+		log.Printf("Error While Creating Lecture: %v\n", err)
+		return err
 	}
-	defer func(cursor *mongo.Cursor, ctx context.Context) {
-		err := cursor.Close(ctx)
-		if err != nil {
-			log.Println("failed to close cursor")
-		}
-	}(cursor, ctx)
-	return note, nil
+	return nil
+}
+
+func UpdateLecture(collection *mongo.Collection, ctx context.Context, lecture models.Lecture) error {
+	filter := bson.D{{"_id", lecture.ID}}
+	update := bson.D{{"$set", lecture}}
+	_, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		log.Printf("Error While Updating Lecture: %v\n", err)
+		return err
+	}
+	return nil
+}
+
+func DeleteLecture(collection *mongo.Collection, ctx context.Context, lectureId string) error {
+	filter := bson.D{{"_id", lectureId}}
+	_, err := collection.DeleteOne(ctx, filter)
+	if err != nil {
+		log.Printf("Error While Deleting Lecture: %v\n", err)
+		return err
+	}
+	return nil
 }

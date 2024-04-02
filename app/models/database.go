@@ -72,7 +72,6 @@ type Application struct {
 	CourseCollection   *mongo.Collection
 	ModuleCollection   *mongo.Collection
 	CommentsCollection *mongo.Collection
-	RatingCollection   *mongo.Collection
 }
 
 func (app *Application) CreateApp(client *mongo.Client) {
@@ -84,7 +83,6 @@ func (app *Application) CreateApp(client *mongo.Client) {
 		CourseCollection:   CourseCollection(client, "courses"),
 		ModuleCollection:   ModuleCollection(client, "modules"),
 		CommentsCollection: CommentCollection(client, "comments"),
-		RatingCollection:   RatingCollection(client, "ratings"),
 	}
 
 }

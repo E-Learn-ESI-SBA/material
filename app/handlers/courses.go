@@ -15,6 +15,7 @@ func CreateCourse(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var course models.Course
 		err := c.BindJSON(&course)
+
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return

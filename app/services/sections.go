@@ -91,8 +91,7 @@ func GetSectionDetailsById(ctx context.Context, collection *mongo.Collection, se
 	return sections, nil
 }
 
-func GetSectionFromStudent(ctx context.Context, SectionCollection *mongo.Collection, noteCollection *mongo.Collection, sectionId string, studentId int) (ExtendedSection, error) {
-
+func GetSectionFromStudent(ctx context.Context, SectionCollection *mongo.Collection, sectionId string, studentId int) (ExtendedSection, error) {
 	pip := bson.M{
 		"$lookup": bson.M{
 			"from":         "student_notes",
