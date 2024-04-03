@@ -14,8 +14,8 @@ import (
 // @Summary Create Course
 // @Description Protected Route used to create a course (chapter)
 // @Produce json
+// @Tags Courses
 // @Accept json
-// @Security ApiKeyAuth
 // @Param course body models.Course true "Course Object"
 // @Success 200 {object} models.Course
 // @Failure 400 {object} interfaces.APiError
@@ -39,6 +39,15 @@ func CreateCourse(collection *mongo.Collection) gin.HandlerFunc {
 	}
 }
 
+// @Summary Update Course
+// @Description Protected Route used to update a course (chapter)
+// @Produce json
+// @Tags Courses
+// @Accept json
+// @Param course body models.Course true "Course Object"
+// @Success 200 {object} models.Course
+// @Failure 400 {object} interfaces.APiError
+// @Router /courses/update [PUT]
 func UpdateCourse(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var course models.Course
@@ -60,6 +69,15 @@ func UpdateCourse(collection *mongo.Collection) gin.HandlerFunc {
 
 }
 
+// @Summary Delete Course
+// @Description Protected Route used to delete a course (chapter)
+// @Produce json
+// @Tags Courses
+// @Accept json
+// @Param id path string true "Course ID"
+// @Success 200 {object} models.Course
+// @Failure 400 {object} interfaces.APiError
+// @Router /courses/delete/{id} [DELETE]
 func DeleteCourse(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user := c.MustGet("user").(*utils.UserDetails)
@@ -80,6 +98,7 @@ func DeleteCourse(collection *mongo.Collection) gin.HandlerFunc {
 // @Summary Getting Course By Admin
 // @Description Protected Route used to get the courses (chapters) by admin id
 // @Produce json
+// @Tags Courses
 // @Accept json
 // @Security ApiKeyAuth
 // @Success 200 {object} []models.Course
@@ -106,6 +125,7 @@ func GetCoursesByAdmin(collection *mongo.Collection) gin.HandlerFunc {
 // @Summary Getting Course By teacher
 // @Description Protected Route used to get the courses (chapters) by teacher id
 // @Produce json
+// @Tags Courses
 // @Accept json
 // @Security ApiKeyAuth
 // @Success 200 {object} []models.Course

@@ -9,6 +9,7 @@ import (
 
 func ModuleRoute(g *gin.Engine, collection *mongo.Collection) {
 	moduleRoute := g.Group("/modules")
+	moduleRoute.GET("/:id", middlewares.Authentication(), handlers.GetModuleById(collection))
 	moduleRoute.GET("/teacher", middlewares.Authentication(), handlers.GetTeacherFilteredModules(collection))
 	moduleRoute.GET("/admin", middlewares.Authentication(), handlers.GetCoursesByAdmin(collection))
 	moduleRoute.POST("/create", middlewares.Authentication(), handlers.CreateModule(collection))
