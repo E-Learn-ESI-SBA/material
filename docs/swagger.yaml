@@ -1,0 +1,116 @@
+basePath: /
+definitions:
+  interfaces.APiError:
+    properties:
+      error:
+        type: string
+    type: object
+  models.Course:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      module_id:
+        type: string
+      name:
+        type: string
+      plan:
+        items:
+          type: string
+        minItems: 1
+        type: array
+      updated_at:
+        type: string
+    required:
+    - plan
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: s.hannachi@esi-sba.dz
+    name: Seif Hanachi
+    url: http://www.swagger.io/support
+  description: This Service is for managing the material of the Madaurus Platform
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Madaurus Material service
+  version: "1.0"
+paths:
+  /courses/admin:
+    get:
+      consumes:
+      - application/json
+      description: Protected Route used to get the courses (chapters) by admin id
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Course'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+      security:
+      - ApiKeyAuth: []
+      summary: Getting Course By Admin
+  /courses/create:
+    post:
+      consumes:
+      - application/json
+      description: Protected Route used to create a course (chapter)
+      parameters:
+      - description: Course Object
+        in: body
+        name: course
+        required: true
+        schema:
+          $ref: '#/definitions/models.Course'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Course'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+      security:
+      - ApiKeyAuth: []
+      summary: Create Course
+  /courses/teacher:
+    get:
+      consumes:
+      - application/json
+      description: Protected Route used to get the courses (chapters) by teacher id
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Course'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+      security:
+      - ApiKeyAuth: []
+      summary: Getting Course By teacher
+swagger: "2.0"

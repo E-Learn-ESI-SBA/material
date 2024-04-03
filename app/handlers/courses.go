@@ -11,6 +11,16 @@ import (
 	"time"
 )
 
+// @Summary Create Course
+// @Description Protected Route used to create a course (chapter)
+// @Produce json
+// @Accept json
+// @Security ApiKeyAuth
+// @Param course body models.Course true "Course Object"
+// @Success 200 {object} models.Course
+// @Failure 400 {object} interfaces.APiError
+// @Failure 500 {object} interfaces.APiError
+// @Router /courses/create [POST]
 func CreateCourse(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var course models.Course
@@ -66,6 +76,15 @@ func DeleteCourse(collection *mongo.Collection) gin.HandlerFunc {
 		c.JSON(200, gin.H{"message": "Course Deleted Successfully"})
 	}
 }
+
+// @Summary Getting Course By Admin
+// @Description Protected Route used to get the courses (chapters) by admin id
+// @Produce json
+// @Accept json
+// @Security ApiKeyAuth
+// @Success 200 {object} []models.Course
+// @Failure 400 {object} interfaces.APiError
+// @Router /courses/admin [GET]
 func GetCoursesByAdmin(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		cursor, err := collection.Find(context.TODO(), nil)
@@ -83,6 +102,15 @@ func GetCoursesByAdmin(collection *mongo.Collection) gin.HandlerFunc {
 	}
 }
 
+// GetCoursesByTeacher godoc
+// @Summary Getting Course By teacher
+// @Description Protected Route used to get the courses (chapters) by teacher id
+// @Produce json
+// @Accept json
+// @Security ApiKeyAuth
+// @Success 200 {object} []models.Course
+// @Failure 400 {object} interfaces.APiError
+// @Router /courses/teacher [GET]
 func GetCoursesByTeacher(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)

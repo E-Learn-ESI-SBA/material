@@ -3,7 +3,7 @@ package models
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type Course struct {
-	ID          primitive.ObjectID `json:"id" bson:"_id"`
+	ID
 	Name        string             `json:"name"`
 	Description string             `json:"description"`
 	Plan        []string           `json:"plan" validate:"required,min=1" bson:"plan"`

@@ -2,10 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"github.com/getsentry/sentry-go"
-	sentrygin "github.com/getsentry/sentry-go/gin"
-	"github.com/gin-gonic/gin"
 	"log"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/routes"
@@ -13,8 +9,25 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/getsentry/sentry-go"
+	sentrygin "github.com/getsentry/sentry-go/gin"
+	"github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @title Madaurus Material service
+// @version 1.0
+// @description This Service is for managing the material of the Madaurus Platform
+// @termsOfService http://swagger.io/terms/
+// @contact.name Seif Hanachi
+// @contact.url http://www.swagger.io/support
+// @contact.email s.hannachi@esi-sba.dz
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @host localhost:8080
+// @BasePath /
 func main() {
 	k := shared.GetSecrets()
 
@@ -24,10 +37,6 @@ func main() {
 	app := new(models.Application)
 	app.CreateApp(client)
 	server := gin.Default()
-	err := server.Run(":8080")
-	if err != nil {
-		log.Fatal("Server not started")
-	}
 	errSentry := sentry.Init(sentry.ClientOptions{
 		Dsn:           k.String("sentry_dsn"),
 		EnableTracing: true,
@@ -42,7 +51,7 @@ func main() {
 		},
 		Debug: true,
 	})
-	err = os.Setenv("JWT_SECRET", k.String("jwt_secret"))
+	err := os.Setenv("JWT_SECRET", k.String("jwt_secret"))
 	if err != nil {
 		log.Fatal("JWT_SECRET not set")
 
@@ -51,15 +60,24 @@ func main() {
 	if errSentry != nil {
 		log.Fatalf("sentry.Init: %s", errSentry)
 	}
-	server.Use(sentrygin.New(sentrygin.Options{}))
+	url := "http://localhost:8080/swagger/doc.json"
+	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler, ginSwagger.URL(url)))
+	server.GET("/hello", func(c *gin.Context) {
+		server.Use(sentrygin.New(sentrygin.Options{}))
+		c.JSON(200, gin.H{
+			"message": "Hello World",
+		})
+	})
 	routes.ModuleRoute(server, app.ModuleCollection)
 	routes.CourseRoute(server, app.CourseCollection)
 	routes.SectionRouter(server, app.SectionCollection)
 	routes.LectureRoute(server, app.LectureCollection)
 	routes.CommentRoute(server, app.CommentsCollection)
 
+	// server.GET("/docs", )
+
 	// Defer Functions
-	fmt.Println("Server Running on Port 8080")
+	log.Println("Server Running on Port 8080")
 	defer sentry.Flush(2 * time.Second)
 	defer func() {
 		if err = client.Disconnect(ctx); err != nil {
@@ -67,4 +85,8 @@ func main() {
 		}
 		cancel()
 	}()
+	err = server.Run(":8080")
+	if err != nil {
+		log.Fatal("Server not started")
+	}
 }
