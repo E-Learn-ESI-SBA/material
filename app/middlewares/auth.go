@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"madaurus/dev/material/app/utils"
 	"net/http"
@@ -16,6 +17,7 @@ func Authentication() gin.HandlerFunc {
 			// try to get it from cookies
 			ClientToken, err = c.Cookie("accessToken")
 			if err != nil || ClientToken == "" {
+				fmt.Println("No Authorization Header Provided")
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "No Authorization Header Provided"})
 				c.Abort()
 				return

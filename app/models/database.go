@@ -2,7 +2,6 @@ package models
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -10,22 +9,27 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func DBHandler(uri string, ctx context.Context) *mongo.Client {
+func DBHandler(uri string) (*mongo.Client, error) {
+	println("Connecting... to the database")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
 	opts.SetConnectTimeout(10 * time.Second)
 	client, err := mongo.Connect(context.TODO(), opts)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("failed to connect to mongodb")
+		return nil, err
+
 	}
 
 	err = client.Ping(ctx, nil)
 	if err != nil {
 		log.Println("failed to connect to mongodb")
-		return nil
+		return nil, err
 	}
-	fmt.Println("Successfully Connected to the mongodb")
-	return client
+	log.Println("Successfully Connected to the mongodb")
+	return client, nil
 }
 
 func ModuleCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
@@ -56,10 +60,6 @@ func ContentCollection(client *mongo.Client, CollectionName string) *mongo.Colle
 	return collection
 }
 func CommentCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
-	collection := client.Database("materials").Collection(CollectionName)
-	return collection
-}
-func RatingCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
 	collection := client.Database("materials").Collection(CollectionName)
 	return collection
 }

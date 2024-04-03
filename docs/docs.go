@@ -899,7 +899,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:8080",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "Madaurus Material service",
+	Title:            "Madaurus Material services",
 	Description:      "This Service is for managing the material of the Madaurus Platform",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
 	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/services"
 	"madaurus/dev/material/app/utils"
+
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // @Summary Edit Module Visibility
@@ -17,7 +18,7 @@ import (
 // @Tags Modules
 // @Param id path string true "Module ID"
 // @Param visibility query string true "Module Visibility"
-// @Success 200 {object} models.Module
+// @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
 // @Failure 500 {object} interfaces.APiError
 // @Router /modules/visibility/{id} [PUT]
@@ -45,7 +46,7 @@ func EditModuleVisibility(collection *mongo.Collection) gin.HandlerFunc {
 // @Accept json
 // @Tags Modules
 // @Param filter body interfaces.ModuleFilter true "Module Filter"
-// @Success 200 {object} models.Module
+// @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
 // @Failure 500 {object} interfaces.APiError
 // @Router /modules/public [POST]
@@ -73,7 +74,7 @@ func GetPublicFilteredModules(collection *mongo.Collection) gin.HandlerFunc {
 // @Tags Modules
 // @Accept json
 // @Param filter body interfaces.ModuleFilter true "Module Filter"
-// @Success 200 {object} models.Module
+// @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
 // @Failure 500 {object} interfaces.APiError
 // @Router /modules/teacher [GET]
@@ -101,12 +102,13 @@ func GetTeacherFilteredModules(collection *mongo.Collection) gin.HandlerFunc {
 // @Accept json
 // @Tags Modules
 // @Param module body models.Module true "Module Object"
-// @Success 200 {object} models.Module
+// @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
 // @Failure 500 {object} interfaces.APiError
 // @Router /modules/create [POST]
 func CreateModule(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		var module models.Module
 		err := c.BindJSON(&module)
 		if err != nil {
@@ -131,7 +133,7 @@ func CreateModule(collection *mongo.Collection) gin.HandlerFunc {
 // @Accept json
 // @Tags Modules
 // @Param module body models.Module true "Module Object"
-// @Success 200 {object} models.Module
+// @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
 // @Failure 500 {object} interfaces.APiError
 // @Router /modules/update [PUT]
@@ -159,7 +161,7 @@ func UpdateModule(collection *mongo.Collection) gin.HandlerFunc {
 // @Produce json
 // @Accept json
 // @Param id path string true "Module ID"
-// @Success 200 {object} models.Module
+// @Success 200 {object} interfaces.APiSuccess
 // @Tags Modules
 // @Failure 400 {object} interfaces.APiError
 // @Failure 500 {object} interfaces.APiError

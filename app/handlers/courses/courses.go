@@ -17,7 +17,7 @@ import (
 // @Tags Courses
 // @Accept json
 // @Param course body models.Course true "Course Object"
-// @Success 200 {object} models.Course
+// @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
 // @Failure 500 {object} interfaces.APiError
 // @Router /courses/create [POST]
@@ -45,7 +45,7 @@ func CreateCourse(collection *mongo.Collection) gin.HandlerFunc {
 // @Tags Courses
 // @Accept json
 // @Param course body models.Course true "Course Object"
-// @Success 200 {object} models.Course
+// @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
 // @Router /courses/update [PUT]
 func UpdateCourse(collection *mongo.Collection) gin.HandlerFunc {
@@ -75,7 +75,7 @@ func UpdateCourse(collection *mongo.Collection) gin.HandlerFunc {
 // @Tags Courses
 // @Accept json
 // @Param id path string true "Course ID"
-// @Success 200 {object} models.Course
+// @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
 // @Router /courses/delete/{id} [DELETE]
 func DeleteCourse(collection *mongo.Collection) gin.HandlerFunc {
