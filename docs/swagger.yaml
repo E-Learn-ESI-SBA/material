@@ -5,6 +5,19 @@ definitions:
       error:
         type: string
     type: object
+  interfaces.ModuleFilter:
+    properties:
+      semester:
+        maximum: 2
+        minimum: 1
+        type: integer
+      speciality:
+        type: string
+      year:
+        maximum: 5
+        minimum: 1
+        type: integer
+    type: object
   models.Course:
     properties:
       created_at:
@@ -27,6 +40,197 @@ definitions:
     required:
     - plan
     type: object
+  models.ExtendCourse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      module_id:
+        type: string
+      name:
+        type: string
+      plan:
+        items:
+          type: string
+        minItems: 1
+        type: array
+      sections:
+        items:
+          $ref: '#/definitions/models.Section'
+        type: array
+      updated_at:
+        type: string
+    required:
+    - plan
+    type: object
+  models.ExtendedModule:
+    properties:
+      coefficient:
+        type: integer
+      courses:
+        items:
+          $ref: '#/definitions/models.ExtendCourse'
+        type: array
+      created_at:
+        type: string
+      id:
+        type: string
+      image:
+        type: string
+      instructors:
+        items:
+          type: integer
+        type: array
+      isPublic:
+        type: boolean
+      name:
+        type: string
+      semester:
+        type: integer
+      speciality:
+        type: string
+      teacher_id:
+        type: integer
+      updated_at:
+        type: string
+      year:
+        type: integer
+    required:
+    - teacher_id
+    type: object
+  models.Files:
+    properties:
+      created_at:
+        type: string
+      group:
+        type: integer
+      id:
+        type: string
+      section_id:
+        type: string
+      teacher_id:
+        type: integer
+      updated_at:
+        type: string
+      url:
+        type: string
+    required:
+    - group
+    - section_id
+    - teacher_id
+    - url
+    type: object
+  models.Lecture:
+    properties:
+      content:
+        minLength: 250
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_public:
+        type: boolean
+      name:
+        type: string
+      section_id:
+        type: string
+      teacher_id:
+        type: integer
+      updated_at:
+        type: string
+    required:
+    - content
+    - section_id
+    - teacher_id
+    type: object
+  models.Module:
+    properties:
+      coefficient:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: string
+      image:
+        type: string
+      instructors:
+        items:
+          type: integer
+        type: array
+      isPublic:
+        type: boolean
+      name:
+        type: string
+      semester:
+        type: integer
+      speciality:
+        type: string
+      teacher_id:
+        type: integer
+      updated_at:
+        type: string
+      year:
+        type: integer
+    required:
+    - teacher_id
+    type: object
+  models.Section:
+    properties:
+      course_id:
+        type: string
+      created_at:
+        type: string
+      files:
+        items:
+          $ref: '#/definitions/models.Files'
+        type: array
+      id:
+        type: string
+      lectures:
+        items:
+          $ref: '#/definitions/models.Lecture'
+        type: array
+      name:
+        type: string
+      order:
+        minimum: 1
+        type: integer
+      teacher_id:
+        type: integer
+      updated_at:
+        type: string
+      videos:
+        items:
+          $ref: '#/definitions/models.Video'
+        type: array
+    required:
+    - course_id
+    - name
+    - teacher_id
+    type: object
+  models.Video:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      section_id:
+        type: string
+      teacher_id:
+        type: integer
+      updated_at:
+        type: string
+      url:
+        type: string
+    required:
+    - section_id
+    - teacher_id
+    - url
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -38,7 +242,7 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
-  title: Madaurus Material service
+  title: Madaurus Material services
   version: "1.0"
 paths:
   /courses/admin:
@@ -62,6 +266,8 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Getting Course By Admin
+      tags:
+      - Courses
   /courses/create:
     post:
       consumes:
@@ -89,9 +295,34 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/interfaces.APiError'
-      security:
-      - ApiKeyAuth: []
       summary: Create Course
+      tags:
+      - Courses
+  /courses/delete/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Protected Route used to delete a course (chapter)
+      parameters:
+      - description: Course ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Course'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+      summary: Delete Course
+      tags:
+      - Courses
   /courses/teacher:
     get:
       consumes:
@@ -113,4 +344,244 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Getting Course By teacher
+      tags:
+      - Courses
+  /courses/update:
+    put:
+      consumes:
+      - application/json
+      description: Protected Route used to update a course (chapter)
+      parameters:
+      - description: Course Object
+        in: body
+        name: course
+        required: true
+        schema:
+          $ref: '#/definitions/models.Course'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Course'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+      summary: Update Course
+      tags:
+      - Courses
+  /modules/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get Module By ID
+      parameters:
+      - description: Module ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ExtendedModule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+      summary: Get Module By ID
+      tags:
+      - Modules
+  /modules/create:
+    post:
+      consumes:
+      - application/json
+      description: Protected Route used to create a module
+      parameters:
+      - description: Module Object
+        in: body
+        name: module
+        required: true
+        schema:
+          $ref: '#/definitions/models.Module'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Module'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+      summary: Create Module
+      tags:
+      - Modules
+  /modules/delete/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Protected Route used to delete a module
+      parameters:
+      - description: Module ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Module'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+      summary: Delete Module
+      tags:
+      - Modules
+  /modules/public:
+    post:
+      consumes:
+      - application/json
+      description: Protected Route used to get public modules
+      parameters:
+      - description: Module Filter
+        in: body
+        name: filter
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.ModuleFilter'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Module'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+      summary: Get Public Modules
+      tags:
+      - Modules
+  /modules/teacher:
+    get:
+      consumes:
+      - application/json
+      description: Protected Route used to get teacher modules
+      parameters:
+      - description: Module Filter
+        in: body
+        name: filter
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.ModuleFilter'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Module'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+      summary: Get Teacher Modules
+      tags:
+      - Modules
+  /modules/update:
+    put:
+      consumes:
+      - application/json
+      description: Protected Route used to update a module
+      parameters:
+      - description: Module Object
+        in: body
+        name: module
+        required: true
+        schema:
+          $ref: '#/definitions/models.Module'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Module'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+      summary: Update Module
+      tags:
+      - Modules
+  /modules/visibility/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Protected Route used to edit module visibility
+      parameters:
+      - description: Module ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Module Visibility
+        in: query
+        name: visibility
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Module'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+      summary: Edit Module Visibility
+      tags:
+      - Modules
 swagger: "2.0"

@@ -2,7 +2,6 @@ package models
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -10,27 +9,31 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func DBHandler(uri string, ctx context.Context) *mongo.Client {
+func DBHandler(uri string) (*mongo.Client, error) {
+	println("Connecting... to the database")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
 	opts.SetConnectTimeout(10 * time.Second)
 	client, err := mongo.Connect(context.TODO(), opts)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("failed to connect to mongodb")
+		return nil, err
+
 	}
 
 	err = client.Ping(ctx, nil)
 	if err != nil {
 		log.Println("failed to connect to mongodb")
-		return nil
+		return nil, err
 	}
-	fmt.Println("Successfully Connected to the mongodb")
-	return client
+	log.Println("Successfully Connected to the mongodb")
+	return client, nil
 }
 
 func ModuleCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
-	var collection *mongo.Collection = client.Database("materials").Collection(CollectionName)
-	return collection
+	return client.Database("materials").Collection(CollectionName)
 
 }
 
@@ -59,10 +62,6 @@ func CommentCollection(client *mongo.Client, CollectionName string) *mongo.Colle
 	collection := client.Database("materials").Collection(CollectionName)
 	return collection
 }
-func RatingCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
-	collection := client.Database("materials").Collection(CollectionName)
-	return collection
-}
 
 type Application struct {
 	ContentCollection  *mongo.Collection
@@ -74,8 +73,8 @@ type Application struct {
 	CommentsCollection *mongo.Collection
 }
 
-func (app *Application) CreateApp(client *mongo.Client) {
-	app = &Application{
+func NewApp(client *mongo.Client) *Application {
+	return &Application{
 		VideoCollection:    VideoCollection(client, "videos"),
 		LectureCollection:  LectureCollection(client, "lectures"),
 		ContentCollection:  ContentCollection(client, "contents"),

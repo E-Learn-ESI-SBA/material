@@ -2,7 +2,7 @@ package utils
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
+	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"time"
 )
@@ -15,30 +15,65 @@ type LightUser struct {
 }
 type UserDetails struct {
 	LightUser
-	Uid string `json:"uid"`
 	jwt.Claims
 }
 
-func ValidateToken(signedtoken string, secretKey string) (claims *UserDetails, err error) {
-	token, err := jwt.ParseWithClaims(signedtoken, &UserDetails{}, func(token *jwt.Token) (interface{}, error) {
+func ParseJwt(signedtoken string, secretKey string) (*jwt.Token, error) {
+	return jwt.Parse(signedtoken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
 		return []byte(secretKey), nil
 	})
+}
 
+func ValidateToken(signedtoken string, secretKey string) (*UserDetails, error) {
+	var user UserDetails
+	token, err := ParseJwt(signedtoken, secretKey)
 	if err != nil {
+		return nil, errors.New("invalid Token")
+	}
+	if !token.Valid {
+		return nil, errors.New("UNAUTHORIZED")
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
 
-		return nil, gin.Error{Err: err}
-	}
-	claims, ok := token.Claims.(*UserDetails)
 	if !ok {
-		return nil, gin.Error{
-			Err: errors.New("the Token is invalid"),
-		}
+		return nil, errors.New("invalid Token")
+
 	}
+
+	// Case: Token expired
+	expTime := time.Unix(int64(claims["exp"].(float64)), 0)
+	if expTime.Unix() < time.Now().Local().Unix() {
+		return nil, errors.New("expired Token")
+	}
+	user.Email = claims["email"].(string)
+	user.Username = claims["username"].(string)
+	user.Role = claims["role"].(string)
+	user.ID = int(claims["id"].(float64))
+	return &user, nil
+
+}
+
+func GenerateToken(user LightUser, secretKey string) (string, error) {
+	claims := jwt.MapClaims{
+		"email":    user.Email,
+		"username": user.Username,
+		"role":     user.Role,
+		"id":       user.ID,
+	}
+	// add expiration time
+	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(secretKey))
+}
+
+/*
 	expTime, _ := claims.GetExpirationTime()
 	if expTime.Unix() < time.Now().Local().Unix() {
 		return nil, gin.Error{
 			Err: errors.New("expired Token"),
 		}
 	}
-	return claims, nil
-}
+*/
