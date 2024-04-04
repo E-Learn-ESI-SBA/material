@@ -16,7 +16,7 @@ func TestCreateModule(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		mt.AddMockResponses(mtest.CreateSuccessResponse())
 		module := models.Module{Name: "OOP", TeacherId: 125, Year: 2, Coefficient: 4, IsPublic: false, Semester: 2}
-		_, err := mt.Coll.InsertOne(ctx, module)
+		err := services.CreateModule(ctx, mt.Coll, module)
 		assert.Nil(t, err)
 		defer cancel()
 

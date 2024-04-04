@@ -120,7 +120,7 @@ func CreateModule(collection *mongo.Collection) gin.HandlerFunc {
 		}
 		user := c.MustGet("user").(*utils.UserDetails)
 		module.TeacherId = user.ID
-		err = services.CreateModule(collection, module)
+		err = services.CreateModule(c.Request.Context(),collection, module)
 		if err != nil {
 			log.Println(err.Error())
 			c.JSON(400, gin.H{"error": err.Error()})
