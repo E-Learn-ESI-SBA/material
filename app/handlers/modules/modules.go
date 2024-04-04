@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"log"
 	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/services"
@@ -108,17 +109,20 @@ func GetTeacherFilteredModules(collection *mongo.Collection) gin.HandlerFunc {
 // @Router /modules/create [POST]
 func CreateModule(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
-
+		print("Create Module Handler ...")
 		var module models.Module
-		err := c.BindJSON(&module)
+
+		err := c.ShouldBindJSON(&module)
 		if err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
+			log.Println(err.Error())
+			c.JSON(400, gin.H{"error": errors.New("invalid Module Object").Error()})
 			return
 		}
 		user := c.MustGet("user").(*utils.UserDetails)
 		module.TeacherId = user.ID
-		err = services.CreateModule(c.Request.Context(), collection, module)
+		err = services.CreateModule(collection, module)
 		if err != nil {
+			log.Println(err.Error())
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}

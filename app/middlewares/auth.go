@@ -24,6 +24,8 @@ func Authentication() gin.HandlerFunc {
 				return
 			}
 		}
+		// remove Bearar from token
+		ClientToken = ClientToken[7:]
 		claims, errToken := utils.ValidateToken(ClientToken, secretKey)
 		if errToken != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": errToken.Error()})

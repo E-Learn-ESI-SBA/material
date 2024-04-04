@@ -33,8 +33,7 @@ func DBHandler(uri string) (*mongo.Client, error) {
 }
 
 func ModuleCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
-	var collection *mongo.Collection = client.Database("materials").Collection(CollectionName)
-	return collection
+	return client.Database("materials").Collection(CollectionName)
 
 }
 
@@ -74,8 +73,8 @@ type Application struct {
 	CommentsCollection *mongo.Collection
 }
 
-func (app *Application) CreateApp(client *mongo.Client) {
-	app = &Application{
+func NewApp(client *mongo.Client) *Application {
+	return &Application{
 		VideoCollection:    VideoCollection(client, "videos"),
 		LectureCollection:  LectureCollection(client, "lectures"),
 		ContentCollection:  ContentCollection(client, "contents"),

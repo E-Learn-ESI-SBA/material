@@ -9,6 +9,7 @@ import (
 	"log"
 	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
+	"time"
 )
 
 // GetModulesByFilter Basic Usage  : GetModulesByFilter(ctx, collection, filterStruct, "public", nil) for public endpoints
@@ -77,13 +78,14 @@ func UpdateModule(ctx context.Context, collection *mongo.Collection, module mode
 	return nil
 }
 
-func CreateModule(ctx context.Context, collection *mongo.Collection, module models.Module) error {
+func CreateModule(collection *mongo.Collection, module models.Module) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	_, err := collection.InsertOne(ctx, module)
 	if err != nil {
 		log.Printf("error while trying to create the module")
-		return errors.New("Error: " + err.Error())
 	}
-	return nil
+	defer cancel()
+	return err
 }
 
 func GetModuleById(ctx context.Context, collection *mongo.Collection, moduleId string) (models.ExtendedModule, error) {
