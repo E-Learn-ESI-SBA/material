@@ -80,8 +80,8 @@ func UpdateModule(ctx context.Context, collection *mongo.Collection, module mode
 func CreateModule(ctx context.Context, collection *mongo.Collection, module models.Module) error {
 	_, err := collection.InsertOne(ctx, module)
 	if err != nil {
-		log.Printf("Error: %v\n", err)
-		return errors.New("error while trying to create the module")
+		log.Printf("error while trying to create the module")
+		return errors.New("Error: " + err.Error())
 	}
 	return nil
 }

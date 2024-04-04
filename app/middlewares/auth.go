@@ -12,6 +12,7 @@ func Authentication() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		secretKey := os.Getenv("JWT_SECRET")
 		ClientToken := c.Request.Header.Get("Authorization")
+
 		var err error
 		if ClientToken == "" {
 			// try to get it from cookies
@@ -25,7 +26,7 @@ func Authentication() gin.HandlerFunc {
 		}
 		claims, errToken := utils.ValidateToken(ClientToken, secretKey)
 		if errToken != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": errToken.Error()})
 			c.Abort()
 			return
 		}
