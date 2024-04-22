@@ -28,14 +28,8 @@ jobs:
         runs-on: ubuntu-latest
        # needs:
        #   - test
-        permissions:
-            contents: read
-            id-token: write
         steps:
-            - uses: actions/checkout@v3
-            - uses: azure/login@v2.1.0
-              name: Azure login
-              with:
-                creds: ${{secrets.AZURE_ACS_CREDENTIALS}}
+            - name: Login To Azure ACR
+              run: docker login  madaurus.azurecr.io -u madaurus -p ${{secrets.AZURE_ACR}} 
             - name: Build and push image to ACR
               run: az acr build --image ${{ env.CONTAINER_NAME }}:${{steps.meta.outputs.tags}} --registry ${{ env.AZURE_CONTAINER_REGISTRY }} -g ${{ env.ACR_RESOURCE_GROUP }} -f ./Dockerfile ./
