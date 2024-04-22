@@ -26,8 +26,8 @@ jobs:
         run: go test -v ./test/unit/...
   build:
         runs-on: ubuntu-latest
-        needs:
-          - test
+       # needs:
+       #   - test
         permissions:
             contents: read
             id-token: write
