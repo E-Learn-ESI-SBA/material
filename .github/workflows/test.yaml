@@ -8,7 +8,7 @@ on:
 env:
     ACR_RESOURCE_GROUP: madaurus
     AZURE_CONTAINER_REGISTRY: madaurus
-    CONTAINER_NAME: materials
+    IMAGE_NAME: materials
 jobs:
 
   test:
@@ -30,8 +30,10 @@ jobs:
        #   - test
         steps:
             - name: Login To Azure ACR
-              run: docker login  madaurus.azurecr.io -u madaurus -p ${{secrets.AZURE_ACR}} 
+              run: docker login  madaurus.azurecr.io -u ${{env.AZURE_CONTAINER_REGISTRY}} -p ${{secrets.AZURE_ACR}} 
             - name: Build and push image to ACR
-              run: docker build -t  madaurus.azurecr.io/${{ env.CONTAINER_NAME }}:latest ./Dockerfile
+              run: |
+                    docker build -t  madaurus.azurecr.io/${{ env.IMAGE_NAME }}:latest .
             - name: Push the Image
-              run: docker pull madaurus.azurecr.io/${{ env.CONTAINER_NAME }}:latest
+              run: |
+                    docker push madaurus.azurecr.io/${{ env.IMAGE_NAME}}:latest
