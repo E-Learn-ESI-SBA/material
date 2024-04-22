@@ -29,6 +29,7 @@ jobs:
        # needs:
        #   - test
         steps:
+            - uses: actions/checkout@v3
             - name: Login To Azure ACR
               run: docker login  madaurus.azurecr.io -u ${{env.AZURE_CONTAINER_REGISTRY}} -p ${{secrets.AZURE_ACR}} 
             - name: Build and push image to ACR
