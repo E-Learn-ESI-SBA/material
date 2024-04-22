@@ -30,7 +30,7 @@ jobs:
        #   - test
         steps:
             - name: Login To Azure ACR
-              run: docker login  madaurus.azurecr.io -u madaurus -p ${{secrets.AZURE_ACR}} 
+              run: docker login  madaurus.azurecr.io -u madaurus -p ${{secrets.AZURE_ACR}} ; ls
             - name: Build and push image to ACR
               run: docker build -t  madaurus.azurecr.io/${{ env.CONTAINER_NAME }}:latest .
             - name: Push the Image
