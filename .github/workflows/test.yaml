@@ -32,6 +32,6 @@ jobs:
             - name: Login To Azure ACR
               run: docker login  madaurus.azurecr.io -u madaurus -p ${{secrets.AZURE_ACR}} 
             - name: Build and push image to ACR
-              run: docker build -t  madaurus.azurecr.io/${{ env.CONTAINER_NAME }}:${{steps.meta.outputs.tags}} 
+              run: docker build -t  madaurus.azurecr.io/${{ env.CONTAINER_NAME }}:${{steps.meta.outputs.tags}} .
             - name: Push the Image
               run: docker pull madaurus.azurecr.io/${{ env.CONTAINER_NAME }}:${{steps.meta.outputs.tags}}
