@@ -1,4 +1,4 @@
-name: Testing  Material Service Go (Gin)
+name: Testing & Building  Material Service Go (Gin) 
 
 on:
   push:
@@ -33,7 +33,7 @@ jobs:
               run: docker login  madaurus.azurecr.io -u ${{env.AZURE_CONTAINER_REGISTRY}} -p ${{secrets.AZURE_ACR}} 
             - name: Build and push image to ACR
               run: |
-                    docker build -t  madaurus.azurecr.io/${{ env.IMAGE_NAME }}:latest .
+                    ls ; docker build -t  madaurus.azurecr.io/${{ env.IMAGE_NAME }}:latest .
             - name: Push the Image
               run: |
                     docker push madaurus.azurecr.io/${{ env.IMAGE_NAME}}:latest
