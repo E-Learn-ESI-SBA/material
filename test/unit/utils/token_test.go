@@ -10,7 +10,10 @@ func TestValidateToken(t *testing.T) {
 	//jwt_secret := os.Getenv("JWT_SECRET")
 	jwt_secret := "A1B2C3D4E5F6G7H8I9J0K"
 	t.Run("Valid Token", func(t *testing.T) {
-		validJwt := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImF5b3ViQGdtYWlsLmNvbSIsImV4cCI6MTcxMjI5NjcyOSwiaWQiOjE2Niwicm9sZSI6ImFkbWluIiwidXNlcm5hbWUiOiJBeW91YiJ9.n-jX7YSdHV1lv_y2Nte-x9CsFxNDUGUI_gVAmh5BQ0k"
+		err, validJwt := utils.TestToken()
+		if err != nil {
+			t.Errorf("Error: %v", err.Error())
+		}
 		claim, err := utils.ValidateToken(validJwt, jwt_secret)
 		if err != nil {
 			t.Errorf("Error: %v", err.Error())
