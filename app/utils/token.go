@@ -70,10 +70,22 @@ func GenerateToken(user LightUser, secretKey string) (string, error) {
 }
 
 /*
-	expTime, _ := claims.GetExpirationTime()
+expTime, _ := claims.GetExpirationTime()
+
 	if expTime.Unix() < time.Now().Local().Unix() {
 		return nil, gin.Error{
 			Err: errors.New("expired Token"),
 		}
 	}
 */
+func TestToken() (error, string) {
+	// Generate new token
+	token, err := GenerateToken(LightUser{
+		ID:       12,
+		Email:    "ameri.ayoub@gmail.com",
+		Username: "Ayoub",
+		Role:     "admin",
+	}, "A1B2C3D4E5F6G7H8I9J0K")
+
+	return err, token
+}
