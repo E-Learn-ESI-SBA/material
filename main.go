@@ -66,6 +66,9 @@ func main() {
 	}
 	url := "http://localhost:8080/swagger/doc.json"
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler, ginSwagger.URL(url)))
+	server.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "Welcome to Madaurus Material Services"})
+	})
 	routes.ModuleRoute(server, app.ModuleCollection)
 	routes.CourseRoute(server, app.CourseCollection)
 	routes.SectionRouter(server, app.SectionCollection)
