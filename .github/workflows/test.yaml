@@ -9,6 +9,7 @@ env:
     ACR_RESOURCE_GROUP: madaurus
     AZURE_CONTAINER_REGISTRY: madaurus
     IMAGE_NAME: materials
+    DOCKER_TOKEN: dckr_pat_yvsyLXV6TNNj6a4R_wR44syesmU
 jobs:
 
   test:
@@ -31,10 +32,10 @@ jobs:
         steps:
             - uses: actions/checkout@v3
             - name: Login To Azure ACR
-              run: docker login  madaurus.azurecr.io -u ${{env.AZURE_CONTAINER_REGISTRY}} -p ${{secrets.AZURE_ACR}} 
+              run: docker login   -u madaurus -p ${{env.DOCKER_TOKEN}} 
             - name: Build and push image to ACR
               run: |
-                    ls ; docker build -t  madaurus.azurecr.io/${{ env.IMAGE_NAME }}:latest .
+                    ls ; docker build -t  madaurus/${{ env.IMAGE_NAME }}:latest .
             - name: Push the Image
               run: |
-                    docker push madaurus.azurecr.io/${{ env.IMAGE_NAME}}:latest
+                    docker push madaurus/${{ env.IMAGE_NAME}}:latest
