@@ -35,7 +35,7 @@ jobs:
               run: docker login   -u madaurus -p ${{env.DOCKER_TOKEN}} 
             - name: Build and push image to ACR
               run: |
-                    ls ; docker build -t  madaurus/${{ env.IMAGE_NAME }}:latest .
+                    ls ; docker build -t  madaurus/${{ env.IMAGE_NAME }}:v1.0.0 .
             - name: Push the Image
               run: |
-                    docker push madaurus/${{ env.IMAGE_NAME}}:latest
+                    docker push madaurus/${{ env.IMAGE_NAME}}:v1.0.0
