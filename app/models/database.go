@@ -63,6 +63,11 @@ func CommentCollection(client *mongo.Client, CollectionName string) *mongo.Colle
 	return collection
 }
 
+func QuizesCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
+	collection := client.Database("materials").Collection(CollectionName)
+	return collection
+}
+
 type Application struct {
 	ContentCollection  *mongo.Collection
 	VideoCollection    *mongo.Collection
@@ -71,6 +76,7 @@ type Application struct {
 	CourseCollection   *mongo.Collection
 	ModuleCollection   *mongo.Collection
 	CommentsCollection *mongo.Collection
+	QuizesCollection   *mongo.Collection
 }
 
 func NewApp(client *mongo.Client) *Application {
@@ -82,6 +88,7 @@ func NewApp(client *mongo.Client) *Application {
 		CourseCollection:   CourseCollection(client, "courses"),
 		ModuleCollection:   ModuleCollection(client, "modules"),
 		CommentsCollection: CommentCollection(client, "comments"),
+		QuizesCollection:   QuizesCollection(client, "quizes"),
 	}
 
 }
