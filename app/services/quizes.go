@@ -93,6 +93,28 @@ func GetQuiz(ctx context.Context, collection *mongo.Collection, quizID string) (
 }
 
 
+func GetQuizesByModuleId(ctx context.Context, collection *mongo.Collection, moduleID string) ([]models.Quiz, error) {
+	var quizes []models.Quiz
+	objectId, err := primitive.ObjectIDFromHex(moduleID)
+	if err != nil {
+		log.Printf("Error While Converting ID: %v\n", err)
+		return quizes, err
+	}
+	cursor, err := collection.Find(ctx, bson.M{"module_id": objectId})
+	if err != nil {
+		log.Printf("Error While Getting Quizes: %v\n", err)
+		return quizes, err
+	}
+	defer cursor.Close(ctx)
+	for cursor.Next(ctx) {
+		var quiz models.Quiz
+		cursor.Decode(&quiz)
+		quizes = append(quizes, quiz)
+	}
+	return quizes, nil
+}
+
+
 func GetQuizesByAdmin(ctx context.Context, collection *mongo.Collection) ([]models.Quiz, error) {
 	var quizes []models.Quiz
 	cursor, err := collection.Find(ctx, bson.M{})

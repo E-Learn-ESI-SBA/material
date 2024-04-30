@@ -158,6 +158,20 @@ func TestCreateQuiz(t *testing.T) {
 	assert.Equal(t, mockResponse, string(responseData))
 }
 
+func TestGetQuizesByModuleId(t *testing.T) {
+	
+	url := "http://localhost:8080/quizes/module/" + globalModule.ID.Hex()
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("Authorization", "Bearer " + teacher1Token)
+
+	res, _ := http.DefaultClient.Do(req)
+	responseData, _ := io.ReadAll(res.Body)
+	
+	var resQuizes []models.Quiz
+	json.Unmarshal(responseData, &resQuizes)
+	assert.Equal(t, globalQuiz.ID, resQuizes[0].ID)
+}
+
 func TestGetQuizById(t *testing.T) {
 	
 	url := "http://localhost:8080/quizes/get/" + globalQuiz.ID.Hex()	

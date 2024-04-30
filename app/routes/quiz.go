@@ -15,6 +15,7 @@ func QuizRoute(c *gin.Engine, collection *mongo.Collection, moduleCollection *mo
 	quizRoute.PUT("/update", middlewares.Authentication(), handlers.UpdateQuiz(collection))
 	quizRoute.DELETE("/delete/:id", middlewares.Authentication(), handlers.DeleteQuiz(collection))
 	quizRoute.GET("/get/:id", middlewares.Authentication(), handlers.GetQuiz(collection))
+	quizRoute.GET("/module/:id", middlewares.Authentication(), handlers.GetQuizesByModuleId(collection))
 	quizRoute.GET("/admin",
 		// middlewares.Authentication(),
 		handlers.GetQuizesByAdmin(collection))
