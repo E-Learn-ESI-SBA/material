@@ -74,7 +74,7 @@ func main() {
 	routes.SectionRouter(server, app.SectionCollection)
 	routes.LectureRoute(server, app.LectureCollection)
 	routes.CommentRoute(server, app.CommentsCollection)
-	routes.QuizRoute(server, app.QuizesCollection)
+	routes.QuizRoute(server, app.QuizesCollection, app.ModuleCollection)
 	log.Println("Server Running on Port 8080")
 	err = server.Run(":8080")
 	defer sentry.Flush(2 * time.Second)

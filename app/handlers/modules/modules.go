@@ -118,8 +118,6 @@ func CreateModule(collection *mongo.Collection) gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": errors.New("invalid Module Object").Error()})
 			return
 		}
-		user := c.MustGet("user").(*utils.UserDetails)
-		module.TeacherId = user.ID
 		err = services.CreateModule(c.Request.Context(),collection, module)
 		if err != nil {
 			log.Println(err.Error())

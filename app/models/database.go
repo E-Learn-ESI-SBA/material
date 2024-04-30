@@ -28,6 +28,8 @@ func DBHandler(uri string) (*mongo.Client, error) {
 		log.Println("failed to connect to mongodb")
 		return nil, err
 	}
+	// drop the database
+	client.Database("materials").Drop(context.Background())
 	log.Println("Successfully Connected to the mongodb")
 	return client, nil
 }

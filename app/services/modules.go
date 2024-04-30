@@ -3,12 +3,13 @@ package services
 import (
 	"context"
 	"errors"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // GetModulesByFilter Basic Usage  : GetModulesByFilter(ctx, collection, filterStruct, "public", nil) for public endpoints

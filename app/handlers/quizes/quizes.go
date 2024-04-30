@@ -21,16 +21,17 @@ import (
 // @Failure 400 {object} interfaces.APiError
 // @Failure 500 {object} interfaces.APiError
 // @Router /quizes/create [POST]
-func CreateQuiz(collection *mongo.Collection) gin.HandlerFunc {
+func CreateQuiz(collection *mongo.Collection, moduleCollection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var quiz models.Quiz
 		err := c.BindJSON(&quiz)
-
+		user := c.MustGet("user").(*utils.UserDetails)
+		quiz.TeacherId = user.ID
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		err = services.CreateQuiz(c.Request.Context(), collection, quiz)
+		err = services.CreateQuiz(c.Request.Context(), collection, moduleCollection, quiz)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
@@ -84,14 +85,13 @@ func UpdateQuiz(collection *mongo.Collection) gin.HandlerFunc {
 // @Router /quizes/delete/{quiz_id} [DELETE]
 func DeleteQuiz(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// user := c.MustGet("user").(*utils.UserDetails)
-		userID := 3
+		user := c.MustGet("user").(*utils.UserDetails)
 		quizID, errP := c.Params.Get("id")
 		if !errP {
 			c.JSON(400, gin.H{"error": errors.New("quiz ID is Required")})
 			return
 		}
-		err := services.DeleteQuiz(c.Request.Context(), collection, quizID, userID)
+		err := services.DeleteQuiz(c.Request.Context(), collection, quizID, user.ID)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
