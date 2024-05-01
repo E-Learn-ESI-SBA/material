@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"madaurus/dev/material/app/models"
@@ -56,21 +57,74 @@ type ExtendedCourse struct {
 	Sections []models.Section `json:"sections"`
 }
 
-func FetchCourseSectionsByModule(ctx context.Context, collection mongo.Collection, moduleID string) ([]ExtendedSection, error) {
-	var extendedSections []ExtendedSection
+func FetchCourseSectionsByModule(ctx context.Context, collection mongo.Collection, moduleID string) ([]models.UltraCourse, error) {
+	var extendedSections []models.UltraCourse
+	id, errId := primitive.ObjectIDFromHex(moduleID)
+	if errId != nil {
+		log.Printf("Error While Parsing Section ID: %v\n", errId)
+		return extendedSections, errId
+	}
 	pipeline := bson.A{
 		bson.M{
-			"$match": bson.M{"module_id": moduleID},
+			"$match": bson.M{"module_id": id},
 		},
 		bson.M{
 			"$lookup": bson.M{
 				"from":         "sections",
-				"localField":   "_id",
+				"localField":   "_id", //
 				"foreignField": "course_id",
 				"as":           "sections",
 			},
 		},
+		bson.M{
+			"$unwind": "$sections", // Unwind sections array to process each section
+		},
+		// Populate sections with details from Videos, Lectures, Files collections
+		bson.M{
+			"$lookup": bson.M{
+				"from":         "videos",
+				"localField":   "sections._id",
+				"foreignField": "section_id",
+				"as":           "sections.videos",
+			},
+		},
+		bson.M{
+			"$lookup": bson.M{
+				"from":         "lectures",
+				"localField":   "sections._id",
+				"foreignField": "section_id",
+				"as":           "sections.lectures",
+			},
+		},
+		bson.M{
+			"$lookup": bson.M{
+				"from":         "files",
+				"localField":   "sections._id",
+				"foreignField": "section_id",
+				"as":           "sections.files",
+			},
+		},
+		bson.M{
+			"$project": bson.M{
+				"_id":         "$courses._id",
+				"name":        "$courses.name",
+				"description": "$courses.description",
+				"sections": bson.A{
+					bson.M{
+						"_id":        "$sections._id",
+						"name":       "$sections.name",
+						"order":      "$sections.order",
+						"teacher_id": "$sections.teacher_id",
+						"course_id":  "$sections.course_id",
+						"videos":     "$sections.videos",
+						"lectures":   "$sections.lectures",
+						"files":      "$sections.files",
+					},
+				},
+			},
+		},
 	}
+
 	cursor, err := collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		log.Printf("Error While Getting Sections By Module: %v\n", err)

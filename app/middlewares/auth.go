@@ -19,7 +19,7 @@ func Authentication() gin.HandlerFunc {
 			ClientToken, err = c.Cookie("accessToken")
 			if err != nil || ClientToken == "" {
 				fmt.Println("No Authorization Header Provided")
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "No Authorization Header Provided"})
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "No Authorization Header Provided"})
 				c.Abort()
 				return
 			}

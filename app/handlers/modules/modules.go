@@ -87,7 +87,13 @@ func GetTeacherFilteredModules(collection *mongo.Collection) gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		user := c.MustGet("user").(*utils.UserDetails)
+
+		value, notFound := c.Get("user")
+		if notFound != true {
+			c.JSON(400, gin.H{"error": errors.New("user not found")})
+			return
+		}
+		user := value.(*utils.UserDetails)
 		modules, CursorErr := services.GetModulesByFilter(c.Request.Context(), collection, filterModule, "private", &user.ID)
 		if CursorErr != nil {
 			c.JSON(400, gin.H{"error": CursorErr.Error()})
@@ -118,9 +124,14 @@ func CreateModule(collection *mongo.Collection) gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": errors.New("invalid Module Object").Error()})
 			return
 		}
-		user := c.MustGet("user").(*utils.UserDetails)
+		value, notFound := c.Get("user")
+		if notFound != true {
+			c.JSON(401, gin.H{"error": errors.New("user not found").Error()})
+			return
+		}
+		user := value.(*utils.UserDetails)
 		module.TeacherId = user.ID
-		err = services.CreateModule(c.Request.Context(),collection, module)
+		err = services.CreateModule(c.Request.Context(), collection, module)
 		if err != nil {
 			log.Println(err.Error())
 			c.JSON(400, gin.H{"error": err.Error()})
@@ -137,6 +148,7 @@ func CreateModule(collection *mongo.Collection) gin.HandlerFunc {
 // @Accept json
 // @Tags Modules
 // @Param module body models.Module true "Module Object"
+// @Param moduleId path string true "Module Id"
 // @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
 // @Failure 500 {object} interfaces.APiError
@@ -144,7 +156,12 @@ func CreateModule(collection *mongo.Collection) gin.HandlerFunc {
 func UpdateModule(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var module models.Module
-		user := c.MustGet("user").(*utils.UserDetails)
+		value, notFound := c.Get("user")
+		if notFound != true {
+			c.JSON(401, gin.H{"error": errors.New("user not found").Error()})
+			return
+		}
+		user := value.(*utils.UserDetails)
 		module.TeacherId = user.ID
 		err := c.BindJSON(&module)
 		if err != nil {
@@ -164,7 +181,6 @@ func UpdateModule(collection *mongo.Collection) gin.HandlerFunc {
 // @Description Protected Route used to delete a module
 // @Produce json
 // @Accept json
-// @Param id path string true "Module ID"
 // @Success 200 {object} interfaces.APiSuccess
 // @Tags Modules
 // @Failure 400 {object} interfaces.APiError
@@ -172,7 +188,12 @@ func UpdateModule(collection *mongo.Collection) gin.HandlerFunc {
 // @Router /modules/delete/{id} [DELETE]
 func DeleteModule(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		user := c.MustGet("user").(*utils.UserDetails)
+		value, notFound := c.Get("user")
+		if notFound {
+			c.JSON(401, gin.H{"error": errors.New("user not found")})
+			return
+		}
+		user := value.(*utils.UserDetails)
 		moduleId, errP := c.Params.Get("id")
 		if errP != true {
 			c.JSON(400, gin.H{"error": errors.New("module ID is Required")})

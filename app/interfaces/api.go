@@ -6,4 +6,5 @@ type APiError struct {
 
 type APiSuccess struct {
 	Message string `json:"message"`
+	Code    int    `json:"code"`
 }

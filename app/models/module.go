@@ -15,7 +15,7 @@ type Module struct {
 	IsPublic    bool     `json:"isPublic" bson:"isPublic"`
 	Plan        []string `json:"plan" binding:"required,min=1" bson:"plan"`
 	Image       *string  `json:"image,omitempty"`
-	Date
+	*Date
 }
 
 type ExtendedModule struct {

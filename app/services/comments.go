@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
@@ -62,7 +63,12 @@ func GetCourseCommentsByCourseId(ctx context.Context, collection *mongo.Collecti
 */
 func EditComment(ctx context.Context, collection *mongo.Collection, commentId string, userId int, editedComment models.Comments) error {
 	var comment models.Comments
-	filter := bson.D{{"_id", commentId}, {"user_id", userId}}
+	id, errId := primitive.ObjectIDFromHex(commentId)
+	if errId != nil {
+		log.Printf("Error While Parsing Section ID: %v\n", errId)
+		return errId
+	}
+	filter := bson.D{{"_id", id}, {"user_id", userId}}
 	update := bson.D{{
 		"$set", bson.D{{"content", editedComment.Content}},
 	}}
@@ -76,9 +82,18 @@ func EditComment(ctx context.Context, collection *mongo.Collection, commentId st
 }
 func EditReply(ctx context.Context, collection *mongo.Collection, commentId string, replyId string, userId int, editedReply models.Reply) error {
 	var reply models.Reply
-
+	id, errId := primitive.ObjectIDFromHex(commentId)
+	if errId != nil {
+		log.Printf("Error While Parsing Section ID: %v\n", errId)
+		return errId
+	}
+	id2, errId2 := primitive.ObjectIDFromHex(replyId)
+	if errId2 != nil {
+		log.Printf("Error While Parsing Section ID: %v\n", errId)
+		return errId2
+	}
 	// find replay from the comment.replays array
-	filter := bson.D{{"_id", commentId}, {"replays._id", replyId}}
+	filter := bson.D{{"_id", id}, {"replays._id", id2}}
 	update := bson.D{{
 		"$set", bson.D{{"replays.$.content", editedReply.Content}},
 	}}
@@ -90,7 +105,12 @@ func EditReply(ctx context.Context, collection *mongo.Collection, commentId stri
 	return nil
 }
 func DeleteCommentByUser(ctx context.Context, collection *mongo.Collection, commentId string, userId int) error {
-	filter := bson.D{{"_id", commentId}, {"user_id", userId}}
+	id, errId := primitive.ObjectIDFromHex(commentId)
+	if errId != nil {
+		log.Printf("Error While Parsing Section ID: %v\n", errId)
+		return errId
+	}
+	filter := bson.D{{"_id", id}, {"user_id", userId}}
 	_, err := collection.DeleteOne(ctx, filter)
 	if err != nil {
 		log.Printf("Error While Deleting the Comment: %v\n", err)
@@ -99,8 +119,18 @@ func DeleteCommentByUser(ctx context.Context, collection *mongo.Collection, comm
 	return nil
 }
 func DeleteReplyByUser(ctx context.Context, collection *mongo.Collection, commentId string, replyId string, userId int) error {
+	id, errId := primitive.ObjectIDFromHex(commentId)
+	if errId != nil {
+		log.Printf("Error While Parsing Section ID: %v\n", errId)
+		return errId
+	}
+	id2, errId2 := primitive.ObjectIDFromHex(replyId)
+	if errId2 != nil {
+		log.Printf("Error While Parsing Section ID: %v\n", errId)
+		return errId2
+	}
 	// Remove replay from the comment.replays array
-	filter := bson.D{{"_id", commentId}, {"replays._id", replyId}}
+	filter := bson.D{{"_id", id}, {"replays._id", id2}, {"user_id", userId}}
 	update := bson.D{{
 		"$pull", bson.D{{"replays", bson.D{{"_id", replyId}}}},
 	}}
@@ -111,9 +141,14 @@ func DeleteReplyByUser(ctx context.Context, collection *mongo.Collection, commen
 	return err
 
 }
-func ReplayToComment(ctx context.Context, collection *mongo.Collection, replay models.Reply, commendId string, userId int) error {
+func ReplayToComment(ctx context.Context, collection *mongo.Collection, replay models.Reply, commentId string, userId int) error {
 	var comment models.Comments
-	filter := bson.D{{"_id", commendId}}
+	id, errId := primitive.ObjectIDFromHex(commentId)
+	if errId != nil {
+		log.Printf("Error While Parsing Section ID: %v\n", errId)
+		return errId
+	}
+	filter := bson.D{{"_id", id}}
 	// insert into replays array
 	// before insert make sure the replays under 10 replays
 	/* const maxReplays = 10

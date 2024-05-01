@@ -15,3 +15,8 @@ type ExtendCourse struct {
 	Course
 	Sections *[]Section
 }
+
+type UltraCourse struct {
+	Course
+	Sections *[]ExtendedSection `json:"sections"`
+}
