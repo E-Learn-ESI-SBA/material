@@ -7,24 +7,21 @@ import (
 	"net/http"
 )
 
-func BasicRBAC(role  string )  gin.HandlerFunc {
-		return func(c *gin.Context) {
+func BasicRBAC(role string) gin.HandlerFunc {
+	return func(c *gin.Context) {
 
-			claim, err := c.Get("user")
-			if(err) {
-				c.JSON(http.StatusInternalServerError, shared.USER_NOT_INJECTED)
+		claim, err := c.Get("user")
+		if err {
+			c.JSON(http.StatusInternalServerError, shared.USER_NOT_INJECTED)
 
-			}
-			user := claim.(utils.UserDetails)
-			if user.Role != role {
-				c.JSON(http.StatusUnauthorized, gin.H{"error": errToken.Error()})
-
-			}
-			if errToken != nil {
-				c.Abort()
-				return
-			}
-			c.Set("user", claims)
-			c.Next()
 		}
+		user := claim.(utils.UserDetails)
+		if user.Role != role {
+			c.JSON(http.StatusForbidden, gin.H{"error": shared.FORBIDDEN})
+			c.Abort()
+			return
+		}
+		
+		c.Next()
+	}
 }

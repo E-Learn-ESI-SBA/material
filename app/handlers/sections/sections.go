@@ -2,10 +2,13 @@ package handlers
 
 import (
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/services"
+	"madaurus/dev/material/app/shared"
 	"madaurus/dev/material/app/utils"
+	"net/http"
 )
 
 // @Summary Create Module
@@ -133,10 +136,15 @@ func DeleteSection(collection *mongo.Collection) gin.HandlerFunc {
 	return func(g *gin.Context) {
 		sectionId, errP := g.Params.Get("sectionId")
 		if errP != true {
-			g.JSON(400, gin.H{"error": "SectionId is required"})
+			g.JSON(http.StatusBadRequest, gin.H{"error": shared.REQUIRED_ID})
 			return
 		}
-		err := services.DeleteSection(g.Request.Context(), collection, sectionId)
+		sectionObjectId, errD := primitive.ObjectIDFromHex(sectionId)
+		if errD != nil {
+			g.JSON(http.StatusBadRequest, gin.H{"error": shared.INVALID_ID})
+			return
+		}
+		err := services.DeleteSection(g.Request.Context(), collection, sectionObjectId)
 		if err != nil {
 			g.JSON(400, gin.H{"error": err.Error()})
 			return

@@ -7,7 +7,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"madaurus/dev/material/app/services"
 	"madaurus/dev/material/app/shared"
-	"madaurus/dev/material/app/utils"
 )
 
 // @Summary Delete Module
@@ -37,36 +36,5 @@ func DeleteModuleByAdmin(collection *mongo.Collection) gin.HandlerFunc {
 			return
 		}
 		c.JSON(200, gin.H{"module": module})
-	}
-}
-
-// @Summary Delete Module
-// @Description Protected Route used to delete a module
-// @Produce json
-// @Success 200 {object} interfaces.APiSuccess
-// @Tags Modules
-// @Failure 400 {object} interfaces.APiError
-// @Failure 500 {object} interfaces.APiError
-// @Router /transaction/module/{id} [DELETE]
-func DeleteModule(collection *mongo.Collection) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		value, notFound := c.Get("user")
-		if notFound {
-			c.JSON(401, gin.H{"error": errors.New(shared.USER_NOT_INJECTED)})
-			return
-		}
-		user := value.(*utils.UserDetails)
-		moduleId, errP := c.Params.Get("id")
-
-		if errP != true {
-			c.JSON(400, gin.H{"error": errors.New(shared.REQUIRED_ID)})
-			return
-		}
-		err := services.DeleteModule(c.Request.Context(), collection, moduleId, user.ID)
-		if err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(200, gin.H{"message": shared.DELETE_MODULE})
 	}
 }

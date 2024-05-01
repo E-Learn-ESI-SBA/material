@@ -19,7 +19,7 @@ func Authentication() gin.HandlerFunc {
 			ClientToken, err = c.Cookie("accessToken")
 			if err != nil || ClientToken == "" {
 				fmt.Println("No Authorization Header Provided")
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "No Authorization Header Provided"})
+				c.JSON(http.StatusBadRequest, gin.H{"message": "No Authorization Header Provided"})
 				c.Abort()
 				return
 			}
@@ -28,7 +28,7 @@ func Authentication() gin.HandlerFunc {
 		ClientToken = ClientToken[7:]
 		claims, errToken := utils.ValidateToken(ClientToken, secretKey)
 		if errToken != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": errToken.Error()})
+			c.JSON(http.StatusUnauthorized, gin.H{"message": errToken.Error()})
 			c.Abort()
 			return
 		}

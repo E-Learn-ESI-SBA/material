@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
+	"log"
+	"madaurus/dev/material/app/shared"
 	"time"
 )
 
@@ -12,6 +14,7 @@ type LightUser struct {
 	Username string `json:"username"`
 	Role     string `json:"role"`
 	ID       string `json:"id"`
+	Avatar   string `json:"avatar"`
 }
 type UserDetails struct {
 	LightUser
@@ -29,17 +32,22 @@ func ParseJwt(signedtoken string, secretKey string) (*jwt.Token, error) {
 
 func ValidateToken(signedtoken string, secretKey string) (*UserDetails, error) {
 	var user UserDetails
+	log.Printf("Getting token .. %v", signedtoken)
 	token, err := ParseJwt(signedtoken, secretKey)
 	if err != nil {
-		return nil, errors.New("invalid Token")
+		log.Printf("Error in parsing token: %v", err.Error())
+		return nil, errors.New(shared.INVALID_TOKEN)
 	}
 	if !token.Valid {
-		return nil, errors.New("UNAUTHORIZED")
+		return nil, errors.New(shared.UNAUTHORIZED)
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 
 	if !ok {
-		return nil, errors.New("invalid Token")
+
+		log.Printf("Error in converting claims: %v", err.Error())
+
+		return nil, errors.New(shared.INVALID_TOKEN)
 
 	}
 
@@ -52,6 +60,7 @@ func ValidateToken(signedtoken string, secretKey string) (*UserDetails, error) {
 	user.Username = claims["username"].(string)
 	user.Role = claims["role"].(string)
 	user.ID = claims["id"].(string)
+	user.Avatar = claims["avatar"].(string)
 	return &user, nil
 
 }
@@ -62,6 +71,7 @@ func GenerateToken(user LightUser, secretKey string) (string, error) {
 		"username": user.Username,
 		"role":     user.Role,
 		"id":       user.ID,
+		"avatar":   user.Avatar,
 	}
 	// add expiration time
 	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()

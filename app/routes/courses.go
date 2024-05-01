@@ -9,10 +9,10 @@ import (
 
 func CourseRoute(c *gin.Engine, collection *mongo.Collection) {
 	courseRoute := c.Group("/courses")
-	courseRoute.GET("/teacher", middlewares.Authentication(), handlers.GetCoursesByTeacher(collection))
+	courseRoute.GET("/", middlewares.Authentication(), handlers.GetCoursesByTeacher(collection))
 	courseRoute.GET("/admin", middlewares.Authentication(), handlers.GetCoursesByAdmin(collection))
-	courseRoute.POST("/create", middlewares.Authentication(), handlers.CreateCourse(collection))
-	courseRoute.PUT("/update", middlewares.Authentication(), handlers.UpdateCourse(collection))
-	courseRoute.DELETE("/delete/:id", middlewares.Authentication(), handlers.DeleteCourse(collection))
+	courseRoute.POST("/", middlewares.Authentication(), handlers.CreateCourse(collection))
+	courseRoute.PUT("/", middlewares.Authentication(), handlers.UpdateCourse(collection))
+	courseRoute.DELETE("/:id", middlewares.Authentication(), handlers.DeleteCourse(collection))
 
 }

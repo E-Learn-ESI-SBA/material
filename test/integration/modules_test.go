@@ -1,4 +1,4 @@
-package integrating
+package integration
 
 import (
 	"bytes"
@@ -24,8 +24,9 @@ func TestCreateModule(t *testing.T) {
 		Username: "ayoub",
 		Role:     "admin",
 		ID:       "12",
+		Avatar:   "https://www.google.com",
 	}
-	const secret = "A1B2C3D4E5F6G7H8I9J0K"
+	const secret = "i6zs1Nq1GzDkdBGQ0ypYYgC5it2Gqb6Ymilyh2EQjHA="
 	authToken, _ := utils.GenerateToken(user, secret)
 	module := fixtures.GetModules()[0]
 	t.Run("Success Creating Module", func(t *testing.T) {

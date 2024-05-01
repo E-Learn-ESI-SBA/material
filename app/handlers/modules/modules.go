@@ -9,6 +9,7 @@ import (
 	"madaurus/dev/material/app/services"
 	"madaurus/dev/material/app/shared"
 	"madaurus/dev/material/app/utils"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -165,7 +166,7 @@ func UpdateModule(collection *mongo.Collection) gin.HandlerFunc {
 		moduleId, _ := c.Params.Get("moduleId")
 		user := value.(*utils.UserDetails)
 		module.TeacherId = user.ID
-		err := c.BindJSON(&module)
+		err := c.ShouldBindJSON(&module)
 		module.ID, _ = primitive.ObjectIDFromHex(moduleId)
 		if err != nil {
 			c.JSON(401, gin.H{"error": err.Error()})
@@ -194,14 +195,56 @@ func GetModuleById(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		moduleId, errP := c.Params.Get("id")
 		if errP != true {
-			c.JSON(400, gin.H{"error": errors.New("module ID is Required")})
+			c.JSON(400, gin.H{"error": shared.REQUIRED_ID})
 			return
 		}
-		module, err := services.GetModuleById(c.Request.Context(), collection, moduleId)
+		ModuleIObjectId, errD := primitive.ObjectIDFromHex(moduleId)
+		if errD != nil {
+			c.JSON(400, gin.H{"error": shared.REQUIRED_ID})
+			return
+		}
+		module, err := services.GetModuleById(c.Request.Context(), collection, ModuleIObjectId)
+		if err != nil {
+			c.JSON(400, gin.H{"error": shared.UNABLE_GET_MODULE})
+			return
+		}
+		c.JSON(200, gin.H{"module": module})
+	}
+}
+
+// @Summary Delete Module
+// @Description Protected Route used to delete a module
+// @Produce json
+// @Success 200 {object} interfaces.APiSuccess
+// @Tags Modules
+// @Failure 400 {object} interfaces.APiError
+// @Failure 500 {object} interfaces.APiError
+// @Router /transaction/module/{id} [DELETE]
+func DeleteModule(collection *mongo.Collection) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		value, notFound := c.Get("user")
+		if notFound {
+			c.JSON(401, gin.H{"error": errors.New(shared.USER_NOT_INJECTED)})
+			return
+		}
+		user := value.(*utils.UserDetails)
+		moduleId, errP := c.Params.Get("id")
+
+		if errP != true {
+			c.JSON(400, gin.H{"error": errors.New(shared.REQUIRED_ID)})
+			return
+		}
+		moduleObjectId, errD := primitive.ObjectIDFromHex(moduleId)
+		if errD != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": shared.INVALID_ID})
+			return
+		}
+
+		err := services.DeleteModule(c.Request.Context(), collection, moduleObjectId, &user.ID)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(200, gin.H{"module": module})
+		c.JSON(200, gin.H{"message": shared.DELETE_MODULE})
 	}
 }

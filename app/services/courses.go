@@ -12,7 +12,8 @@ import (
 )
 
 func CreateCourse(ctx context.Context, collection *mongo.Collection, course models.Course) error {
-	_, err := collection.InsertOne(ctx, course)
+	result, err := collection.InsertOne(ctx, course)
+	log.Printf("Course Created: %v\n", result.InsertedID)
 	if err != nil {
 		log.Printf("Error While Creating Course: %v\n", err)
 		return err
