@@ -70,6 +70,11 @@ func QuizesCollection(client *mongo.Client, CollectionName string) *mongo.Collec
 	return collection
 }
 
+func QuestionCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
+	collection := client.Database("materials").Collection(CollectionName)
+	return collection
+}
+
 type Application struct {
 	ContentCollection  *mongo.Collection
 	VideoCollection    *mongo.Collection

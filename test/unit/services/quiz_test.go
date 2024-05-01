@@ -116,6 +116,44 @@ func TestCreateQuiz(t *testing.T) {
     	StartDate: time.Now(),
     	EndDate: time.Now(),
     	Duration: 100,
+		Questions: []models.Question{
+			{
+				ID: primitive.NewObjectID(),
+				Body: "what is the capital of france?",
+				Description: "extra info (optional)",
+				Score: 10,
+				Answers: []models.Answer{
+					{
+						Body:      "Paris",
+						IsCorrect: true,
+					},
+					{
+						Body:      "London",
+						IsCorrect: false,
+					},
+				},
+			},
+		},
+		Grades: []models.Grade{
+			{
+				Min:    0,
+				Max:    33,
+				Grade:  "C",
+				IsPass: false,
+			},
+			{
+				Min:    34,
+				Max:    66,
+				Grade:  "B",
+				IsPass: true,
+			},
+			{
+				Min:    67,
+				Max:    100,
+				Grade:  "A",
+				IsPass: true,
+			},
+		},
 	}
 
 	jsonQuiz, _ := json.Marshal(globalQuiz)
@@ -132,17 +170,8 @@ func TestCreateQuiz(t *testing.T) {
 	assert.Equal(t, mockResponse, string(responseData))
 	// creating a quiz with a non existing teacher/module combination
 	// should return an error
-	quiz := models.Quiz{
-		ID: primitive.NewObjectID(),
-		ModuleId: primitive.NewObjectID(),
-		Title: "quiz_goes_brr",
-		Instructions: "some instructions...",
-		MinScore: 50,
-		QuestionCount: 20,
-		StartDate: time.Now(),
-		EndDate: time.Now(),
-		Duration: 100,
-	}
+	quiz := globalQuiz
+	quiz.ModuleId = primitive.NewObjectID()
 
 	jsonQuiz, _ = json.Marshal(quiz)
 	req, _ = http.NewRequest(
