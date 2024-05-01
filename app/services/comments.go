@@ -61,7 +61,7 @@ func GetCourseCommentsByCourseId(ctx context.Context, collection *mongo.Collecti
 		return comments, nil
 	}
 */
-func EditComment(ctx context.Context, collection *mongo.Collection, commentId string, userId int, editedComment models.Comments) error {
+func EditComment(ctx context.Context, collection *mongo.Collection, commentId string, userId string, editedComment models.Comments) error {
 	var comment models.Comments
 	id, errId := primitive.ObjectIDFromHex(commentId)
 	if errId != nil {
@@ -80,7 +80,7 @@ func EditComment(ctx context.Context, collection *mongo.Collection, commentId st
 	return nil
 
 }
-func EditReply(ctx context.Context, collection *mongo.Collection, commentId string, replyId string, userId int, editedReply models.Reply) error {
+func EditReply(ctx context.Context, collection *mongo.Collection, commentId string, replyId string, userId string, editedReply models.Reply) error {
 	var reply models.Reply
 	id, errId := primitive.ObjectIDFromHex(commentId)
 	if errId != nil {
@@ -93,7 +93,7 @@ func EditReply(ctx context.Context, collection *mongo.Collection, commentId stri
 		return errId2
 	}
 	// find replay from the comment.replays array
-	filter := bson.D{{"_id", id}, {"replays._id", id2}}
+	filter := bson.D{{"_id", id}, {"replays._id", id2}, {"res.user_id", userId}}
 	update := bson.D{{
 		"$set", bson.D{{"replays.$.content", editedReply.Content}},
 	}}
@@ -104,7 +104,7 @@ func EditReply(ctx context.Context, collection *mongo.Collection, commentId stri
 	}
 	return nil
 }
-func DeleteCommentByUser(ctx context.Context, collection *mongo.Collection, commentId string, userId int) error {
+func DeleteCommentByUser(ctx context.Context, collection *mongo.Collection, commentId string, userId string) error {
 	id, errId := primitive.ObjectIDFromHex(commentId)
 	if errId != nil {
 		log.Printf("Error While Parsing Section ID: %v\n", errId)
@@ -118,7 +118,7 @@ func DeleteCommentByUser(ctx context.Context, collection *mongo.Collection, comm
 	}
 	return nil
 }
-func DeleteReplyByUser(ctx context.Context, collection *mongo.Collection, commentId string, replyId string, userId int) error {
+func DeleteReplyByUser(ctx context.Context, collection *mongo.Collection, commentId string, replyId string, userId string) error {
 	id, errId := primitive.ObjectIDFromHex(commentId)
 	if errId != nil {
 		log.Printf("Error While Parsing Section ID: %v\n", errId)
@@ -141,14 +141,9 @@ func DeleteReplyByUser(ctx context.Context, collection *mongo.Collection, commen
 	return err
 
 }
-func ReplayToComment(ctx context.Context, collection *mongo.Collection, replay models.Reply, commentId string, userId int) error {
+func ReplayToComment(ctx context.Context, collection *mongo.Collection, replay models.Reply, commentId primitive.ObjectID) error {
 	var comment models.Comments
-	id, errId := primitive.ObjectIDFromHex(commentId)
-	if errId != nil {
-		log.Printf("Error While Parsing Section ID: %v\n", errId)
-		return errId
-	}
-	filter := bson.D{{"_id", id}}
+	filter := bson.D{{"_id", commentId}}
 	// insert into replays array
 	// before insert make sure the replays under 10 replays
 	/* const maxReplays = 10

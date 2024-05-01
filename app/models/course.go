@@ -7,7 +7,7 @@ type Course struct {
 
 	Name        string             `json:"name" binding:"required" bson:"name" validate:"required"`
 	Description string             `json:"description" binding:"required" bson:"description" validate:"required"`
-	ModuleId    primitive.ObjectID `json:"module_id" bson:"module_id" binding:"required" validate:"required"`
+	ModuleId    primitive.ObjectID `json:"module_id" bson:"module_id"`
 	Date
 }
 

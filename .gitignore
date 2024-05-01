@@ -25,3 +25,6 @@
 go.work
 mongo/
 # End of https://www.toptal.com/developers/gitignore/api/go
+
+material
+.idea

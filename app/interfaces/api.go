@@ -1,7 +1,8 @@
 package interfaces
 
-type APiError struct {
-	Error string `json:"error"`
+type APIResponse struct {
+	Message string `json:"message"`
+	Code    int    `json:"code"`
 }
 
 type APiSuccess struct {

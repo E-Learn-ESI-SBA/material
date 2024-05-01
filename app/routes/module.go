@@ -13,7 +13,7 @@ func ModuleRoute(g *gin.Engine, collection *mongo.Collection) {
 	moduleRoute.GET("/teacher", middlewares.Authentication(), handlers.GetTeacherFilteredModules(collection))
 	moduleRoute.POST("/", middlewares.Authentication(), handlers.CreateModule(collection))
 	moduleRoute.PUT("/:moduleId", middlewares.Authentication(), handlers.UpdateModule(collection))
-	moduleRoute.DELETE("/delete/:id", middlewares.Authentication(), handlers.DeleteModule(collection))
+	moduleRoute.DELETE("/:id", middlewares.Authentication(), handlers.DeleteModule(collection))
 	moduleRoute.PUT("/visibility/:id", middlewares.Authentication(), handlers.EditModuleVisibility(collection))
 	moduleRoute.GET("/public", middlewares.Authentication(), handlers.GetPublicFilteredModules(collection))
 	moduleRoute.GET("/public/:id", handlers.GetPublicFilteredModules(collection))
