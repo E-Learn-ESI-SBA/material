@@ -11,7 +11,7 @@ func GetModules() []models.Module {
 	// generate dummy data
 	speciality := "Siw"
 	speciality2 := "ISI"
-	instructors := []int{1, 2}
+	instructors := []string{"1", "2"}
 
 	modules = append(modules, models.Module{
 		ID:          primitive.NewObjectID(),
@@ -20,7 +20,7 @@ func GetModules() []models.Module {
 		Speciality:  &speciality,
 		Semester:    1,
 		Coefficient: 1,
-		TeacherId:   1,
+		TeacherId:   "1",
 		Instructors: &instructors,
 		IsPublic:    true,
 		Plan:        []string{"Plan 1", "Plan 2"},
@@ -35,7 +35,7 @@ func GetModules() []models.Module {
 		IsPublic:    true,
 		Semester:    2,
 		Coefficient: 2,
-		TeacherId:   2,
+		TeacherId:   "2",
 		Instructors: &instructors,
 		Plan:        []string{"Plan 1", "Plan 2"},
 		Image:       &image,
@@ -51,7 +51,7 @@ func GetModules() []models.Module {
 		Coefficient: 3,
 		Plan:        []string{"Plan 1", "Plan 2"},
 		Instructors: &instructors,
-		TeacherId:   53,
+		TeacherId:   "53",
 	})
 	return modules
 }

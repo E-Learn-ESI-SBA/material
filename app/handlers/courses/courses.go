@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/services"
+	"madaurus/dev/material/app/shared"
 	"madaurus/dev/material/app/utils"
 	"time"
 )
@@ -80,18 +82,22 @@ func UpdateCourse(collection *mongo.Collection) gin.HandlerFunc {
 // @Router /courses/delete/{id} [DELETE]
 func DeleteCourse(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		user := c.MustGet("user").(*utils.UserDetails)
 		courseId, errP := c.Params.Get("id")
 		if errP != true {
 			c.JSON(400, gin.H{"error": errors.New("course ID is Required")})
 			return
 		}
-		err := services.DeleteCourse(c.Request.Context(), collection, courseId, user.ID)
+		id, errD := primitive.ObjectIDFromHex(courseId)
+		if errD != nil {
+			c.JSON(400, gin.H{"error": shared.REQUIRED_ID})
+			return
+		}
+		err := services.DeleteCourse(c.Request.Context(), collection, id)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(200, gin.H{"message": "Course Deleted Successfully"})
+		c.JSON(200, gin.H{"message": shared.DELETE_COURSE})
 	}
 }
 

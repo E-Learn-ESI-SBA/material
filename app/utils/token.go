@@ -11,7 +11,7 @@ type LightUser struct {
 	Email    string `json:"email"`
 	Username string `json:"username"`
 	Role     string `json:"role"`
-	ID       int    `json:"id"`
+	ID       string `json:"id"`
 }
 type UserDetails struct {
 	LightUser
@@ -51,7 +51,7 @@ func ValidateToken(signedtoken string, secretKey string) (*UserDetails, error) {
 	user.Email = claims["email"].(string)
 	user.Username = claims["username"].(string)
 	user.Role = claims["role"].(string)
-	user.ID = int(claims["id"].(float64))
+	user.ID = claims["id"].(string)
 	return &user, nil
 
 }
@@ -81,7 +81,7 @@ expTime, _ := claims.GetExpirationTime()
 func TestToken() (error, string) {
 	// Generate new token
 	token, err := GenerateToken(LightUser{
-		ID:       12,
+		ID:       "12",
 		Email:    "ameri.ayoub@gmail.com",
 		Username: "Ayoub",
 		Role:     "admin",

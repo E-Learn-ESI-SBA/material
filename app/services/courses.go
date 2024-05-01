@@ -2,11 +2,13 @@ package services
 
 import (
 	"context"
+	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"madaurus/dev/material/app/models"
+	"madaurus/dev/material/app/shared"
 )
 
 func CreateCourse(ctx context.Context, collection *mongo.Collection, course models.Course) error {
@@ -17,7 +19,7 @@ func CreateCourse(ctx context.Context, collection *mongo.Collection, course mode
 	}
 	return nil
 }
-func UpdateCourse(ctx context.Context, collection *mongo.Collection, course models.Course, teacherId int) error {
+func UpdateCourse(ctx context.Context, collection *mongo.Collection, course models.Course, teacherId string) error {
 	_, err := collection.UpdateOne(ctx, bson.D{{"_id", course.ID}, {"teacher_id", teacherId}}, bson.D{{"$set", course}})
 	if err != nil {
 		log.Printf("Error While Updating Course: %v\n", err)
@@ -27,7 +29,7 @@ func UpdateCourse(ctx context.Context, collection *mongo.Collection, course mode
 }
 
 // GetCoursesByInstructor is a function that returns a list of courses that an instructor is teaching
-func GetCoursesByInstructor(ctx context.Context, collection *mongo.Collection, instructorID int) ([]models.Course, error) {
+func GetCoursesByInstructor(ctx context.Context, collection *mongo.Collection, instructorID string) ([]models.Course, error) {
 	// Logic to get courses by instructor
 	var courses []models.Course
 	cursor, err := collection.Find(ctx, bson.D{{"instructor_id", instructorID}})
@@ -43,15 +45,16 @@ func GetCoursesByInstructor(ctx context.Context, collection *mongo.Collection, i
 	return courses, nil
 }
 
-func DeleteCourse(ctx context.Context, collection *mongo.Collection, courseID string, teacherId int) error {
-	_, err := collection.DeleteOne(ctx, bson.D{{"_id", courseID}, {"teacher_id", teacherId}})
-	if err != nil {
-		log.Printf("Error While Deleting Course: %v\n", err)
-		return err
+/*
+	func DeleteCourse(ctx context.Context, collection *mongo.Collection, courseID string, teacherId int) error {
+		_, err := collection.DeleteOne(ctx, bson.D{{"_id", courseID}, {"teacher_id", teacherId}})
+		if err != nil {
+			log.Printf("Error While Deleting Course: %v\n", err)
+			return err
+		}
+		return nil
 	}
-	return nil
-}
-
+*/
 type ExtendedCourse struct {
 	models.Course
 	Sections []models.Section `json:"sections"`
@@ -193,3 +196,56 @@ func GetCoursesByModule(ctx context.Context, collectionCourse mongo.Collection, 
 
 }
 */
+
+func DeleteCourse(ctx context.Context, collection *mongo.Collection, courseId primitive.ObjectID) error {
+	pip := bson.A{
+		bson.M{
+			"$match": bson.M{"_id": courseId},
+		},
+		bson.M{
+			"$lookup": bson.M{
+				"from":         "sections",
+				"localField":   "_id",
+				"foreignField": "course_id",
+				"as":           "sections",
+			},
+		},
+		bson.M{
+			"$unwind": "$sections",
+		},
+		bson.M{
+			"$project": bson.M{
+				"_id": 0, // exclude original document
+				"count": bson.M{
+					"$sum": bson.A{1, "$sections"},
+				},
+			},
+		},
+		bson.M{
+			"$group": bson.M{
+				"_id":   nil,
+				"total": bson.M{"$sum": "$count"},
+			},
+		},
+	}
+	var count int64 = -1
+	cursor, err := collection.Aggregate(ctx, pip)
+	if err != nil {
+		log.Printf("Error While Deleting Course: %v\n", err)
+		return errors.New(shared.UNABLE_DELETE_COURSE)
+	}
+	cursorError := cursor.Decode(&count)
+	if cursorError != nil {
+		log.Printf("Error While Parsing Course Count: %v\n", cursorError)
+		return errors.New(shared.UNABLE_DELETE_COURSE)
+	}
+	if count > 0 {
+		return errors.New(shared.UNABLE_DELETE_COURSE)
+	}
+	_, err = collection.DeleteOne(ctx, bson.D{{"_id", courseId}})
+	if err != nil {
+		log.Printf("Error While Deleting Course: %v\n", err)
+		return errors.New(shared.UNABLE_DELETE_COURSE)
+	}
+	return nil
+}

@@ -5,6 +5,13 @@ definitions:
       error:
         type: string
     type: object
+  interfaces.APiSuccess:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
   interfaces.ModuleFilter:
     properties:
       semester:
@@ -30,15 +37,12 @@ definitions:
         type: string
       name:
         type: string
-      plan:
-        items:
-          type: string
-        minItems: 1
-        type: array
       updated_at:
         type: string
     required:
-    - plan
+    - description
+    - module_id
+    - name
     type: object
   models.ExtendCourse:
     properties:
@@ -52,11 +56,6 @@ definitions:
         type: string
       name:
         type: string
-      plan:
-        items:
-          type: string
-        minItems: 1
-        type: array
       sections:
         items:
           $ref: '#/definitions/models.Section'
@@ -64,7 +63,9 @@ definitions:
       updated_at:
         type: string
     required:
-    - plan
+    - description
+    - module_id
+    - name
     type: object
   models.ExtendedModule:
     properties:
@@ -88,6 +89,11 @@ definitions:
         type: boolean
       name:
         type: string
+      plan:
+        items:
+          type: string
+        minItems: 1
+        type: array
       semester:
         type: integer
       speciality:
@@ -99,6 +105,54 @@ definitions:
       year:
         type: integer
     required:
+    - coefficient
+    - name
+    - plan
+    - semester
+    - teacher_id
+    - year
+    type: object
+  models.ExtendedSection:
+    properties:
+      contents:
+        items:
+          $ref: '#/definitions/models.Lecture'
+        type: array
+      course_id:
+        type: string
+      created_at:
+        type: string
+      files:
+        items:
+          $ref: '#/definitions/models.Files'
+        type: array
+      id:
+        type: string
+      lectures:
+        items:
+          $ref: '#/definitions/models.Lecture'
+        type: array
+      name:
+        type: string
+      note:
+        items:
+          $ref: '#/definitions/models.StudentNote'
+        type: array
+      order:
+        minimum: 1
+        type: integer
+      teacher_id:
+        type: integer
+      updated_at:
+        type: string
+      videos:
+        items:
+          $ref: '#/definitions/models.Video'
+        type: array
+    required:
+    - course_id
+    - name
+    - order
     - teacher_id
     type: object
   models.Files:
@@ -144,6 +198,7 @@ definitions:
         type: string
     required:
     - content
+    - is_public
     - section_id
     - teacher_id
     type: object
@@ -165,6 +220,11 @@ definitions:
         type: boolean
       name:
         type: string
+      plan:
+        items:
+          type: string
+        minItems: 1
+        type: array
       semester:
         type: integer
       speciality:
@@ -176,7 +236,12 @@ definitions:
       year:
         type: integer
     required:
+    - coefficient
+    - name
+    - plan
+    - semester
     - teacher_id
+    - year
     type: object
   models.Section:
     properties:
@@ -210,7 +275,33 @@ definitions:
     required:
     - course_id
     - name
+    - order
     - teacher_id
+    type: object
+  models.SectionDetailsResponse:
+    properties:
+      section:
+        $ref: '#/definitions/models.ExtendedSection'
+    type: object
+  models.SectionResponse:
+    properties:
+      sections:
+        $ref: '#/definitions/models.Section'
+    type: object
+  models.StudentNote:
+    properties:
+      content:
+        type: string
+      id:
+        type: string
+      section_id:
+        type: string
+      student_id:
+        type: integer
+    required:
+    - content
+    - section_id
+    - student_id
     type: object
   models.Video:
     properties:
@@ -286,7 +377,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Course'
+            $ref: '#/definitions/interfaces.APiSuccess'
         "400":
           description: Bad Request
           schema:
@@ -315,7 +406,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Course'
+            $ref: '#/definitions/interfaces.APiSuccess'
         "400":
           description: Bad Request
           schema:
@@ -364,7 +455,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Course'
+            $ref: '#/definitions/interfaces.APiSuccess'
         "400":
           description: Bad Request
           schema:
@@ -372,6 +463,71 @@ paths:
       summary: Update Course
       tags:
       - Courses
+  /modules:
+    post:
+      consumes:
+      - application/json
+      description: Protected Route used to create a module
+      parameters:
+      - description: Module Object
+        in: body
+        name: module
+        required: true
+        schema:
+          $ref: '#/definitions/models.Module'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/interfaces.APiSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+      summary: Create Module
+      tags:
+      - Modules
+  /modules/:moduleId:
+    put:
+      consumes:
+      - application/json
+      description: Protected Route used to update a module
+      parameters:
+      - description: Module Object
+        in: body
+        name: module
+        required: true
+        schema:
+          $ref: '#/definitions/models.Module'
+      - description: Module Id
+        in: path
+        name: moduleId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/interfaces.APiSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+      summary: Update Module
+      tags:
+      - Modules
   /modules/{id}:
     get:
       consumes:
@@ -401,54 +557,18 @@ paths:
       summary: Get Module By ID
       tags:
       - Modules
-  /modules/create:
-    post:
-      consumes:
-      - application/json
-      description: Protected Route used to create a module
-      parameters:
-      - description: Module Object
-        in: body
-        name: module
-        required: true
-        schema:
-          $ref: '#/definitions/models.Module'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Module'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/interfaces.APiError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/interfaces.APiError'
-      summary: Create Module
-      tags:
-      - Modules
   /modules/delete/{id}:
     delete:
       consumes:
       - application/json
       description: Protected Route used to delete a module
-      parameters:
-      - description: Module ID
-        in: path
-        name: id
-        required: true
-        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Module'
+            $ref: '#/definitions/interfaces.APiSuccess'
         "400":
           description: Bad Request
           schema:
@@ -478,7 +598,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Module'
+            $ref: '#/definitions/interfaces.APiSuccess'
         "400":
           description: Bad Request
           schema:
@@ -508,7 +628,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Module'
+            $ref: '#/definitions/interfaces.APiSuccess'
         "400":
           description: Bad Request
           schema:
@@ -518,36 +638,6 @@ paths:
           schema:
             $ref: '#/definitions/interfaces.APiError'
       summary: Get Teacher Modules
-      tags:
-      - Modules
-  /modules/update:
-    put:
-      consumes:
-      - application/json
-      description: Protected Route used to update a module
-      parameters:
-      - description: Module Object
-        in: body
-        name: module
-        required: true
-        schema:
-          $ref: '#/definitions/models.Module'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Module'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/interfaces.APiError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/interfaces.APiError'
-      summary: Update Module
       tags:
       - Modules
   /modules/visibility/{id}:
@@ -572,7 +662,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Module'
+            $ref: '#/definitions/interfaces.APiSuccess'
         "400":
           description: Bad Request
           schema:
@@ -584,4 +674,68 @@ paths:
       summary: Edit Module Visibility
       tags:
       - Modules
+  /section/create:
+    post:
+      consumes:
+      - application/json
+      description: Protected Route Get Sections
+      parameters:
+      - description: Course Id
+        in: path
+        name: courseId
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.SectionResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+      summary: Create Module
+      tags:
+      - Section
+  /section/details/{sectionId}:
+    get:
+      consumes:
+      - application/json
+      description: Protected Route Get Section Details
+      parameters:
+      - description: Section Id
+        in: path
+        name: sectionId
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SectionDetailsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APiError'
+      summary: Get Section Details
+      tags:
+      - Section
 swagger: "2.0"

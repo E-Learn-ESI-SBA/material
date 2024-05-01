@@ -23,7 +23,7 @@ func TestCreateModule(t *testing.T) {
 		Email:    "ameri.mohamedayoub@gmail.com",
 		Username: "ayoub",
 		Role:     "admin",
-		ID:       12,
+		ID:       "12",
 	}
 	const secret = "A1B2C3D4E5F6G7H8I9J0K"
 	authToken, _ := utils.GenerateToken(user, secret)
@@ -134,8 +134,8 @@ func TestUpdateModule(t *testing.T) {
 	user := utils.LightUser{
 		Email:    "ameri.mohamedayoub@gmail.com",
 		Username: "ayoub",
-		Role:     "admin",
-		ID:       12,
+		Role:     "teacher",
+		ID:       "12",
 	}
 	const secret = "A1B2C3D4E5F6G7H8I9J0K"
 	authToken, _ := utils.GenerateToken(user, secret)
@@ -239,4 +239,138 @@ func TestUpdateModule(t *testing.T) {
 
 	})
 
+}
+func TestDeleteModule(t *testing.T) {
+	// Write Test for the delete module
+	user := utils.LightUser{
+		Email:    "ameri.mohamedayoub@gmail.com",
+		Username: "ayoub",
+		Role:     "admin",
+		ID:       "12",
+	}
+	user2 := utils.LightUser{
+		Email:    "ameri.mohamedayoub@gmail.com",
+		Username: "ayoub",
+		Role:     "teacher",
+		ID:       "13",
+	}
+	const id = "663184f340bb0ad546ce0b30"
+	const secret = "A1B2C3D4E5F6G7H8I9J0K"
+	authToken, _ := utils.GenerateToken(user, secret)
+	teacherAuthToken, _ := utils.GenerateToken(user2, secret)
+	t.Run("Delete :: Success  ", func(t *testing.T) {
+		req, errR := http.NewRequest("DELETE", url+"/modules/admin"+id, nil)
+		if errR != nil {
+			t.Errorf("Error while creating request: %v", errR)
+		}
+		req.Header.Set("Authorization", "Bearer "+authToken)
+		client := &http.Client{}
+		res, errS := client.Do(req)
+		if errS != nil {
+			t.Errorf("Error while getting the response: %v", errS)
+		}
+		assert.Equal(t, 200, res.StatusCode, "Module Deleted")
+	})
+	t.Run("Delete :: Module Note Found ", func(t *testing.T) {
+		// ID does not exist , or the user id not the same with teacher_id
+		newId := primitive.NewObjectID()
+		newHexId := newId.Hex()
+		req, errR := http.NewRequest("DELETE", url+"/modules/"+newHexId, nil)
+		if errR != nil {
+			t.Errorf("Error while creating request: %v", errR)
+		}
+		req.Header.Set("Authorization", "Bearer "+authToken)
+		client := &http.Client{}
+		res, errS := client.Do(req)
+		if errS != nil {
+			t.Errorf("Error while getting the response: %v", errS)
+		}
+		assert.Equal(t, 404, res.StatusCode, "Unable to delete the module")
+	})
+	t.Run("Invalid Id", func(t *testing.T) {
+		invalidId := "122"
+		req, errR := http.NewRequest("DELETE", url+"/modules/"+invalidId, nil)
+		if errR != nil {
+			t.Errorf("Error while creating request: %v", errR)
+		}
+		req.Header.Set("Authorization", "Bearer "+authToken)
+		client := &http.Client{}
+		res, errS := client.Do(req)
+		if errS != nil {
+			t.Errorf("Error while getting the response: %v", errS)
+		}
+		assert.Equal(t, 400, res.StatusCode, "Unable to delete the module")
+	})
+
+	t.Run("Delete :: UNAUTHORIZED", func(t *testing.T) {
+		req, errR := http.NewRequest("DELETE", url+"/modules/"+id, nil)
+		if errR != nil {
+			t.Errorf("Error while creating request: %v", errR)
+		}
+		req.Header.Set("Authorization", "Bearer "+teacherAuthToken)
+		client := &http.Client{}
+		res, errS := client.Do(req)
+		if errS != nil {
+			t.Errorf("Error while getting the response: %v", errS)
+		}
+		assert.Equal(t, 401, res.StatusCode, "Unable to delete the module")
+	})
+
+}
+
+func TestDeleteModuleByAdmin(t *testing.T) {
+	// Write Test for the delete module
+	user := utils.LightUser{
+		Email:    "ameri.mohamedayoub@gmail.com",
+		Username: "ayoub",
+		Role:     "admin",
+		ID:       "12",
+	}
+	const id = "663184f340bb0ad546ce0b30"
+	const secret = "A1B2C3D4E5F6G7H8I9J0K"
+	authToken, _ := utils.GenerateToken(user, secret)
+
+	t.Run("Delete :: Success  ", func(t *testing.T) {
+		req, errR := http.NewRequest("DELETE", url+"/modules/"+id, nil)
+		if errR != nil {
+			t.Errorf("Error while creating request: %v", errR)
+		}
+		req.Header.Set("Authorization", "Bearer "+authToken)
+		client := &http.Client{}
+		res, errS := client.Do(req)
+		if errS != nil {
+			t.Errorf("Error while getting the response: %v", errS)
+		}
+		assert.Equal(t, 200, res.StatusCode, "Module Deleted")
+	})
+	t.Run("Delete :: Module Note Found ", func(t *testing.T) {
+		// ID does not exist , or the user id not the same with teacher_id
+		newId := primitive.NewObjectID()
+		newHexId := newId.Hex()
+		req, errR := http.NewRequest("DELETE", url+"/modules/"+newHexId, nil)
+		if errR != nil {
+			t.Errorf("Error while creating request: %v", errR)
+		}
+		req.Header.Set("Authorization", "Bearer "+authToken)
+		client := &http.Client{}
+		res, errS := client.Do(req)
+		if errS != nil {
+			t.Errorf("Error while getting the response: %v", errS)
+		}
+		assert.Equal(t, 404, res.StatusCode, "Unable to delete the module")
+	})
+	t.Run("Invalid Id", func(t *testing.T) {
+		id := "122"
+		req, errR := http.NewRequest("DELETE", url+"/modules/"+id, nil)
+		if errR != nil {
+			t.Errorf("Error while creating request: %v", errR)
+		}
+		req.Header.Set("Authorization", "Bearer "+authToken)
+		client := &http.Client{}
+		res, errS := client.Do(req)
+		if errS != nil {
+			t.Errorf("Error while getting the response: %v", errS)
+		}
+		assert.Equal(t, 400, res.StatusCode, "Unable to delete the module")
+	})
 }
