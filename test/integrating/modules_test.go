@@ -141,7 +141,7 @@ func TestUpdateModule(t *testing.T) {
 	authToken, _ := utils.GenerateToken(user, secret)
 
 	module := fixtures.GetModules()[1]
-	const id = "663183f584a7d58b141442ac"
+	const id = "663184f340bb0ad546ce0b30"
 	module.ID, _ = primitive.ObjectIDFromHex(id)
 
 	module.Name = "Updated Module " + time.Now().GoString()
@@ -152,7 +152,7 @@ func TestUpdateModule(t *testing.T) {
 			t.Errorf("unexpected error with %v", err.Error())
 		}
 
-		req, errR := http.NewRequest("PUT", url+"/modules", bytes.NewReader(jsonModule))
+		req, errR := http.NewRequest("PUT", url+"/modules/"+id, bytes.NewReader(jsonModule))
 		if errR != nil {
 			t.Errorf("Error while creating request: %v", errR)
 		}
@@ -187,7 +187,7 @@ func TestUpdateModule(t *testing.T) {
 			t.Errorf("unexpected error with %v", err.Error())
 		}
 
-		req, errR := http.NewRequest("PUT", url+"/modules", bytes.NewReader(jsonModule))
+		req, errR := http.NewRequest("PUT", url+"/modules/"+id, bytes.NewReader(jsonModule))
 		if errR != nil {
 			t.Errorf("Error while creating request: %v", errR)
 		}
@@ -210,14 +210,14 @@ func TestUpdateModule(t *testing.T) {
 	})
 	t.Run("Error , Module Not Found Code 404", func(t *testing.T) {
 		unExistObjectID := primitive.NewObjectID()
+		unExistHexId := unExistObjectID.Hex()
 		module.ID = unExistObjectID
 		module.Name = "The New update that does not exist"
 		jsonModule, err := json.Marshal(module)
 		if err != nil {
 			t.Errorf("unexpected error with %v", err.Error())
 		}
-
-		req, errR := http.NewRequest("PUT", url+"/modules", bytes.NewReader(jsonModule))
+		req, errR := http.NewRequest("PUT", url+"/modules/"+unExistHexId, bytes.NewReader(jsonModule))
 		if errR != nil {
 			t.Errorf("Error while creating request: %v", errR)
 		}

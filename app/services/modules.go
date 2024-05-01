@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
@@ -87,6 +88,7 @@ func UpdateModule(ctx context.Context, collection *mongo.Collection, module mode
 }
 
 func CreateModule(ctx context.Context, collection *mongo.Collection, module models.Module) error {
+	module.ID = primitive.NewObjectID()
 	_, err := collection.InsertOne(ctx, module)
 	if err != nil {
 		log.Printf("error while trying to create the module")

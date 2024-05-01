@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
 	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
@@ -161,9 +162,11 @@ func UpdateModule(collection *mongo.Collection) gin.HandlerFunc {
 			c.JSON(401, gin.H{"error": errors.New("user not found").Error()})
 			return
 		}
+		moduleId, _ := c.Params.Get("moduleId")
 		user := value.(*utils.UserDetails)
 		module.TeacherId = user.ID
 		err := c.BindJSON(&module)
+		module.ID, _ = primitive.ObjectIDFromHex(moduleId)
 		if err != nil {
 			c.JSON(401, gin.H{"error": err.Error()})
 			return
