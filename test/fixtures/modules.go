@@ -38,7 +38,7 @@ func GetModules() []models.Module {
 		TeacherId:   2,
 		Instructors: &instructors,
 		Plan:        []string{"Plan 1", "Plan 2"},
-		Image:       nil,
+		Image:       &image,
 	})
 	modules = append(modules, models.Module{
 		ID:          primitive.NewObjectID(),

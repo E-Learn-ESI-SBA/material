@@ -112,7 +112,7 @@ func GetTeacherFilteredModules(collection *mongo.Collection) gin.HandlerFunc {
 // @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
 // @Failure 500 {object} interfaces.APiError
-// @Router /modules/create [POST]
+// @Router /modules [POST]
 func CreateModule(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		print("Create Module Handler ...")
@@ -137,7 +137,7 @@ func CreateModule(collection *mongo.Collection) gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(200, gin.H{"message": "Module Created Successfully"})
+		c.JSON(201, gin.H{"message": "Module Created Successfully"})
 	}
 
 }
@@ -152,7 +152,7 @@ func CreateModule(collection *mongo.Collection) gin.HandlerFunc {
 // @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
 // @Failure 500 {object} interfaces.APiError
-// @Router /modules/update [PUT]
+// @Router /modules [PUT]
 func UpdateModule(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var module models.Module
@@ -165,12 +165,12 @@ func UpdateModule(collection *mongo.Collection) gin.HandlerFunc {
 		module.TeacherId = user.ID
 		err := c.BindJSON(&module)
 		if err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
+			c.JSON(401, gin.H{"error": err.Error()})
 			return
 		}
 		err = services.UpdateModule(c.Request.Context(), collection, module)
 		if err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
+			c.JSON(404, gin.H{"error": err.Error()})
 			return
 		}
 		c.JSON(200, gin.H{"message": "Module Updated Successfully"})

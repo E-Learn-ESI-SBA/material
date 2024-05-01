@@ -67,17 +67,26 @@ func DeleteModule(ctx context.Context, collection *mongo.Collection, moduleId st
 
 func UpdateModule(ctx context.Context, collection *mongo.Collection, module models.Module) error {
 	filter := bson.D{{"_id", module.ID}}
-	// do not update the courses
 	update := bson.D{{"$set", module}}
-	_, err := collection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		log.Printf("Error: %v\n", err)
-		return errors.New("error while trying to update the module")
+	newModule, err := collection.UpdateOne(ctx, filter, update)
+	// var module models.Module
+	// err := obj.Decode(&module)
+	/*
+		if err != nil {
+			return err
+		}
+	*/
+
+	//err = obj.Err()
+
+	if err != nil || newModule.ModifiedCount == 0 {
+		log.Printf("Error in Mongo Module Update  : %v\n", err)
+		return errors.New("unable to update the module")
 	}
 	return nil
 }
 
-func CreateModule(ctx context.Context,collection *mongo.Collection, module models.Module) error {
+func CreateModule(ctx context.Context, collection *mongo.Collection, module models.Module) error {
 	_, err := collection.InsertOne(ctx, module)
 	if err != nil {
 		log.Printf("error while trying to create the module")
