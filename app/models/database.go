@@ -75,27 +75,34 @@ func QuestionCollection(client *mongo.Client, CollectionName string) *mongo.Coll
 	return collection
 }
 
+func GradesCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
+	collection := client.Database("materials").Collection(CollectionName)
+	return collection
+}
+
 type Application struct {
-	ContentCollection  *mongo.Collection
-	VideoCollection    *mongo.Collection
-	LectureCollection  *mongo.Collection
-	SectionCollection  *mongo.Collection
-	CourseCollection   *mongo.Collection
-	ModuleCollection   *mongo.Collection
-	CommentsCollection *mongo.Collection
-	QuizesCollection   *mongo.Collection
+	ContentCollection  		*mongo.Collection
+	VideoCollection    		*mongo.Collection
+	LectureCollection  		*mongo.Collection
+	SectionCollection  		*mongo.Collection
+	CourseCollection   		*mongo.Collection
+	ModuleCollection   		*mongo.Collection
+	CommentsCollection 		*mongo.Collection
+	QuizesCollection   		*mongo.Collection
+	SubmissionsCollection   *mongo.Collection
 }
 
 func NewApp(client *mongo.Client) *Application {
 	return &Application{
-		VideoCollection:    VideoCollection(client, "videos"),
-		LectureCollection:  LectureCollection(client, "lectures"),
-		ContentCollection:  ContentCollection(client, "contents"),
-		SectionCollection:  SectionCollection(client, "sections"),
-		CourseCollection:   CourseCollection(client, "courses"),
-		ModuleCollection:   ModuleCollection(client, "modules"),
-		CommentsCollection: CommentCollection(client, "comments"),
-		QuizesCollection:   QuizesCollection(client, "quizes"),
+		VideoCollection:    	VideoCollection(client, "videos"),
+		LectureCollection:  	LectureCollection(client, "lectures"),
+		ContentCollection:  	ContentCollection(client, "contents"),
+		SectionCollection:  	SectionCollection(client, "sections"),
+		CourseCollection:   	CourseCollection(client, "courses"),
+		ModuleCollection:   	ModuleCollection(client, "modules"),
+		CommentsCollection: 	CommentCollection(client, "comments"),
+		QuizesCollection:   	QuizesCollection(client, "quizes"),
+		SubmissionsCollection:  GradesCollection(client, "submissions"),
 	}
 
 }

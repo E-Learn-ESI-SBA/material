@@ -1,8 +1,9 @@
 package models
 
 import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"madaurus/dev/material/app/utils"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Comments struct {

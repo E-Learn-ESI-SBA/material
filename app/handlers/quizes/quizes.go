@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -170,5 +171,45 @@ func GetQuizesByModuleId(collection *mongo.Collection) gin.HandlerFunc {
 			return
 		}
 		c.JSON(200, quizes)
+	}
+}
+
+
+// @Summary Submit Quiz Answers
+// @Description Protected Route used to submit quiz answers by a student
+// @Produce json
+// @Tags Quizes
+// @Accept json
+// @Param quiz_id path string true "Quiz ID"
+// @Param answer body models.QuizAnswer true "Quiz Answer Object"
+// @Success 200 {object} interfaces.APiSuccess
+// @Failure 400 {object} interfaces.APiError
+// @Router /quizes/submit/{quiz_id} [POST]
+func SubmitQuizAnswers(collection *mongo.Collection, SubmissionsCollection *mongo.Collection) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user := c.MustGet("user").(*utils.UserDetails)
+		var submission models.Submission
+		err := c.BindJSON(&submission)
+		if err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+		quizID, errP := c.Params.Get("id")
+		if !errP {
+			c.JSON(400, gin.H{"error": errors.New("quiz ID is Required")})
+			return
+		}
+		submission.QuizId, err = primitive.ObjectIDFromHex(quizID)
+		if err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+		submission.StudentId = user.ID
+		err = services.SubmitQuizAnswers(c.Request.Context(), collection, SubmissionsCollection, submission)
+		if err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(200, gin.H{"message": "Quiz Answer Submitted Successfully"})
 	}
 }

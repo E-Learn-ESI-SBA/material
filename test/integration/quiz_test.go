@@ -1,4 +1,4 @@
-package services_test
+package integration
 
 import (
 	"bytes"
@@ -46,6 +46,19 @@ var teacher2 utils.LightUser = utils.LightUser{
 	ID:       2,
 }
 
+var student1 utils.LightUser = utils.LightUser{
+	Username: "godsword",
+	Role:     "Student",
+	Email:    "godsword@gmail.com",
+	ID:       3,
+}
+
+var student2 utils.LightUser = utils.LightUser{
+	Username: "ayoub",
+	Role:     "Student",
+	Email:    "ayoub@gmail.com",
+	ID:       4,
+}
 var secretKey string = "A1B2C3D4E5F6G7H8I9J0K"
 	
 var err error
@@ -53,6 +66,8 @@ var err error
 var adminToken string
 var teacher1Token string
 var teacher2Token string
+var student1Token string
+var student2Token string
 
 
 
@@ -111,27 +126,19 @@ func TestCreateQuiz(t *testing.T) {
 		ModuleId: globalModule.ID,
 		Title: "quiz_goes_brr",
     	Instructions: "some instructions...",
-    	MinScore: 50,
     	QuestionCount: 20,
+		MaxScore: 100,
     	StartDate: time.Now(),
-    	EndDate: time.Now(),
+    	EndDate: time.Now().Add(time.Hour * 1), // after one hour
     	Duration: 100,
 		Questions: []models.Question{
 			{
 				ID: primitive.NewObjectID(),
 				Body: "what is the capital of france?",
 				Description: "extra info (optional)",
-				Score: 10,
-				Answers: []models.Answer{
-					{
-						Body:      "Paris",
-						IsCorrect: true,
-					},
-					{
-						Body:      "London",
-						IsCorrect: false,
-					},
-				},
+				Score: 100,
+				Options: []string{"paris", "london", "berlin", "madrid"},
+				CorrectIdxs: []int{0},
 			},
 		},
 		Grades: []models.Grade{
@@ -250,6 +257,75 @@ func TestUpdateQuiz(t *testing.T) {
 	mockResponse = `{"error":"Unauthorized"}`
 	assert.Equal(t, mockResponse, string(responseData))
 
+}
+
+func TestSubmitQuizAnswers(t *testing.T) {
+	// create two students
+	student1Token, err = utils.GenerateToken(student1, secretKey)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		panic(err)
+	}
+	student2Token, err = utils.GenerateToken(student2, secretKey)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		panic(err)
+	}
+
+	// student1 submits the quiz with correct answers
+	submission := models.Submission{
+		ID: primitive.NewObjectID(),
+		StudentId: student1.ID,
+		QuizId: globalQuiz.ID,
+		Answers: []models.Answer{
+			{
+				QuestionId: globalQuiz.Questions[0].ID,
+				Choices: []int{0},
+			},
+		},
+	}
+
+	jsonSubmission, _ := json.Marshal(submission)
+	url := "http://localhost:8080/quizes/" + globalQuiz.ID.Hex() + "/submit"
+	req, _ := http.NewRequest("POST", url, bytes.NewReader(jsonSubmission))
+	req.Header.Set("Authorization", "Bearer " + student1Token)
+	// this shoud succeed
+	res, _ := http.DefaultClient.Do(req)
+	responseData, _ := io.ReadAll(res.Body)
+	mockResponse := `{"message":"Quiz Answer Submitted Successfully"}`
+	assert.Equal(t, mockResponse, string(responseData))
+
+
+	// student2 submits the quiz with wrong answers
+	submission = models.Submission{
+		ID: primitive.NewObjectID(),
+		StudentId: student2.ID,
+		QuizId: globalQuiz.ID,
+		Answers: []models.Answer{
+			{
+				QuestionId: globalQuiz.Questions[0].ID,
+				Choices: []int{0, 1},
+			},
+		},
+	}
+
+	jsonSubmission, _ = json.Marshal(submission)
+	req, _ = http.NewRequest("POST", url, bytes.NewReader(jsonSubmission))
+	req.Header.Set("Authorization", "Bearer " + student2Token)
+	// this shoud succeed
+	res, _ = http.DefaultClient.Do(req)
+	responseData, _ = io.ReadAll(res.Body)
+	mockResponse = `{"message":"Quiz Answer Submitted Successfully"}`
+	assert.Equal(t, mockResponse, string(responseData))
+
+	// submit again using student1
+	// this should return an error
+	req, _ = http.NewRequest("POST", url, bytes.NewReader(jsonSubmission))
+	req.Header.Set("Authorization", "Bearer " + student1Token)
+	res, _ = http.DefaultClient.Do(req)
+	responseData, _ = io.ReadAll(res.Body)
+	mockResponse = `{"error":"student already submitted the quiz answers"}`
+	assert.Equal(t, mockResponse, string(responseData))
 }
 
 func TestDeleteQuiz(t *testing.T) {
