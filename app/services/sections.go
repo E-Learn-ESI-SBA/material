@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
@@ -37,20 +38,16 @@ func GetSectionsByCourse(ctx context.Context, collection *mongo.Collection, modu
 	return sections, nil
 }
 
-type ExtendedSection struct {
-	models.Section
-
-	Files    []models.Files        `json:"files"`
-	Videos   []models.Video        `json:"videos"`
-	Lectures []models.Lecture      `json:"contents"`
-	Notes    *[]models.StudentNote `json:"note"`
-}
-
-func GetSectionDetailsById(ctx context.Context, collection *mongo.Collection, sectionId string, pips ...bson.M) (ExtendedSection, error) {
-	var sections ExtendedSection
+func GetSectionDetailsById(ctx context.Context, collection *mongo.Collection, sectionId string, pips ...bson.M) (models.ExtendedSection, error) {
+	var sections models.ExtendedSection
+	id, errId := primitive.ObjectIDFromHex(sectionId)
+	if errId != nil {
+		log.Printf("Error While Parsing Section ID: %v\n", errId)
+		return sections, errId
+	}
 	pipeline := bson.A{
 		bson.M{
-			"$match": bson.M{"_id": sectionId},
+			"$match": bson.M{"_id": id},
 		},
 		bson.M{
 			"$lookup": bson.M{
@@ -77,7 +74,7 @@ func GetSectionDetailsById(ctx context.Context, collection *mongo.Collection, se
 	for _, pip := range pips {
 		pipeline = append(pipeline, pip)
 	}
-	cursor, err := collection.Find(ctx, pipeline)
+	cursor, err := collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		log.Printf("Error While Getting Lectures By Module: %v\n", err)
 		return sections, err
@@ -91,7 +88,7 @@ func GetSectionDetailsById(ctx context.Context, collection *mongo.Collection, se
 	return sections, nil
 }
 
-func GetSectionFromStudent(ctx context.Context, SectionCollection *mongo.Collection, sectionId string, studentId int) (ExtendedSection, error) {
+func GetSectionFromStudent(ctx context.Context, SectionCollection *mongo.Collection, sectionId string, studentId int) (models.ExtendedSection, error) {
 	pip := bson.M{
 		"$lookup": bson.M{
 			"from":         "student_notes",
@@ -103,7 +100,7 @@ func GetSectionFromStudent(ctx context.Context, SectionCollection *mongo.Collect
 	extendedSection, err := GetSectionDetailsById(ctx, SectionCollection, sectionId, pip)
 	if err != nil {
 		log.Printf("Error While Getting Section By Student: %v\n", err)
-		return ExtendedSection{}, err
+		return models.ExtendedSection{}, err
 	}
 	filteredNotes := make([]models.StudentNote, 0)
 	notes := extendedSection.Notes
@@ -117,7 +114,12 @@ func GetSectionFromStudent(ctx context.Context, SectionCollection *mongo.Collect
 }
 
 func EditSection(ctx context.Context, collection *mongo.Collection, section models.Section, sectionId string) error {
-	filter := bson.D{{"_id", sectionId}}
+	id, errId := primitive.ObjectIDFromHex(sectionId)
+	if errId != nil {
+		log.Printf("Error While Parsing Section ID: %v\n", errId)
+		return errId
+	}
+	filter := bson.D{{"_id", id}}
 	update := bson.D{{"$set", section}}
 	_, err := collection.UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -137,7 +139,12 @@ func CreateSection(ctx context.Context, collection *mongo.Collection, section mo
 }
 
 func DeleteSection(ctx context.Context, collection *mongo.Collection, sectionId string) error {
-	filter := bson.D{{"_id", sectionId}}
+	id, errId := primitive.ObjectIDFromHex(sectionId)
+	if errId != nil {
+		log.Printf("Error While Parsing Section ID: %v\n", errId)
+		return errId
+	}
+	filter := bson.D{{"_id", id}}
 	_, err := collection.DeleteOne(ctx, filter)
 	if err != nil {
 		log.Printf("Error While Deleting Section: %v\n", err)
