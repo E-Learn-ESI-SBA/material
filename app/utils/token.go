@@ -54,7 +54,7 @@ func ValidateToken(signedtoken string, secretKey string) (*UserDetails, error) {
 	// Case: Token expired
 	expTime := time.Unix(int64(claims["exp"].(float64)), 0)
 	if expTime.Unix() < time.Now().Local().Unix() {
-		return nil, errors.New("expired Token")
+		return nil, errors.New(shared.EXPIRED_TOKEN)
 	}
 	user.Email = claims["email"].(string)
 	user.Username = claims["username"].(string)
@@ -88,14 +88,3 @@ expTime, _ := claims.GetExpirationTime()
 		}
 	}
 */
-func TestToken() (error, string) {
-	// Generate new token
-	token, err := GenerateToken(LightUser{
-		ID:       "12",
-		Email:    "ameri.ayoub@gmail.com",
-		Username: "Ayoub",
-		Role:     "admin",
-	}, "A1B2C3D4E5F6G7H8I9J0K")
-
-	return err, token
-}

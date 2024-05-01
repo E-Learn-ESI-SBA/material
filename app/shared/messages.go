@@ -8,7 +8,7 @@ const INVALID_HEADER = "Invalid Header"
 const INVALID_ID = "Invalid Id"
 
 // Auth
-
+const EXPIRED_TOKEN = "Token Expired"
 const USER_NOT_INJECTED = "user not found, unable to handle your action"
 const UNAUTHORIZED = "Unauthorized to perform this action"
 const FORBIDDEN = "not allowed to perform this action"

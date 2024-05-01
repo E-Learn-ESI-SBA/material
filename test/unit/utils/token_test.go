@@ -7,10 +7,16 @@ import (
 )
 
 func TestValidateToken(t *testing.T) {
-	//jwt_secret := os.Getenv("JWT_SECRET")
-	jwt_secret := "A1B2C3D4E5F6G7H8I9J0K"
+	user := utils.LightUser{
+		Email:    "ameri.mohamedayoub@gmail.com",
+		Username: "ayoub",
+		Role:     "admin",
+		ID:       "12",
+		Avatar:   "sqkddkslqdns",
+	}
+	jwt_secret := "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
 	t.Run("Valid Token", func(t *testing.T) {
-		err, validJwt := utils.TestToken()
+		validJwt, err := utils.GenerateToken(user, jwt_secret)
 		if err != nil {
 			t.Errorf("Error: %v", err.Error())
 		}
@@ -29,4 +35,10 @@ func TestValidateToken(t *testing.T) {
 		assert.Nil(t, claim)
 	})
 
+	t.Run("Short Token", func(t *testing.T) {
+		shortJwt := "s1"
+		claim, err := utils.ValidateToken(shortJwt, jwt_secret)
+		assert.NotNil(t, err)
+		assert.Nil(t, claim)
+	})
 }
