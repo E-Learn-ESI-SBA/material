@@ -17,10 +17,11 @@ import (
 // @Tags Section
 // @Param courseId path string true "Course Id"
 // @Success 200 {object} []models.SectionResponse
+// @Security Bearer
 // @Failure 400 {object} interfaces.APiError
 // @Failure 500 {object} interfaces.APiError
 // @Failure 401 {object} interfaces.APiError
-// @Router /section/create [POST]
+// @Router /section/all/{courseId} [POST]
 func GetSections(collection *mongo.Collection) gin.HandlerFunc {
 	return func(g *gin.Context) {
 		courseId, errP := g.Params.Get("courseId")
@@ -42,6 +43,7 @@ func GetSections(collection *mongo.Collection) gin.HandlerFunc {
 // @Description Protected Route Get Section Details
 // @Accept json
 // @Tags Section
+// @Security Bearer
 // @Param sectionId path string true "Section Id"
 // @Success 200 {object} models.SectionDetailsResponse
 // @Failure 400 {object} interfaces.APiError
@@ -69,6 +71,8 @@ func GetSectionDetails(collection *mongo.Collection) gin.HandlerFunc {
 // @Accept json
 // @Tags Section
 // @Param object body models.Section true "Section Object"
+// @Param courseId query string true "Course Id"
+// @Security Bearer
 // @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
 // @Failure 500 {object} interfaces.APiError
@@ -76,20 +80,37 @@ func GetSectionDetails(collection *mongo.Collection) gin.HandlerFunc {
 func CreateSection(collection *mongo.Collection) gin.HandlerFunc {
 	return func(g *gin.Context) {
 		var section models.Section
-		user := g.MustGet("user").(utils.UserDetails)
-
+		value, errU := g.Get("user")
+		courseId := g.Query("courseId")
+		user := value.(*utils.UserDetails)
+		if courseId == "" {
+			g.JSON(http.StatusBadRequest, gin.H{"message": shared.INVALID_ID})
+			return
+		}
+		objectCourseId, errD := primitive.ObjectIDFromHex(courseId)
+		if errD != nil {
+			g.JSON(http.StatusBadRequest, gin.H{"message": shared.INVALID_ID})
+			return
+		}
+		if !errU {
+			g.JSON(http.StatusInternalServerError, gin.H{"message": shared.USER_NOT_INJECTED})
+			return
+		}
 		err := g.BindJSON(&section)
+		// Update Section Document
 		section.TeacherId = user.ID
+		section.CourseID = objectCourseId
+		section.ID = primitive.NewObjectID()
 		if err != nil {
-			g.JSON(400, gin.H{"error": err.Error()})
+			g.JSON(http.StatusBadRequest, gin.H{"message": shared.INVALID_BODY})
 			return
 		}
 		err = services.CreateSection(g.Request.Context(), collection, section)
 		if err != nil {
-			g.JSON(400, gin.H{"error": err.Error()})
+			g.JSON(http.StatusInternalServerError, gin.H{"message": shared.UNABLE_CREATE_SECTION})
 			return
 		}
-		g.JSON(200, gin.H{"message": "Section Created Successfully"})
+		g.JSON(http.StatusCreated, gin.H{"message": shared.CREATE_SECTION})
 	}
 }
 
@@ -100,6 +121,7 @@ func CreateSection(collection *mongo.Collection) gin.HandlerFunc {
 // @Param object body models.Section true "Section Object"
 // @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
+// @Router /section [PUT]
 func EditSection(collection *mongo.Collection) gin.HandlerFunc {
 	return func(g *gin.Context) {
 		var section models.Section
@@ -132,6 +154,8 @@ func EditSection(collection *mongo.Collection) gin.HandlerFunc {
 // @Failure 500 {object} interfaces.APiError
 // @Failure 401 {object} interfaces.APiError
 // @Failure 403 {object} interfaces.APiError
+// @Router /section/:id [DELETE]
+
 func DeleteSection(collection *mongo.Collection) gin.HandlerFunc {
 	return func(g *gin.Context) {
 		sectionId, errP := g.Params.Get("sectionId")
