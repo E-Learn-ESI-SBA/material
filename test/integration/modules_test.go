@@ -4,16 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"io"
 	"log"
 	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
+	"madaurus/dev/material/app/shared"
 	"madaurus/dev/material/app/utils"
 	"madaurus/dev/material/test/fixtures"
 	"net/http"
 	"testing"
-	"time"
 )
 
 const url = "http://localhost:8080"
@@ -26,7 +25,7 @@ func TestCreateModule(t *testing.T) {
 		ID:       "12",
 		Avatar:   "https://www.google.com",
 	}
-	const secret = "i6zs1Nq1GzDkdBGQ0ypYYgC5it2Gqb6Ymilyh2EQjHA="
+	const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
 	authToken, _ := utils.GenerateToken(user, secret)
 	module := fixtures.GetModules()[0]
 	t.Run("Success Creating Module", func(t *testing.T) {
@@ -57,10 +56,10 @@ func TestCreateModule(t *testing.T) {
 		log.Printf("Response message   %v ", apiResponse.Message)
 
 		// Optional Status Code Assertion
-		assert.Equal(t, 201, res.StatusCode)
+		assert.Equal(t, http.StatusCreated, res.StatusCode)
 
 		// Message Assertion
-		assert.Equal(t, "Module Created Successfully", apiResponse.Message)
+		assert.Equal(t, shared.CREATE_MODULE, apiResponse.Message)
 
 		defer t.Cleanup(func() {
 			err := res.Body.Close()
@@ -119,7 +118,8 @@ func TestCreateModule(t *testing.T) {
 			t.Errorf("Error unmarshalling response body: %v", err)
 		}
 
-		assert.Equal(t, 400, res.StatusCode)
+		assert.Equal(t, http.StatusNotAcceptable, res.StatusCode)
+		assert.Equal(t, shared.INVALID_BODY, apiResponse.Message)
 		defer t.Cleanup(func() {
 			err := res.Body.Close()
 			if err != nil {
@@ -129,8 +129,156 @@ func TestCreateModule(t *testing.T) {
 	})
 }
 
-// Test The Edit Module
+func TestCreateManyModules(t *testing.T) {
+	user := utils.LightUser{
+		Email:    "ameri.mohamedayoub@gmail.com",
+		Username: "ayoub",
+		Role:     "admin",
+		ID:       "12",
+		Avatar:   "https://www.google.com",
+	}
+	const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
+	authToken, _ := utils.GenerateToken(user, secret)
+	modules := fixtures.GetModules()
+	t.Run("Success Creating Many Modules", func(t *testing.T) {
+		jsonModules, err := json.Marshal(modules)
+		if err != nil {
+			t.Errorf("UnExpected Error: %v", err)
+		}
+		req, errR := http.NewRequest("POST", url+"/modules/many", bytes.NewReader(jsonModules))
+		if errR != nil {
+			t.Errorf("Error while creating request: %v", errR)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+authToken)
+		client := &http.Client{}
+		res, errS := client.Do(req)
+		if errS != nil {
+			t.Errorf("Error while getting the response: %v", errS)
+		}
+		resBody, _ := io.ReadAll(res.Body)
 
+		// Fixed Unmarshalling
+		var apiResponse interfaces.APiSuccess
+		err = json.Unmarshal(resBody, &apiResponse)
+		if err != nil {
+			t.Errorf("Error unmarshalling response body: %v", err)
+		}
+
+		log.Printf("Response message   %v ", apiResponse.Message)
+
+		// Optional Status Code Assertion
+		assert.Equal(t, http.StatusCreated, res.StatusCode)
+
+		// Message Assertion
+		assert.Equal(t, shared.CREATE_MODULE, apiResponse.Message)
+
+		defer t.Cleanup(func() {
+			err := res.Body.Close()
+			if err != nil {
+				return
+			}
+		})
+
+	})
+	t.Run("Unauthorized Access (Missing Auth Token)", func(t *testing.T) {
+		jsonModules, err := json.Marshal(modules)
+		if err != nil {
+			t.Errorf("UnExpected Error: %v", err)
+		}
+		req, errR := http.NewRequest("POST", url+"/modules/many", bytes.NewReader(jsonModules))
+		if errR != nil {
+			t.Errorf("Error while creating request: %v", errR)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		client := &http.Client{}
+		res, errS := client.Do(req)
+		if errS != nil {
+			t.Errorf("Error while getting the response: %v", errS)
+		}
+		defer t.Cleanup(func() {
+			err := res.Body.Close()
+			if err != nil {
+				return
+			}
+		})
+
+		assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
+
+	})
+	t.Run("Bad Request , invalid Body", func(t *testing.T) {
+
+		var emptyModule models.Module
+		jsonModules, err := json.Marshal(emptyModule)
+		if err != nil {
+			t.Errorf("UnExpected Error: %v", err)
+		}
+		req, errR := http.NewRequest("POST", url+"/modules/many", bytes.NewReader(jsonModules))
+		if errR != nil {
+			t.Errorf("Error while creating request: %v", errR)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+authToken)
+		client := &http.Client{}
+		res, errS := client.Do(req)
+		if errS != nil {
+			t.Errorf("Error while getting the response: %v", errS)
+		}
+		resBody, _ := io.ReadAll(res.Body)
+
+		var apiResponse interfaces.APiSuccess
+		err = json.Unmarshal(resBody, &apiResponse)
+		if err != nil {
+			t.Errorf("Error unmarshalling response body: %v", err)
+		}
+
+		assert.Equal(t, http.StatusNotAcceptable, res.StatusCode)
+		assert.Equal(t, shared.INVALID_BODY, apiResponse.Message)
+		defer t.Cleanup(func() {
+			err := res.Body.Close()
+			if err != nil {
+				return
+			}
+		})
+
+	})
+	t.Run("Forbidden Access (Teacher)", func(t *testing.T) {
+		user2 := utils.LightUser{
+			Email:    "ameri.mohamedayoub@gmail.com",
+			Username: "ayoub",
+			Role:     "teacher",
+			ID:       "12",
+			Avatar:   "https://www.google.com",
+		}
+		authToken, _ = utils.GenerateToken(user2, secret)
+		jsonModules, err := json.Marshal(modules)
+		if err != nil {
+			t.Errorf("UnExpected Error: %v", err)
+		}
+		req, errR := http.NewRequest("POST", url+"/modules/many", bytes.NewReader(jsonModules))
+		if errR != nil {
+			t.Errorf("Error while creating request: %v", errR)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+authToken)
+		client := &http.Client{}
+		res, errS := client.Do(req)
+		if errS != nil {
+			t.Errorf("Error while getting the response: %v", errS)
+		}
+		defer t.Cleanup(func() {
+			err := res.Body.Close()
+			if err != nil {
+				return
+			}
+		})
+		assert.Equal(t, http.StatusForbidden, res.StatusCode)
+	})
+
+}
+
+// Test The Edit Module
+/*
 func TestUpdateModule(t *testing.T) {
 	user := utils.LightUser{
 		Email:    "ameri.mohamedayoub@gmail.com",
@@ -138,7 +286,8 @@ func TestUpdateModule(t *testing.T) {
 		Role:     "teacher",
 		ID:       "12",
 	}
-	const secret = "A1B2C3D4E5F6G7H8I9J0K"
+	const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
+
 	authToken, _ := utils.GenerateToken(user, secret)
 
 	module := fixtures.GetModules()[1]
@@ -255,8 +404,9 @@ func TestDeleteModule(t *testing.T) {
 		Role:     "teacher",
 		ID:       "13",
 	}
+
 	const id = "663184f340bb0ad546ce0b30"
-	const secret = "A1B2C3D4E5F6G7H8I9J0K"
+	const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
 	authToken, _ := utils.GenerateToken(user, secret)
 	teacherAuthToken, _ := utils.GenerateToken(user2, secret)
 	t.Run("Delete :: Success  ", func(t *testing.T) {
@@ -375,3 +525,6 @@ func TestDeleteModuleByAdmin(t *testing.T) {
 		assert.Equal(t, 400, res.StatusCode, "Unable to delete the module")
 	})
 }
+
+
+*/

@@ -122,19 +122,18 @@ func CreateModule(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		print("Create Module Handler ...")
 		var module models.Module
-
 		err := c.ShouldBindJSON(&module)
 		if err != nil {
 			log.Println(err.Error())
-			c.JSON(400, gin.H{"error": errors.New("invalid Module Object").Error()})
+			c.JSON(http.StatusNotAcceptable, gin.H{"message": shared.INVALID_BODY})
 			return
 		}
 		err = services.CreateModule(c.Request.Context(), collection, module)
 		if err != nil {
-			c.JSON(400, gin.H{"error": shared.UNABLE_CREATE_MODULE})
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.UNABLE_CREATE_MODULE})
 			return
 		}
-		c.JSON(201, gin.H{"message": shared.CREATE_MODULE})
+		c.JSON(http.StatusCreated, gin.H{"message": shared.CREATE_MODULE})
 	}
 
 }
@@ -237,5 +236,22 @@ func DeleteModule(collection *mongo.Collection) gin.HandlerFunc {
 			return
 		}
 		c.JSON(200, gin.H{"message": shared.DELETE_MODULE})
+	}
+}
+
+func CreateManyModules(collection *mongo.Collection) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var modules []models.Module
+		err := c.ShouldBindJSON(&modules)
+		if err != nil {
+			c.JSON(http.StatusNotAcceptable, gin.H{"message": shared.INVALID_BODY})
+			return
+		}
+		err = services.CreateManyModules(c.Request.Context(), collection, modules)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			return
+		}
+		c.JSON(http.StatusCreated, gin.H{"message": shared.CREATE_MODULE})
 	}
 }

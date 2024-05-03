@@ -13,6 +13,7 @@ const USER_NOT_INJECTED = "user not found, unable to handle your action"
 const UNAUTHORIZED = "Unauthorized to perform this action"
 const FORBIDDEN = "not allowed to perform this action"
 const INVALID_TOKEN = "Invalid Token"
+const INVALID_CREDENTIALS = "Invalid Credentials"
 
 // MODULES MESSAGE
 

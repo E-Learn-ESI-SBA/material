@@ -22,7 +22,7 @@ func TestCreateChapter(t *testing.T) {
 		ID:       "12",
 		Avatar:   "sqkddkslqdns",
 	}
-	const module_id = "6632042f17c6d49ef81973f9"
+	const module_id = "66356c454bf0cb9c986b9042"
 	const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
 	authToken, _ := utils.GenerateToken(user, secret)
 	course := fixtures.GetCourse()[0]
@@ -93,7 +93,7 @@ func TestCreateChapter(t *testing.T) {
 		if err != nil {
 			t.Errorf("Error unmarshalling response body: %v", err)
 		}
-		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+		assert.Equal(t, http.StatusNotAcceptable, res.StatusCode)
 		assert.Equal(t, shared.INVALID_BODY, apiResponse.Message)
 	})
 	t.Run("Create Course with invalid token", func(t *testing.T) {
@@ -128,7 +128,7 @@ func TestCreateChapter(t *testing.T) {
 			t.Errorf("Error unmarshalling response body: %v", err)
 		}
 		assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
-		assert.Equal(t, shared.INVALID_TOKEN, apiResponse.Message)
+		assert.Equal(t, shared.UNAUTHORIZED, apiResponse.Message)
 	})
 
 }
