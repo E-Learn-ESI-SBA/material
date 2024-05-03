@@ -28,7 +28,7 @@ import (
 // @BasePath /
 func main() {
 	k := shared.GetSecrets()
-	var uri string = k.String("database_uri")
+	uri := k.String("database_uri")
 	client, err := models.DBHandler(uri)
 	if err != nil {
 		log.Fatal("Database not connected")
@@ -50,7 +50,6 @@ func main() {
 
 				}
 			}
-
 			return event
 		},
 		Debug: true,

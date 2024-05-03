@@ -10,11 +10,12 @@ type Module struct {
 	Speciality  *string   `json:"speciality,omitempty"`
 	Semester    int8      `json:"semester" binding:"required" bson:"semester" validate:"required"`
 	Coefficient int8      `json:"coefficient" binding:"required" bson:"coefficient" validate:"required"`
-	TeacherId   string    `json:"teacher_id" bson:"teacher_id" validate:"required" `
+	TeacherId   string    `json:"teacher_id" bson:"teacher_id" validate:"required" binding:"required" `
 	Instructors *[]string `json:"instructors,omitempty" bson:"instructors" `
 	IsPublic    bool      `json:"isPublic" bson:"isPublic"`
 	Plan        []string  `json:"plan" binding:"required,min=1" bson:"plan"`
 	Image       *string   `json:"image,omitempty"`
+	Courses     []Course  `json:"courses" bson:"courses"`
 	*Date
 }
 

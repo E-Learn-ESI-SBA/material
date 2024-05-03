@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"time"
 
@@ -48,16 +49,25 @@ func SectionCollection(client *mongo.Client, CollectionName string) *mongo.Colle
 }
 func LectureCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
 	collection := client.Database("materials").Collection(CollectionName)
+	collection.Indexes().CreateOne(context.Background(), mongo.IndexModel{
+		Keys: bson.D{{"name", 1}},
+	})
 	return collection
 }
 func VideoCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
 	collection := client.Database("materials").Collection(CollectionName)
 	return collection
 }
-func ContentCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
-	collection := client.Database("materials").Collection(CollectionName)
-	return collection
-}
+
+/*
+	func ContentCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
+		collection := client.Database("materials").Collection(CollectionName)
+		collection.Indexes().CreateOne(context.Background(), mongo.IndexModel{
+			Keys: bson.D{{"name", 1}},
+		})
+		return collection
+	}
+*/
 func CommentCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
 	collection := client.Database("materials").Collection(CollectionName)
 	return collection
@@ -75,9 +85,9 @@ type Application struct {
 
 func NewApp(client *mongo.Client) *Application {
 	return &Application{
-		VideoCollection:    VideoCollection(client, "videos"),
-		LectureCollection:  LectureCollection(client, "lectures"),
-		ContentCollection:  ContentCollection(client, "contents"),
+		VideoCollection:   VideoCollection(client, "videos"),
+		LectureCollection: LectureCollection(client, "lectures"),
+		//	ContentCollection:  ContentCollection(client, "contents"),
 		SectionCollection:  SectionCollection(client, "sections"),
 		CourseCollection:   CourseCollection(client, "courses"),
 		ModuleCollection:   ModuleCollection(client, "modules"),
