@@ -99,7 +99,7 @@ func CreateSection(collection *mongo.Collection) gin.HandlerFunc {
 		err := g.BindJSON(&section)
 		// Update Section Document
 		section.TeacherId = user.ID
-		section.CourseID = objectCourseId
+		//		section.CourseID = objectCourseId
 		section.ID = primitive.NewObjectID()
 		if err != nil {
 			g.JSON(http.StatusBadRequest, gin.H{"message": shared.INVALID_BODY})
