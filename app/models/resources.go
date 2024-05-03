@@ -3,13 +3,12 @@ package models
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type Section struct {
-	ID   primitive.ObjectID `json:"id" bson:"_id"`
-	Name string             `json:"name" validate:"required" binding:"required" bson:"name" `
-	//	CourseID  primitive.ObjectID `json:"course_id" bson:"course_id"`
-	TeacherId string     `json:"teacher_id" bson:"teacher_id"`
-	Videos    *[]Video   `json:"videos" bson:"videos"   `
-	Lectures  *[]Lecture `json:"lectures" bson:"lectures"`
-	Files     *[]Files   `json:"files" bson:"files"`
+	ID        primitive.ObjectID `json:"id" bson:"_id"`
+	Name      string             `json:"name" validate:"required" binding:"required" bson:"name" `
+	TeacherId string             `json:"teacher_id" bson:"teacher_id"`
+	Videos    *[]Video           `json:"videos" bson:"videos"`
+	Lectures  *[]Lecture         `json:"lectures" bson:"lectures"`
+	Files     *[]Files           `json:"files" bson:"files"`
 	Date
 }
 

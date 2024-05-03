@@ -17,11 +17,11 @@ func BasicRBAC(role string) gin.HandlerFunc {
 		}
 		user := claim.(utils.UserDetails)
 		if user.Role != role {
-			c.JSON(http.StatusForbidden, gin.H{"error": shared.FORBIDDEN})
+			c.JSON(http.StatusForbidden, gin.H{"message": shared.FORBIDDEN})
 			c.Abort()
 			return
 		}
-		
+
 		c.Next()
 	}
 }

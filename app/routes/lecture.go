@@ -3,7 +3,7 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
-	handlers "madaurus/dev/material/app/handlers/lecture"
+	"madaurus/dev/material/app/handlers"
 	"madaurus/dev/material/app/middlewares"
 )
 

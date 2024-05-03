@@ -99,3 +99,15 @@ const FILE_RETRIEVED = "File Retrieved Successfully"
 // Queries
 
 const QUERY_NOT_FOUND = "Query Not Found"
+
+// Lectures
+
+const LECTURE_NOT_FOUND = "Lecture Not Found"
+const LECTURE_DELETED = "Lecture Deleted Successfully"
+const LECTURE_UPDATED = "Lecture Updated Successfully"
+const LECTURE_CREATED = "Lecture Created Successfully"
+const LECTURE_NOT_CREATED = "Lecture Not Created"
+const LECTURE_NOT_UPDATED = "Lecture Not Updated"
+const LECTURE_NOT_DELETED = "Lecture Not Deleted"
+const LECTURE_NOT_RETRIEVED = "Lecture Not Retrieved"
+const LECTURE_RETRIEVED = "Lecture Retrieved Successfully"
