@@ -115,9 +115,9 @@ func GetSectionFromStudent(ctx context.Context, SectionCollection *mongo.Collect
 	return extendedSection, nil
 }
 
-func EditSection(ctx context.Context, collection *mongo.Collection, section models.Section, sectionId primitive.ObjectID) error {
+func EditSection(ctx context.Context, collection *mongo.Collection, section models.Section, sectionId primitive.ObjectID, teacherId string) error {
 	// update only the name
-	rs := collection.FindOneAndUpdate(ctx, bson.D{{"courses.sections._id", sectionId}}, bson.D{{"$set", bson.D{{"courses.sections.$.name", section.Name}}}})
+	rs := collection.FindOneAndUpdate(ctx, bson.D{{"courses.sections._id", sectionId}, {"teacher_id", teacherId}}, bson.D{{"$set", bson.D{{"courses.sections.$.name", section.Name}}}})
 	err := rs.Err()
 	if err != nil {
 		log.Printf("Error updating section: %v", err)
@@ -136,15 +136,16 @@ func CreateSection(ctx context.Context, collection *mongo.Collection, section mo
 	return nil
 }
 
-func DeleteSection(ctx context.Context, collection *mongo.Collection, sectionId primitive.ObjectID) error {
-	rs := collection.FindOneAndUpdate(ctx, bson.D{{"courses.sections._id", sectionId}, {
+func DeleteSection(ctx context.Context, collection *mongo.Collection, sectionId primitive.ObjectID, teacherId string) error {
+	rs := collection.FindOneAndUpdate(ctx, bson.D{{"teacher_id", teacherId}, {"courses.sections._id", sectionId}, {
 		"courses.sections.files", bson.D{{"$size", 0}},
 	},
 		{"courses.sections.videos", bson.D{{"$size", 0}}},
 		{"courses.sections.lectures", bson.D{{"$size", 0}}},
 	}, bson.D{{"$pull", bson.D{{"courses.sections", bson.D{{"_id", sectionId}}}}}})
-	if rs.Err() != nil {
-		log.Printf("Error While Deleting Section: %v\n", rs.Err())
+	err := rs.Err()
+	if err != nil {
+		log.Printf("Error While Deleting Section: %v\n", err)
 		return errors.New(shared.UNABLE_DELETE_SECTION)
 
 	}

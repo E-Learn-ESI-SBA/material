@@ -25,7 +25,7 @@ import (
 // @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
 // @Failure 500 {object} interfaces.APiError
-// @Router /coursesp [POST]
+// @Router /courses [POST]
 func CreateCourse(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var course models.Course
