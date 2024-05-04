@@ -71,7 +71,7 @@ func main() {
 	routes.ModuleRoute(server, app.ModuleCollection)
 	routes.CourseRoute(server, app.ModuleCollection)
 	routes.SectionRouter(server, app.ModuleCollection)
-	routes.LectureRoute(server, app.LectureCollection)
+	routes.LectureRoute(server, app.ModuleCollection)
 	routes.CommentRoute(server, app.CommentsCollection)
 	routes.TransactionRoute(server, client, app.ModuleCollection)
 	routes.FileRouter(server, app.ModuleCollection)

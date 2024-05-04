@@ -11,6 +11,7 @@ import (
 	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/shared"
+	"time"
 )
 
 // GetModulesByFilter Basic Usage  : GetModulesByFilter(ctx, collection, filterStruct, "public", nil) for public endpoints
@@ -59,6 +60,8 @@ func EditModuleVisibility(ctx context.Context, collection *mongo.Collection, mod
 func UpdateModule(ctx context.Context, collection *mongo.Collection, module models.Module) error {
 	filter := bson.D{{"_id", module.ID}}
 	update := bson.D{{"$set", module}}
+	updatedAt := time.Now()
+	module.UpdatedAt = updatedAt
 	newModule, err := collection.UpdateOne(ctx, filter, update)
 
 	if err != nil || newModule.ModifiedCount == 0 {
@@ -70,6 +73,9 @@ func UpdateModule(ctx context.Context, collection *mongo.Collection, module mode
 
 func CreateModule(ctx context.Context, collection *mongo.Collection, module models.Module) error {
 	module.ID = primitive.NewObjectID()
+	module.Courses = []models.Course{}
+	module.CreatedAt = time.Now()
+	module.UpdatedAt = module.UpdatedAt
 	_, err := collection.InsertOne(ctx, module)
 	if err != nil {
 		log.Printf("error while trying to create the module")
@@ -230,4 +236,19 @@ func DeleteModule(ctx context.Context, collection *mongo.Collection, moduleId pr
 
 	return nil
 
+}
+func CreateManyModules(ctx context.Context, collection *mongo.Collection, modules []models.Module) error {
+	var docs []interface{}
+	for _, module := range modules {
+		module.ID = primitive.NewObjectID()
+		module.CreatedAt = time.Now()
+		module.UpdatedAt = module.CreatedAt
+		module.Courses = []models.Course{}
+		docs = append(docs, module)
+	}
+	_, err := collection.InsertMany(ctx, docs)
+	if err != nil {
+		log.Printf("error while trying to create the module")
+	}
+	return err
 }

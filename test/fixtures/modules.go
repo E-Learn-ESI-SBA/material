@@ -25,7 +25,6 @@ func GetModules() []models.Module {
 		IsPublic:    true,
 		Plan:        []string{"Plan 1", "Plan 2"},
 		Image:       &image,
-		Date:        nil,
 	})
 	modules = append(modules, models.Module{
 		ID:          primitive.NewObjectID(),

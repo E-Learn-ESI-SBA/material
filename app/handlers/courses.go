@@ -32,28 +32,26 @@ func CreateCourse(collection *mongo.Collection) gin.HandlerFunc {
 		err := c.ShouldBind(&course)
 		if err != nil {
 			log.Printf("Error in binding the course: %v", err)
-			c.JSON(http.StatusBadRequest, gin.H{"message": shared.INVALID_BODY})
+			c.JSON(http.StatusNotAcceptable, gin.H{"message": shared.INVALID_BODY})
 			return
 		}
 		moduleId := c.Query("module")
 		if moduleId == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"message": shared.INVALID_BODY})
+			c.JSON(http.StatusNotAcceptable, gin.H{"message": shared.REQUIRED_ID})
 			return
 		}
-		course.ID = primitive.NewObjectID()
-		createdAt := time.Now()
-		course.CreatedAt = &createdAt
+
 		id, errD := primitive.ObjectIDFromHex(moduleId)
 		//	course.ModuleId = id
 		if errD != nil {
 			log.Printf("Error in converting module id: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.SERVER_ERROR})
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.REQUIRED_ID})
 			return
 		}
 		err = services.CreateCourse(c.Request.Context(), collection, course, id)
 		if err != nil {
 			log.Printf("Error in creating course: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.SERVER_ERROR})
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
 		}
 
@@ -103,8 +101,6 @@ func UpdateCourse(collection *mongo.Collection) gin.HandlerFunc {
 			return
 		}
 		course.ID = id
-		updatedAt := time.Now()
-		course.UpdatedAt = &updatedAt
 		moduleId := c.Query("module")
 		if moduleId == "" {
 			log.Printf("Error in converting module id: %v", err)

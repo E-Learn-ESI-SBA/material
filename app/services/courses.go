@@ -9,10 +9,16 @@ import (
 	"log"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/shared"
+	"time"
 )
 
 func CreateCourse(ctx context.Context, collection *mongo.Collection, course models.Course, moduleId primitive.ObjectID) error {
 	// instead of insert , find the module from moduleId  , then insert the course in the courses array of the module
+	course.ID = primitive.NewObjectID()
+	createdAt := time.Now()
+	course.CreatedAt = createdAt
+	course.UpdatedAt = createdAt
+	course.Sections = []models.Section{}
 	rs, err := collection.UpdateOne(ctx, bson.D{{"_id", moduleId}}, bson.D{{"$push", bson.D{{"courses", course}}}})
 	if err != nil {
 		log.Printf("Error While Creating Course: %v\n", err)
@@ -20,7 +26,7 @@ func CreateCourse(ctx context.Context, collection *mongo.Collection, course mode
 
 	}
 	if rs.ModifiedCount == 0 {
-		log.Printf("Error While Creating Course: %v\n", err)
+		log.Printf("No Course Created: %v\n", err)
 		return errors.New(shared.UNABLE_CREATE_COURSE)
 	}
 
@@ -36,7 +42,7 @@ func CreateCourse(ctx context.Context, collection *mongo.Collection, course mode
 	return nil
 }
 func UpdateCourse(ctx context.Context, collection *mongo.Collection, course models.Course, teacherId string, moduleId primitive.ObjectID) error {
-
+	course.UpdatedAt = time.Now()
 	// search first collection module by module Id, then course from course array by course.id , then update the course
 	rs, err := collection.UpdateOne(ctx, bson.D{{"_id", moduleId}, {"courses._id", course.ID}}, bson.D{{"$set", bson.D{{"courses.$", course}}}})
 	if err != nil {

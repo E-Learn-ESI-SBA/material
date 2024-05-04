@@ -1,6 +1,9 @@
 package models
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"time"
+)
 
 type Course struct {
 	ID primitive.ObjectID `json:"id" bson:"_id"`
@@ -8,8 +11,9 @@ type Course struct {
 	Name        string `json:"name" binding:"required" bson:"name" validate:"required"`
 	Description string `json:"description" binding:"required" bson:"description" validate:"required"`
 	//  ModuleId    primitive.ObjectID `json:"module_id" bson:"module_id"`
-	Sections []Section `json:"sections" bson:"sections"`
-	Date
+	Sections  []Section `json:"sections" bson:"sections"`
+	CreatedAt time.Time `json:"created_at,omitempty" bson:"created_at"`
+	UpdatedAt time.Time `json:"updated_at,omitempty" bson:"updated_at"`
 }
 
 type ExtendCourse struct {

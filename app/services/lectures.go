@@ -10,6 +10,7 @@ import (
 	"log"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/shared"
+	"time"
 )
 
 func GetTeacherLecture(collection *mongo.Collection, ctx context.Context, lectureId primitive.ObjectID) (models.Lecture, error) {
@@ -26,16 +27,26 @@ func GetTeacherLecture(collection *mongo.Collection, ctx context.Context, lectur
 }
 
 func CreateLecture(collection *mongo.Collection, ctx context.Context, lecture models.Lecture, sectionId primitive.ObjectID) error {
-	filter := bson.D{{"courses.sections._id", sectionId}}
-	update := bson.D{{"$push", bson.D{{"courses.sections.$.lectures", lecture}}}}
-	rs, err := collection.UpdateOne(ctx, filter, update)
+	lecture.ID = primitive.NewObjectID()
+	lecture.CreatedAt = time.Now()
+	log.Printf("Section id: %v\n", sectionId)
+	lecture.UpdatedAt = lecture.CreatedAt
+	filter := bson.M{"courses.sections._id": sectionId}
+	update := bson.M{
+		"$push": bson.M{
+			"courses.$[course].sections.$[section].lectures": lecture,
+		},
+	}
+	arrayFilters := bson.A{
+		bson.M{"course.sections._id": sectionId},
+		bson.M{"section._id": sectionId},
+	}
+	opts := options.FindOneAndUpdate().SetArrayFilters(options.ArrayFilters{Filters: arrayFilters})
+	rs := collection.FindOneAndUpdate(ctx, filter, update, opts)
+	err := rs.Err()
 	if err != nil {
 		log.Printf("Error While Creating Lecture: %v\n", err)
 		return errors.New(shared.LECTURE_NOT_CREATED)
-	} else if rs.ModifiedCount == 0 {
-		log.Printf("Error While Creating Lecture: \n")
-		return errors.New(shared.LECTURE_NOT_CREATED)
-
 	}
 	return nil
 }

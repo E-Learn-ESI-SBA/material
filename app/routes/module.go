@@ -18,4 +18,6 @@ func ModuleRoute(g *gin.Engine, collection *mongo.Collection) {
 	moduleRoute.PUT("/visibility/:id", middlewares.Authentication(), handlers.EditModuleVisibility(collection))
 	moduleRoute.GET("/public", middlewares.Authentication(), handlers.GetPublicFilteredModules(collection))
 	moduleRoute.GET("/public/:id", handlers.GetPublicFilteredModules(collection))
+	moduleRoute.POST("/many", middlewares.Authentication(), middlewares.BasicRBAC("admin"), handlers.CreateManyModules(collection))
+
 }

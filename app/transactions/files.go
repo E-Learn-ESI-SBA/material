@@ -39,13 +39,13 @@ func CreateFileTransaction(client *mongo.Client, collection *mongo.Collection) g
 			log.Printf("Error getting section id: %v", studentId)
 			c.JSON(http.StatusBadRequest, gin.H{"message": shared.REQUIRED_ID})
 		}
-		user := value.(utils.UserDetails)
-		createdAt := time.Now()
+		user := value.(*utils.UserDetails)
 		fileObject.TeacherId = user.ID
 		fileObject.Name = c.PostForm("name")
 		fileObject.Group = c.PostForm("group")
 		fileObject.Type = c.PostForm("type")
-		fileObject.CreatedAt = &createdAt
+		fileObject.CreatedAt = time.Now()
+		fileObject.UpdatedAt = fileObject.CreatedAt
 		file, errF := c.FormFile("file")
 		if errF != nil {
 			log.Printf("Error getting file: %v", errF)

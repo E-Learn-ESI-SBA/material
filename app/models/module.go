@@ -1,6 +1,9 @@
 package models
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"time"
+)
 
 type Module struct {
 	ID primitive.ObjectID `json:"id" bson:"_id"`
@@ -16,7 +19,8 @@ type Module struct {
 	Plan        []string  `json:"plan" binding:"required,min=1" bson:"plan"`
 	Image       *string   `json:"image,omitempty"`
 	Courses     []Course  `json:"courses" bson:"courses"`
-	*Date
+	CreatedAt   time.Time `json:"created_at,omitempty" bson:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at,omitempty" bson:"updated_at"`
 }
 
 type ExtendedModule struct {

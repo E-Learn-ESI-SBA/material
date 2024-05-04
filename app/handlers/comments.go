@@ -153,7 +153,7 @@ func ReplayToComment(collection *mongo.Collection) gin.HandlerFunc {
 			return
 		}
 		value, errC := context.Get("user")
-		user := value.(utils.UserDetails)
+		user := value.(*utils.UserDetails)
 		if errC != true {
 			context.JSON(http.StatusInternalServerError, gin.H{"error": shared.USER_NOT_INJECTED})
 			return

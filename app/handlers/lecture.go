@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"log"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/services"
 	"madaurus/dev/material/app/shared"
@@ -63,8 +64,8 @@ func CreateLecture(collection *mongo.Collection) gin.HandlerFunc {
 			g.JSON(http.StatusInternalServerError, gin.H{"message": shared.USER_NOT_INJECTED})
 			return
 		}
-		user := value.(utils.UserDetails)
-		sectionId := g.Param("sectionId")
+		user := value.(*utils.UserDetails)
+		sectionId := g.Query("sectionId")
 		if sectionId == "" {
 			g.JSON(http.StatusBadRequest, gin.H{"message": shared.REQUIRED_ID})
 			return
@@ -75,18 +76,20 @@ func CreateLecture(collection *mongo.Collection) gin.HandlerFunc {
 			return
 		}
 		var lecture models.Lecture
-		err := g.BindJSON(&lecture)
+		err := g.ShouldBind(&lecture)
 		if err != nil {
+			log.Printf("Error binding lecture: %v", err.Error())
 			g.JSON(http.StatusNotAcceptable, gin.H{"message": shared.INVALID_BODY})
 			return
 		}
 		lecture.TeacherId = user.ID
 		err = services.CreateLecture(collection, g.Request.Context(), lecture, sectionObj)
 		if err != nil {
-			g.JSON(http.StatusInternalServerError, gin.H{"message": shared.UNABLE_TO_CREATE_COLLECTION})
+			log.Printf("Error creating lecture: %v", err.Error())
+			g.JSON(http.StatusBadRequest, gin.H{"message": shared.LECTURE_NOT_CREATED})
 			return
 		}
-		g.JSON(http.StatusOK, gin.H{"message": "Lecture Created Successfully"})
+		g.JSON(http.StatusCreated, gin.H{"message": "Lecture Created Successfully"})
 	}
 }
 

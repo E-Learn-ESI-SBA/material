@@ -3,6 +3,7 @@ package middlewares
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"madaurus/dev/material/app/shared"
 	"madaurus/dev/material/app/utils"
 	"net/http"
 	"os"
@@ -19,7 +20,7 @@ func Authentication() gin.HandlerFunc {
 			ClientToken, err = c.Cookie("accessToken")
 			if err != nil || ClientToken == "" {
 				fmt.Println("No Authorization Header Provided")
-				c.JSON(http.StatusBadRequest, gin.H{"message": "No Authorization Header Provided"})
+				c.JSON(http.StatusUnauthorized, gin.H{"message": shared.UNAUTHORIZED})
 				c.Abort()
 				return
 			}
