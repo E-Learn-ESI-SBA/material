@@ -1,14 +1,14 @@
 package interfaces
 
 type ModuleFilter struct {
-	Year       *int8   `json:"year,omitempty" validate:"min=1,max=5"`
-	Semester   *int8   `json:"semester,omitempty" validate:"min=1,max=2"`
+	Year       *int8   `json:"year,omitempty"`
+	Semester   *int8   `json:"semester,omitempty"`
 	Speciality *string `json:"speciality,omitempty"`
 }
 
 type PaginationQuery struct {
-	Page  int `json:"page,omitempty" validate:"min=1 ,default=1"`
-	Items int `json:"items" validate:"min=1, default=10"`
+	Page  int `json:"page,omitempty"`
+	Items int `json:"items" `
 }
 
 func (p *PaginationQuery) newPagination(page int, items int) {

@@ -17,10 +17,10 @@ func GetStorageFile(dir string) (string, error) {
 	}
 
 	// Go up two directories to get to the project root
-	projectRoot := filepath.Dir(filepath.Dir(pwd))
+	log.Printf("Current working directory: %v", pwd)
 
 	// Construct the path to the storage/files directory
-	storageFilesPath := filepath.Join(projectRoot, "storage", dir)
+	storageFilesPath := filepath.Join(pwd, "storage", dir)
 
 	log.Printf("Path to storage/files: %v", storageFilesPath)
 	return storageFilesPath, nil

@@ -26,6 +26,7 @@ const UNABLE_UPDATE_MODULE = "unable to update the module"
 const UPDATE_MODULE = "Module Updated Successfully"
 const UNABLE_GET_MODULE = "unable to get the module"
 const GET_MODULE = "Module Retrieved Successfully"
+const UNABLE_GET_MODULES = "unable to get the modules"
 
 // section
 
