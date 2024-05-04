@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/net/context"
 	"log"
 	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
@@ -10,6 +11,7 @@ import (
 	"madaurus/dev/material/app/shared"
 	"madaurus/dev/material/app/utils"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -120,26 +122,18 @@ func CreateModule(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		print("Create Module Handler ...")
 		var module models.Module
-
 		err := c.ShouldBindJSON(&module)
 		if err != nil {
 			log.Println(err.Error())
-			c.JSON(400, gin.H{"error": errors.New("invalid Module Object").Error()})
+			c.JSON(http.StatusNotAcceptable, gin.H{"message": shared.INVALID_BODY})
 			return
 		}
-		value, notFound := c.Get("user")
-		if notFound != true {
-			c.JSON(401, gin.H{"error": errors.New("user not found").Error()})
-			return
-		}
-		user := value.(*utils.UserDetails)
-		module.TeacherId = user.ID
 		err = services.CreateModule(c.Request.Context(), collection, module)
 		if err != nil {
-			c.JSON(400, gin.H{"error": shared.UNABLE_CREATE_MODULE})
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.UNABLE_CREATE_MODULE})
 			return
 		}
-		c.JSON(201, gin.H{"message": shared.CREATE_MODULE})
+		c.JSON(http.StatusCreated, gin.H{"message": shared.CREATE_MODULE})
 	}
 
 }
@@ -193,6 +187,7 @@ func UpdateModule(collection *mongo.Collection) gin.HandlerFunc {
 // @Router /modules/{id} [GET]
 func GetModuleById(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx, _ := context.WithTimeout(c.Request.Context(), 50*time.Second)
 		moduleId, errP := c.Params.Get("id")
 		if errP != true {
 			c.JSON(400, gin.H{"error": shared.REQUIRED_ID})
@@ -203,12 +198,13 @@ func GetModuleById(collection *mongo.Collection) gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": shared.REQUIRED_ID})
 			return
 		}
-		module, err := services.GetModuleById(c.Request.Context(), collection, ModuleIObjectId)
+		module, err := services.GetModuleById(ctx, collection, ModuleIObjectId)
 		if err != nil {
-			c.JSON(400, gin.H{"error": shared.UNABLE_GET_MODULE})
+			c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
 			return
 		}
 		c.JSON(200, gin.H{"module": module})
+		ctx.Done()
 	}
 }
 
@@ -222,12 +218,6 @@ func GetModuleById(collection *mongo.Collection) gin.HandlerFunc {
 // @Router /transaction/module/{id} [DELETE]
 func DeleteModule(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		value, notFound := c.Get("user")
-		if notFound {
-			c.JSON(401, gin.H{"error": errors.New(shared.USER_NOT_INJECTED)})
-			return
-		}
-		user := value.(*utils.UserDetails)
 		moduleId, errP := c.Params.Get("id")
 
 		if errP != true {
@@ -240,11 +230,28 @@ func DeleteModule(collection *mongo.Collection) gin.HandlerFunc {
 			return
 		}
 
-		err := services.DeleteModule(c.Request.Context(), collection, moduleObjectId, &user.ID)
+		err := services.DeleteModule(c.Request.Context(), collection, moduleObjectId)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
 		c.JSON(200, gin.H{"message": shared.DELETE_MODULE})
+	}
+}
+
+func CreateManyModules(collection *mongo.Collection) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var modules []models.Module
+		err := c.ShouldBindJSON(&modules)
+		if err != nil {
+			c.JSON(http.StatusNotAcceptable, gin.H{"message": shared.INVALID_BODY})
+			return
+		}
+		err = services.CreateManyModules(c.Request.Context(), collection, modules)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			return
+		}
+		c.JSON(http.StatusCreated, gin.H{"message": shared.CREATE_MODULE})
 	}
 }

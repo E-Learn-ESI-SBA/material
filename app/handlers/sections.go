@@ -80,32 +80,35 @@ func GetSectionDetails(collection *mongo.Collection) gin.HandlerFunc {
 func CreateSection(collection *mongo.Collection) gin.HandlerFunc {
 	return func(g *gin.Context) {
 		var section models.Section
-		value, errU := g.Get("user")
+		// Block
 		courseId := g.Query("courseId")
-		user := value.(*utils.UserDetails)
 		if courseId == "" {
 			g.JSON(http.StatusBadRequest, gin.H{"message": shared.INVALID_ID})
 			return
 		}
+		// Block
+		value, errU := g.Get("user")
+		user := value.(*utils.UserDetails)
+		if !errU {
+			g.JSON(http.StatusInternalServerError, gin.H{"message": shared.USER_NOT_INJECTED})
+			return
+		}
+		// Block
 		objectCourseId, errD := primitive.ObjectIDFromHex(courseId)
 		if errD != nil {
 			g.JSON(http.StatusBadRequest, gin.H{"message": shared.INVALID_ID})
 			return
 		}
-		if !errU {
-			g.JSON(http.StatusInternalServerError, gin.H{"message": shared.USER_NOT_INJECTED})
-			return
-		}
+		// Block
 		err := g.BindJSON(&section)
-		// Update Section Document
 		section.TeacherId = user.ID
-		section.CourseID = objectCourseId
+		//		section.CourseID = objectCourseId
 		section.ID = primitive.NewObjectID()
 		if err != nil {
 			g.JSON(http.StatusBadRequest, gin.H{"message": shared.INVALID_BODY})
 			return
 		}
-		err = services.CreateSection(g.Request.Context(), collection, section)
+		err = services.CreateSection(g.Request.Context(), collection, section, objectCourseId)
 		if err != nil {
 			g.JSON(http.StatusInternalServerError, gin.H{"message": shared.UNABLE_CREATE_SECTION})
 			return
@@ -124,10 +127,23 @@ func CreateSection(collection *mongo.Collection) gin.HandlerFunc {
 // @Router /section [PUT]
 func EditSection(collection *mongo.Collection) gin.HandlerFunc {
 	return func(g *gin.Context) {
+		// Block
+		value, errU := g.Get("user")
+		user := value.(*utils.UserDetails)
+		if !errU {
+			g.JSON(http.StatusInternalServerError, gin.H{"message": shared.USER_NOT_INJECTED})
+			return
+		}
+		// Block
 		var section models.Section
 		sectionId, errP := g.Params.Get("sectionId")
 		if errP != true {
 			g.JSON(400, gin.H{"error": "SectionId is required"})
+			return
+		}
+		sectionObj, errD := primitive.ObjectIDFromHex(sectionId)
+		if errD != nil {
+			g.JSON(http.StatusNotAcceptable, gin.H{"message": shared.INVALID_ID})
 			return
 		}
 		err := g.BindJSON(&section)
@@ -135,7 +151,7 @@ func EditSection(collection *mongo.Collection) gin.HandlerFunc {
 			g.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		err = services.EditSection(g.Request.Context(), collection, section, sectionId)
+		err = services.EditSection(g.Request.Context(), collection, section, sectionObj, user.ID)
 		if err != nil {
 			g.JSON(400, gin.H{"error": err.Error()})
 			return
@@ -158,22 +174,31 @@ func EditSection(collection *mongo.Collection) gin.HandlerFunc {
 
 func DeleteSection(collection *mongo.Collection) gin.HandlerFunc {
 	return func(g *gin.Context) {
+		// Block
+		value, errU := g.Get("user")
+		user := value.(*utils.UserDetails)
+		if !errU {
+			g.JSON(http.StatusInternalServerError, gin.H{"message": shared.USER_NOT_INJECTED})
+			return
+		}
+		// Block
 		sectionId, errP := g.Params.Get("sectionId")
 		if errP != true {
-			g.JSON(http.StatusBadRequest, gin.H{"error": shared.REQUIRED_ID})
+			g.JSON(http.StatusNotAcceptable, gin.H{"error": shared.REQUIRED_ID})
 			return
 		}
+		// Block
 		sectionObjectId, errD := primitive.ObjectIDFromHex(sectionId)
 		if errD != nil {
-			g.JSON(http.StatusBadRequest, gin.H{"error": shared.INVALID_ID})
+			g.JSON(http.StatusNotAcceptable, gin.H{"error": shared.INVALID_ID})
 			return
 		}
-		err := services.DeleteSection(g.Request.Context(), collection, sectionObjectId)
+		err := services.DeleteSection(g.Request.Context(), collection, sectionObjectId, user.ID)
 		if err != nil {
-			g.JSON(400, gin.H{"error": err.Error()})
+			g.JSON(http.StatusInternalServerError, gin.H{"message": shared.UNABLE_DELETE_MODULE})
 			return
 		}
-		g.JSON(200, gin.H{"message": "Section Deleted Successfully"})
+		g.JSON(http.StatusOK, gin.H{"message": shared.DELETE_MODULE})
 	}
 }
 

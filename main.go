@@ -28,7 +28,7 @@ import (
 // @BasePath /
 func main() {
 	k := shared.GetSecrets()
-	var uri string = k.String("database_uri")
+	uri := k.String("database_uri")
 	client, err := models.DBHandler(uri)
 	if err != nil {
 		log.Fatal("Database not connected")
@@ -50,7 +50,6 @@ func main() {
 
 				}
 			}
-
 			return event
 		},
 		Debug: true,
@@ -70,10 +69,12 @@ func main() {
 		c.JSON(200, gin.H{"message": "Welcome to Madaurus Material Services"})
 	})
 	routes.ModuleRoute(server, app.ModuleCollection)
-	routes.CourseRoute(server, app.CourseCollection)
-	routes.SectionRouter(server, app.SectionCollection)
-	routes.LectureRoute(server, app.LectureCollection)
+	routes.CourseRoute(server, app.ModuleCollection)
+	routes.SectionRouter(server, app.ModuleCollection)
+	routes.LectureRoute(server, app.ModuleCollection)
 	routes.CommentRoute(server, app.CommentsCollection)
+	routes.TransactionRoute(server, client, app.ModuleCollection)
+	routes.FileRouter(server, app.ModuleCollection)
 	log.Println("Server Running on Port 8080")
 	err = server.Run(":8080")
 	defer sentry.Flush(2 * time.Second)

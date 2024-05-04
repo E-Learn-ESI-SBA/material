@@ -25,35 +25,33 @@ import (
 // @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
 // @Failure 500 {object} interfaces.APiError
-// @Router /coursesp [POST]
+// @Router /courses [POST]
 func CreateCourse(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var course models.Course
 		err := c.ShouldBind(&course)
 		if err != nil {
 			log.Printf("Error in binding the course: %v", err)
-			c.JSON(http.StatusBadRequest, gin.H{"message": shared.INVALID_BODY})
+			c.JSON(http.StatusNotAcceptable, gin.H{"message": shared.INVALID_BODY})
 			return
 		}
 		moduleId := c.Query("module")
 		if moduleId == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"message": shared.INVALID_BODY})
+			c.JSON(http.StatusNotAcceptable, gin.H{"message": shared.REQUIRED_ID})
 			return
 		}
-		course.ID = primitive.NewObjectID()
-		createdAt := time.Now()
-		course.CreatedAt = &createdAt
+
 		id, errD := primitive.ObjectIDFromHex(moduleId)
-		course.ModuleId = id
+		//	course.ModuleId = id
 		if errD != nil {
 			log.Printf("Error in converting module id: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.SERVER_ERROR})
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.REQUIRED_ID})
 			return
 		}
-		err = services.CreateCourse(c.Request.Context(), collection, course)
+		err = services.CreateCourse(c.Request.Context(), collection, course, id)
 		if err != nil {
 			log.Printf("Error in creating course: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.SERVER_ERROR})
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
 		}
 
@@ -69,21 +67,54 @@ func CreateCourse(collection *mongo.Collection) gin.HandlerFunc {
 // @Tags Courses
 // @Accept json
 // @Param course body models.Course true "Course Object"
+// @Security ApiKeyAuth
+// @Param id path string true "Course ID"
 // @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
+// @Param module query string true "Module ID"
 // @Router /courses/update [PUT]
+
 func UpdateCourse(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var course models.Course
-		user := c.MustGet("user").(*utils.UserDetails)
-		err := c.BindJSON(&course)
+		value, errG := c.Get("user")
+		if errG != true {
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.USER_NOT_INJECTED})
+			return
+		}
+		courseId, errId := c.Params.Get("id")
+		if errId != true {
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.INVALID_ID})
+			return
+		}
+		id, errD := primitive.ObjectIDFromHex(courseId)
+		if errD != nil {
+			log.Printf("Error in converting course id: %v", errD)
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.INVALID_ID})
+			return
+		}
+		user := value.(*utils.UserDetails)
+		err := c.ShouldBind(&course)
 		if err != nil {
+			log.Printf("Error in binding the course: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		updatedAt := time.Now()
-		course.UpdatedAt = &updatedAt
-		err = services.UpdateCourse(c.Request.Context(), collection, course, user.ID)
+		course.ID = id
+		moduleId := c.Query("module")
+		if moduleId == "" {
+			log.Printf("Error in converting module id: %v", err)
+
+			c.JSON(http.StatusBadRequest, gin.H{"error": errors.New("Module ID is Required")})
+			return
+		}
+		ModuleId, errD2 := primitive.ObjectIDFromHex(moduleId)
+		if errD2 != nil {
+			log.Printf("Error in converting module id: %v", errD2)
+			c.JSON(http.StatusBadRequest, gin.H{"error": errors.New("Module ID is Required")})
+			return
+		}
+		err = services.UpdateCourse(c.Request.Context(), collection, course, user.ID, ModuleId)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -99,6 +130,7 @@ func UpdateCourse(collection *mongo.Collection) gin.HandlerFunc {
 // @Tags Courses
 // @Accept json
 // @Param id path string true "Course ID"
+// @Param moduleId query string true "Module ID"
 // @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
 // @Router /courses/delete/{id} [DELETE]
@@ -109,14 +141,25 @@ func DeleteCourse(collection *mongo.Collection) gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": errors.New("course ID is Required")})
 			return
 		}
+		moduleId := c.Query("moduleId")
+		if moduleId == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.QUERY_NOT_FOUND})
+			return
+		}
+
 		id, errD := primitive.ObjectIDFromHex(courseId)
 		if errD != nil {
 			c.JSON(400, gin.H{"error": shared.REQUIRED_ID})
 			return
 		}
-		err := services.DeleteCourse(c.Request.Context(), collection, id)
+		moduleObjectID, errD := primitive.ObjectIDFromHex(moduleId)
+		if errD != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": shared.QUERY_NOT_FOUND})
+			return
+		}
+		err := services.DeleteCourse(c.Request.Context(), collection, id, moduleObjectID)
 		if err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 			return
 		}
 		c.JSON(200, gin.H{"message": shared.DELETE_COURSE})

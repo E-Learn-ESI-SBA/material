@@ -13,6 +13,7 @@ const USER_NOT_INJECTED = "user not found, unable to handle your action"
 const UNAUTHORIZED = "Unauthorized to perform this action"
 const FORBIDDEN = "not allowed to perform this action"
 const INVALID_TOKEN = "Invalid Token"
+const INVALID_CREDENTIALS = "Invalid Credentials"
 
 // MODULES MESSAGE
 
@@ -39,7 +40,7 @@ const UPDATE_SECTION = "Section Updated Successfully"
 const GET_SECTION = "Section Retrieved Successfully"
 
 // COURSE
-
+const UNABLE_GET_COURSES = "unable to get the courses"
 const CREATE_COURSE = "Course Created Successfully"
 const UNABLE_CREATE_COURSE = "unable to create the course"
 const UNABLE_UPDATE_COURSE = "unable to update the course"
@@ -47,6 +48,14 @@ const UNABLE_DELETE_COURSE = "unable to delete the course"
 const UNABLE_GET_COURSE = "unable to get the course"
 const CREATE_COURSE_SECTION = "Course Section Created Successfully"
 const DELETE_COURSE = "Course Deleted Successfully"
+
+// Creating File
+const CREATE_FILE = "File Created Successfully"
+const UNABLE_CREATE_FILE = "unable to create the file"
+const UNABLE_UPDATE_FILE = "unable to update the file"
+const UNABLE_DELETE_FILE = "unable to delete the file"
+const UNABLE_GET_FILE = "unable to get the file"
+const DELETE_FILE = "File Deleted Successfully"
 
 // Server Errors :
 
@@ -75,3 +84,31 @@ const UNABLE_TO_CREATE_COLLECTION = "unable to create the collection"
 const UNABLE_TO_CREATE_CLIENT = "unable to create the client"
 const UNABLE_TO_CREATE_FILTER = "unable to create the filter"
 const UNABLE_TO_CREATE_RESPONSE = "unable to create the response"
+
+// Files
+
+const FILE_NOT_FOUND = "File Not Found"
+const FILE_DELETED = "File Deleted Successfully"
+const FILE_UPDATED = "File Updated Successfully"
+const FILE_CREATED = "File Created Successfully"
+const FILE_NOT_CREATED = "File Not Created"
+const FILE_NOT_UPDATED = "File Not Updated"
+const FILE_NOT_DELETED = "File Not Deleted"
+const FILE_NOT_RETRIEVED = "File Not Retrieved"
+const FILE_RETRIEVED = "File Retrieved Successfully"
+
+// Queries
+
+const QUERY_NOT_FOUND = "Query Not Found"
+
+// Lectures
+
+const LECTURE_NOT_FOUND = "Lecture Not Found"
+const LECTURE_DELETED = "Lecture Deleted Successfully"
+const LECTURE_UPDATED = "Lecture Updated Successfully"
+const LECTURE_CREATED = "Lecture Created Successfully"
+const LECTURE_NOT_CREATED = "Lecture Not Created"
+const LECTURE_NOT_UPDATED = "Lecture Not Updated"
+const LECTURE_NOT_DELETED = "Lecture Not Deleted"
+const LECTURE_NOT_RETRIEVED = "Lecture Not Retrieved"
+const LECTURE_RETRIEVED = "Lecture Retrieved Successfully"

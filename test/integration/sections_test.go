@@ -23,7 +23,7 @@ func TestCreateSection(t *testing.T) {
 	}
 	const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
 	const url = "http://localhost:8080/section/"
-	const id1 = "6632042f17c6d49ef81973f9"
+	const id1 = "66357c998551700b413c587e"
 	const id2 = "66327ca0547f7f30e5b2a733"
 	section := fixtures.GetSections()[0]
 	authToken, _ := utils.GenerateToken(user, secret)

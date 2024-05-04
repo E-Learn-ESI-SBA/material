@@ -10,6 +10,8 @@ import (
 	"log"
 	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
+	"madaurus/dev/material/app/shared"
+	"time"
 )
 
 // GetModulesByFilter Basic Usage  : GetModulesByFilter(ctx, collection, filterStruct, "public", nil) for public endpoints
@@ -58,6 +60,8 @@ func EditModuleVisibility(ctx context.Context, collection *mongo.Collection, mod
 func UpdateModule(ctx context.Context, collection *mongo.Collection, module models.Module) error {
 	filter := bson.D{{"_id", module.ID}}
 	update := bson.D{{"$set", module}}
+	updatedAt := time.Now()
+	module.UpdatedAt = updatedAt
 	newModule, err := collection.UpdateOne(ctx, filter, update)
 
 	if err != nil || newModule.ModifiedCount == 0 {
@@ -69,6 +73,9 @@ func UpdateModule(ctx context.Context, collection *mongo.Collection, module mode
 
 func CreateModule(ctx context.Context, collection *mongo.Collection, module models.Module) error {
 	module.ID = primitive.NewObjectID()
+	module.Courses = []models.Course{}
+	module.CreatedAt = time.Now()
+	module.UpdatedAt = module.UpdatedAt
 	_, err := collection.InsertOne(ctx, module)
 	if err != nil {
 		log.Printf("error while trying to create the module")
@@ -76,7 +83,7 @@ func CreateModule(ctx context.Context, collection *mongo.Collection, module mode
 	return err
 }
 
-func GetModuleById(ctx context.Context, collection *mongo.Collection, moduleId primitive.ObjectID) (models.ExtendedModule, error) {
+func vGetModuleById(ctx context.Context, collection *mongo.Collection, moduleId primitive.ObjectID) (models.ExtendedModule, error) {
 	// make aggregation to get the courses
 	// then select sections from the courses
 	// then select the lectures from the sections and videos from sections
@@ -139,7 +146,19 @@ func GetModuleById(ctx context.Context, collection *mongo.Collection, moduleId p
 	return module, nil
 }
 
-func DeleteModule(ctx context.Context, collection *mongo.Collection, moduleId primitive.ObjectID, teacherId *string) error {
+func GetModuleById(ctx context.Context, collection *mongo.Collection, moduleId primitive.ObjectID) (models.Module, error) {
+
+	var module models.Module
+	opts := options.FindOne().SetProjection(bson.D{{"courses", 1}})
+	err := collection.FindOne(ctx, bson.D{{"_id", moduleId}}, opts).Decode(&module)
+	if err != nil {
+		log.Printf("Error while retriving the single module:  %v", err.Error())
+		return module, errors.New(shared.UNABLE_GET_MODULE)
+	}
+	return module, nil
+}
+
+func vDeleteModule(ctx context.Context, collection *mongo.Collection, moduleId primitive.ObjectID, teacherId *string) error {
 
 	// Before Delete , get now the number of tha courses that this module have
 	pipe := bson.A{
@@ -199,4 +218,37 @@ func DeleteModule(ctx context.Context, collection *mongo.Collection, moduleId pr
 
 	}
 	return nil
+}
+func DeleteModule(ctx context.Context, collection *mongo.Collection, moduleId primitive.ObjectID) error {
+
+	rs, err := collection.DeleteOne(ctx, bson.D{{"_id", moduleId}, {
+		"courses", bson.D{{"$size", 0}},
+	}})
+	if err != nil {
+		log.Printf("Error While Deleting the module %v", err.Error())
+		return errors.New(shared.UNABLE_CREATE_MODULE)
+
+	}
+	if rs.DeletedCount < 1 {
+		log.Printf("unable to delete the module ")
+		return errors.New(shared.UNABLE_CREATE_MODULE)
+	}
+
+	return nil
+
+}
+func CreateManyModules(ctx context.Context, collection *mongo.Collection, modules []models.Module) error {
+	var docs []interface{}
+	for _, module := range modules {
+		module.ID = primitive.NewObjectID()
+		module.CreatedAt = time.Now()
+		module.UpdatedAt = module.CreatedAt
+		module.Courses = []models.Course{}
+		docs = append(docs, module)
+	}
+	_, err := collection.InsertMany(ctx, docs)
+	if err != nil {
+		log.Printf("error while trying to create the module")
+	}
+	return err
 }
