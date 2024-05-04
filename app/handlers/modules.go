@@ -2,8 +2,9 @@ package handlers
 
 import (
 	"errors"
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"golang.org/x/net/context"
+	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
@@ -11,10 +12,6 @@ import (
 	"madaurus/dev/material/app/shared"
 	"madaurus/dev/material/app/utils"
 	"net/http"
-	"time"
-
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // @Summary Edit Module Visibility
@@ -59,7 +56,7 @@ func EditModuleVisibility(collection *mongo.Collection) gin.HandlerFunc {
 func GetPublicFilteredModules(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var filterModule interfaces.ModuleFilter
-		err := c.BindJSON(&filterModule)
+		err := c.ShouldBind(&filterModule)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
@@ -84,10 +81,10 @@ func GetPublicFilteredModules(collection *mongo.Collection) gin.HandlerFunc {
 // @Failure 400 {object} interfaces.APiError
 // @Failure 500 {object} interfaces.APiError
 // @Router /modules/teacher [GET]
-func GetTeacherFilteredModules(collection *mongo.Collection) gin.HandlerFunc {
+func GetTeacherFilterModules(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var filterModule interfaces.ModuleFilter
-		err := c.BindJSON(&filterModule)
+		err := c.ShouldBind(&filterModule)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
@@ -187,7 +184,6 @@ func UpdateModule(collection *mongo.Collection) gin.HandlerFunc {
 // @Router /modules/{id} [GET]
 func GetModuleById(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, _ := context.WithTimeout(c.Request.Context(), 50*time.Second)
 		moduleId, errP := c.Params.Get("id")
 		if errP != true {
 			c.JSON(400, gin.H{"error": shared.REQUIRED_ID})
@@ -198,13 +194,12 @@ func GetModuleById(collection *mongo.Collection) gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": shared.REQUIRED_ID})
 			return
 		}
-		module, err := services.GetModuleById(ctx, collection, ModuleIObjectId)
+		module, err := services.GetModuleById(c.Request.Context(), collection, ModuleIObjectId)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
 			return
 		}
 		c.JSON(200, gin.H{"module": module})
-		ctx.Done()
 	}
 }
 
@@ -221,24 +216,34 @@ func DeleteModule(collection *mongo.Collection) gin.HandlerFunc {
 		moduleId, errP := c.Params.Get("id")
 
 		if errP != true {
-			c.JSON(400, gin.H{"error": errors.New(shared.REQUIRED_ID)})
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.REQUIRED_ID})
 			return
 		}
 		moduleObjectId, errD := primitive.ObjectIDFromHex(moduleId)
 		if errD != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": shared.INVALID_ID})
+			c.JSON(http.StatusNotAcceptable, gin.H{"message": shared.INVALID_ID})
 			return
 		}
 
 		err := services.DeleteModule(c.Request.Context(), collection, moduleObjectId)
 		if err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
 		}
-		c.JSON(200, gin.H{"message": shared.DELETE_MODULE})
+		c.JSON(http.StatusOK, gin.H{"message": shared.DELETE_MODULE})
 	}
 }
 
+// @Summary Create Module
+// @Description Protected Route used to create a module
+// @Produce json
+// @Accept json
+// @Tags Modules
+// @Param module body []models.Module true "Module Object"
+// @Success 200 {object} interfaces.APiSuccess
+// @Failure 400 {object} interfaces.APiError
+// @Failure 500 {object} interfaces.APiError
+// @Router /modules/many [POST]
 func CreateManyModules(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var modules []models.Module

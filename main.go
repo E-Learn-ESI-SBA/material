@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/gin-contrib/cors"
 	"log"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/routes"
@@ -27,6 +28,13 @@ import (
 // @host localhost:8080
 // @BasePath /
 func main() {
+	configCors := cors.Config{
+		AllowAllOrigins: true,
+		AllowMethods:    []string{"GET", "POST", "PUT", "DELETE", "PATCH"},
+		AllowFiles:      true,
+		AllowHeaders:    []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-CSRF-Token", "hx-request", "hx-current-url"},
+		MaxAge:          12 * time.Hour,
+	}
 	k := shared.GetSecrets()
 	uri := k.String("database_uri")
 	client, err := models.DBHandler(uri)
@@ -68,6 +76,10 @@ func main() {
 	server.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "Welcome to Madaurus Material Services"})
 	})
+
+	// Start Middleware
+	server.Use(cors.New(configCors))
+	// End Middleware
 	routes.ModuleRoute(server, app.ModuleCollection)
 	routes.CourseRoute(server, app.ModuleCollection)
 	routes.SectionRouter(server, app.ModuleCollection)

@@ -25,3 +25,23 @@ type UltraCourse struct {
 	Course
 	Sections *[]ExtendedSection `json:"sections"`
 }
+
+type RCourse struct {
+	Course
+	ID       string     `json:"id"`
+	Sections []RSection `json:"sections"`
+}
+
+func (c *RCourse) Extract(course Course) {
+	c = &RCourse{
+		Course:   course,
+		ID:       course.ID.Hex(),
+		Sections: []RSection{},
+	}
+	rs := RSection{}
+	for _, section := range course.Sections {
+		rs.Extract(section)
+		c.Sections = append(c.Sections, rs)
+
+	}
+}

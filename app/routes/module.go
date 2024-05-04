@@ -10,7 +10,7 @@ import (
 func ModuleRoute(g *gin.Engine, collection *mongo.Collection) {
 	moduleRoute := g.Group("/modules")
 	moduleRoute.GET("/:id", middlewares.Authentication(), handlers.GetModuleById(collection))
-	moduleRoute.GET("/teacher", middlewares.Authentication(), handlers.GetTeacherFilteredModules(collection))
+	moduleRoute.GET("/teacher", middlewares.Authentication(), handlers.GetTeacherFilterModules(collection))
 	moduleRoute.POST("/", middlewares.Authentication(), middlewares.BasicRBAC("admin"), handlers.CreateModule(collection))
 	moduleRoute.PUT("/:moduleId", middlewares.Authentication(), handlers.UpdateModule(collection))
 	// Protected By the admin

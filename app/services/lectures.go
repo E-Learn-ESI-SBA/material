@@ -53,32 +53,47 @@ func CreateLecture(collection *mongo.Collection, ctx context.Context, lecture mo
 
 func UpdateLecture(collection *mongo.Collection, ctx context.Context, lecture models.Lecture) error {
 	filter := bson.D{{"courses.sections.lectures._id", lecture.ID}}
-	update := bson.D{{"$set", bson.D{{"courses.sections.lectures.$", lecture}}}}
-	rs, err := collection.UpdateOne(ctx, filter, update)
+	update := bson.M{
+		"$set": bson.M{
+			"courses.$[course].sections.$[section].lectures.$[lecture]": lecture,
+		},
+	}
+	arrayFilters := bson.A{
+		bson.M{"course.sections.lectures._id": lecture.ID},
+		bson.M{"section.lectures._id": lecture.ID},
+		bson.M{"lecture._id": lecture.ID},
+	}
+	opts := options.FindOneAndUpdate().SetArrayFilters(options.ArrayFilters{Filters: arrayFilters})
+	rs := collection.FindOneAndUpdate(ctx, filter, update, opts)
+	err := rs.Err()
 	if err != nil {
 		log.Printf("Error While Updating Lecture: %v\n", err)
 		return errors.New(shared.LECTURE_NOT_UPDATED)
 	}
-	if rs.ModifiedCount == 0 {
-		log.Printf("Error While Updating Lecture: \n")
-		return errors.New(shared.LECTURE_NOT_UPDATED)
 
-	}
 	return nil
 }
 
 func DeleteLecture(collection *mongo.Collection, ctx context.Context, lectureId primitive.ObjectID) error {
 	filter := bson.D{{"courses.sections.lectures._id", lectureId}}
-	update := bson.D{{"$pull", bson.D{{"courses.sections.lectures", bson.D{{"_id", lectureId}}}}}}
-	rs, err := collection.UpdateOne(ctx, filter, update)
+	update := bson.M{
+		"$pull": bson.M{
+			"courses.$[course].sections.$[section].lectures.$[lecture]._id": lectureId,
+		},
+	}
+	arrayFilters := bson.A{
+		bson.M{"course.sections.lectures._id": lectureId},
+		bson.M{"section.lectures._id": lectureId},
+		bson.M{"lecture._id": lectureId},
+	}
+	//update := bson.D{{"$pull", bson.D{{"courses.sections.lectures", bson.D{{"_id", lectureId}}}}}}
+
+	opts := options.FindOneAndUpdate().SetArrayFilters(options.ArrayFilters{Filters: arrayFilters})
+	rs := collection.FindOneAndUpdate(ctx, filter, update, opts)
+	err := rs.Err()
 	if err != nil {
 		log.Printf("Error While Deleting Lecture: %v\n", err)
 		return errors.New(shared.LECTURE_NOT_DELETED)
-	}
-	if rs.ModifiedCount == 0 {
-		log.Printf("Error While Deleting Lecture: \n")
-		return errors.New(shared.LECTURE_NOT_DELETED)
-
 	}
 	return nil
 }

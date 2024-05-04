@@ -1,22 +1,26 @@
 package transactions
 
 import (
+	"context"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
 	"madaurus/dev/material/app/models"
+	"madaurus/dev/material/app/services"
 	"madaurus/dev/material/app/shared"
 	"madaurus/dev/material/app/utils"
 	"net/http"
-	"os"
 	"path"
 	"time"
 )
 
+// @Summary Create a file
+// @Description Create a file
+// @Tags Files
+// @Params sectionId query string true
 func CreateFileTransaction(client *mongo.Client, collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// start  Mongo session
@@ -33,11 +37,6 @@ func CreateFileTransaction(client *mongo.Client, collection *mongo.Collection) g
 		if !errU {
 			log.Printf("Error getting user: %v", errU)
 			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.UNABLE_CREATE_FILE})
-		}
-		studentId := c.Query("section_id")
-		if studentId == "" {
-			log.Printf("Error getting section id: %v", studentId)
-			c.JSON(http.StatusBadRequest, gin.H{"message": shared.REQUIRED_ID})
 		}
 		user := value.(*utils.UserDetails)
 		fileObject.TeacherId = user.ID
@@ -73,8 +72,10 @@ func CreateFileTransaction(client *mongo.Client, collection *mongo.Collection) g
 
 		}
 		fileObject.ID = primitive.NewObjectID()
-		fileObject.Url = fileObject.ID.String() + "-" + time.DateOnly + "." + fileObject.Type
+		fileObject.Url = fileObject.ID.Hex() + "-" + time.Now().Format("2006-01-02") + "." + fileObject.Type
 		fileURI := path.Join(dir, fileObject.Url)
+		log.Printf("This File path %v", fileURI)
+		file.Filename = fileURI
 		err = c.SaveUploadedFile(file, fileURI)
 		if err != nil {
 			log.Printf("Error saving file: %v", err)
@@ -82,15 +83,11 @@ func CreateFileTransaction(client *mongo.Client, collection *mongo.Collection) g
 			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.UNABLE_CREATE_FILE})
 			return
 		}
-		// update module.courses[wantedCourse].sections[wantedSection] push new file
-		// filter
-		filter := bson.D{{"courses.sections._id", sectionObjId}}
-		rs := collection.FindOneAndUpdate(c.Request.Context(), filter, bson.D{{"$push", bson.D{{"courses.sections.$.files", fileObject}}}})
-		err = rs.Err()
+		err = services.CreateFileObject(c.Request.Context(), collection, sectionObjId, fileObject)
 		if err != nil {
 			log.Printf("Error inserting file: %v", err)
 			err = session.AbortTransaction(c.Request.Context())
-			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.UNABLE_CREATE_FILE})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 			return
 
 		}
@@ -106,76 +103,138 @@ func CreateFileTransaction(client *mongo.Client, collection *mongo.Collection) g
 
 	}
 }
-func deleteFileObject(c *gin.Context, collection *mongo.Collection, file models.Files) error {
-	filter := bson.D{{"courses.sections.files._id", file.ID}}
-	rs := collection.FindOneAndUpdate(c.Request.Context(), filter, bson.D{{"$pull", bson.D{{"courses.sections.$.files", bson.D{{"_id", file.ID}}}}}})
-	err := rs.Err()
-	if err != nil {
-		log.Printf("Error deleting file object: %v", err)
-		return err
-
-	}
-	return nil
-}
 
 // For the file (the actual file, not the file object in the database), we need to implement the following functions:
-func deleteSavedFile(filename string) error {
-	dir, err := GetStorageFile("files")
-	if err != nil {
-		log.Printf("Error getting storage file: %v", err)
-	}
-	err = os.Remove(path.Join(dir, filename))
-	if err != nil {
-		log.Printf("Error deleting file: %v", err.Error())
-	}
-	return err
-}
 
+// @Summary Delete a file
+// @Description Delete a file
+// @Tags Files
+// @Params id path string true
+// @Security Bearer
+// @Success 200 {string} string "File deleted"
+// @Failure 400 {string} string "Bad request"
+// @Failure 404 {string} string "File not found"
+// @Failure 500 {string} string "File not deleted"
+// @Router /transactions/files/{id} [delete]
 func DeleteFileTransaction(client *mongo.Client, collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
-
-		var file models.Files
 		fileId := c.Param("id")
+		ctx, _ := context.WithTimeout(c.Request.Context(), time.Second*10)
+		defer func() {
+			ctx.Done()
+		}()
 		fileObjectId, errD := primitive.ObjectIDFromHex(fileId)
 		if errD != nil {
 			log.Printf("Error converting file id: %v", errD)
 			c.JSON(http.StatusBadRequest, gin.H{"message": shared.REQUIRED_ID})
 			return
 		}
-		file.ID = fileObjectId
-		session, err := client.StartSession()
+		// select only the file object
+		rs, err := services.GetFileObject(ctx, collection, fileObjectId)
 		if err != nil {
-			log.Printf("Error starting session: %v", err)
+			log.Printf("Error getting file object: %v", err.Error())
+			c.JSON(http.StatusNotFound, gin.H{"message": shared.FILE_NOT_DELETED})
+			return
+		}
+
+		session, errS := client.StartSession()
+		if errS != nil {
+			log.Printf("Error starting session: %v", errS.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.FILE_NOT_DELETED})
 			return
 
+		}
+
+		dir, err := GetStorageFile("files")
+		if err != nil {
+			log.Printf("Error getting storage file: %v", err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.FILE_NOT_DELETED})
+			return
+		}
+		transactionOption := options.Transaction().SetReadPreference(readpref.Primary())
+		err = session.StartTransaction(transactionOption)
+		if err != nil {
+			log.Printf("Error starting transaction: %v", err)
+			err = session.AbortTransaction(c.Request.Context())
+			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.FILE_NOT_DELETED})
+			return
+
+		}
+		errOF := services.DeleteFileObject(c.Request.Context(), collection, fileObjectId)
+		if errOF != nil {
+			session.AbortTransaction(ctx)
+			log.Printf("Error deleting file object: %v", err.Error())
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.FILE_NOT_DELETED})
+			return
+
+		}
+		errDF := services.DeleteSavedFile(rs.File.Url, dir)
+		if errDF != nil {
+			log.Printf("Error deleting file object: %v", errDF.Error())
+			session.AbortTransaction(ctx)
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.FILE_NOT_DELETED})
+			return
+		}
+		err = session.CommitTransaction(ctx)
+		if err != nil {
+			log.Printf("Error While Commiting the Transaction: %v", err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.FILE_NOT_DELETED})
+			return
 		}
 		defer func() {
-			session.EndSession(c.Request.Context())
+			session.EndSession(ctx)
 			return
 		}()
-		errDF := deleteSavedFile(file.Url)
-
-		if errDF != nil {
-			log.Printf("Error deleting file object: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.FILE_NOT_DELETED})
-			return
-		}
-		errOF := deleteFileObject(c, collection, file)
-		if errOF != nil {
-			log.Printf("Error deleting file object: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.FILE_NOT_DELETED})
-			return
-
-		}
-		err = session.CommitTransaction(c.Request.Context())
-		if err != nil {
-			log.Printf("Error deleting saved file: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.FILE_NOT_DELETED})
-			return
-		}
-
 		c.JSON(http.StatusOK, gin.H{"message": shared.FILE_DELETED})
 		return
+
 	}
 }
+
+/*
+
+
+
+db.modules.aggregate([
+    {
+        "$unwind": "$courses"
+    },
+{
+        "$unwind": "$courses.sections"
+    },
+{
+        "$unwind": "$courses.sections.files"
+    },
+    {
+        "$match": {
+            "courses.sections.files._id":ObjectId("6636a46fa59f3297bb0f9577")
+        }
+    },
+    {
+        "$replaceRoot": {
+            "newRoot": {
+                "$mergeObjects": [
+                    "$$ROOT",
+                    {
+            "file": {
+              _id: "$courses.sections.files._id",
+              name: "$courses.sections.files.name",
+              url: "$courses.sections.files.url",
+              // Add other desired file fields here
+            }
+          }
+                ]
+            }
+        }
+    },
+    {
+        "$project": {
+			"courses": 0,
+        }
+    },
+
+])
+
+
+
+*/

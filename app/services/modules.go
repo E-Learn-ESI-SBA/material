@@ -41,7 +41,9 @@ func GetModulesByFilter(ctx context.Context, collection *mongo.Collection, filte
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
 		err := cursor.Close(ctx)
 		if err != nil {
+
 			log.Println("failed to close cursor")
+
 		}
 	}(cursor, ctx)
 	return modules, nil
