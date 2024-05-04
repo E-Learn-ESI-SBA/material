@@ -89,7 +89,6 @@ func GetSectionDetailsById(ctx context.Context, collection *mongo.Collection, se
 	}
 	return sections, nil
 }
-
 func GetSectionFromStudent(ctx context.Context, SectionCollection *mongo.Collection, sectionId string, studentId string) (models.ExtendedSection, error) {
 	pip := bson.M{
 		"$lookup": bson.M{
@@ -114,7 +113,6 @@ func GetSectionFromStudent(ctx context.Context, SectionCollection *mongo.Collect
 	extendedSection.Notes = &filteredNotes
 	return extendedSection, nil
 }
-
 func EditSection(ctx context.Context, collection *mongo.Collection, section models.Section, sectionId primitive.ObjectID, teacherId string) error {
 	// update only the name
 	rs := collection.FindOneAndUpdate(ctx, bson.D{{"courses.sections._id", sectionId}, {"teacher_id", teacherId}}, bson.D{{"$set", bson.D{{"courses.sections.$.name", section.Name}}}})

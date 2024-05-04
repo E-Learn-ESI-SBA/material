@@ -39,7 +39,7 @@ func CreateFileTransaction(client *mongo.Client, collection *mongo.Collection) g
 			log.Printf("Error getting section id: %v", studentId)
 			c.JSON(http.StatusBadRequest, gin.H{"message": shared.REQUIRED_ID})
 		}
-		user := value.(utils.UserDetails)
+		user := value.(*utils.UserDetails)
 		fileObject.TeacherId = user.ID
 		fileObject.Name = c.PostForm("name")
 		fileObject.Group = c.PostForm("group")
