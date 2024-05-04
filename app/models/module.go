@@ -27,3 +27,22 @@ type ExtendedModule struct {
 	Module
 	Courses *[]ExtendCourse `json:"courses,omitempty" bson:"courses" validate:"default=[]"`
 }
+
+type RModule struct {
+	Module
+	ID      string    `json:"id"`
+	Courses []RCourse `json:"courses"`
+}
+
+func (m *RModule) Extract(module Module) {
+	m = &RModule{
+		Module:  module,
+		ID:      module.ID.Hex(),
+		Courses: []RCourse{},
+	}
+	rc := RCourse{}
+	for _, course := range module.Courses {
+		rc.Extract(course)
+		m.Courses = append(m.Courses, rc)
+	}
+}

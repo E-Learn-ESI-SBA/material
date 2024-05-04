@@ -68,9 +68,79 @@ type ExtendedSection struct {
 
 // ---------------------- API ----------------------
 
-type SectionResponse struct {
-	Section `json:"sections"`
+type RSection struct {
+	Section
+	ID       string     `json:"id"`
+	Files    []RFiles   `json:"files"`
+	Videos   []RVideo   `json:"videos"`
+	Lectures []RLecture `json:"lectures"`
 }
-type SectionDetailsResponse struct {
-	ExtendedSection `json:"section"`
+
+func (s *RSection) Extract(section Section) {
+	s = &RSection{
+		Section:  section,
+		ID:       section.ID.Hex(),
+		Videos:   []RVideo{},
+		Files:    []RFiles{},
+		Lectures: []RLecture{},
+	}
+	for _, f := range section.Files {
+		s.Files = append(s.Files, RFiles{
+			f,
+			f.ID.Hex(),
+		})
+	}
+	for _, v := range section.Videos {
+		s.Videos = append(s.Videos, RVideo{
+			v,
+			v.ID.Hex(),
+		})
+	}
+	for _, l := range section.Lectures {
+		s.Lectures = append(s.Lectures, RLecture{
+			l,
+			l.ID.Hex(),
+		})
+	}
+
+}
+
+// ---------- Files
+type RFiles struct {
+	Files
+	ID string `json:"id"`
+}
+
+func (rf *RFiles) Extract(f Files) {
+	rf = &RFiles{
+		f,
+		f.ID.Hex(),
+	}
+
+}
+
+// ----------- Videos
+type RVideo struct {
+	Video
+	ID string `json:"id"`
+}
+
+func (vd *RVideo) Extract(v Video) {
+	vd = &RVideo{
+		v,
+		v.ID.Hex(),
+	}
+}
+
+// --------- Lectures
+type RLecture struct {
+	Lecture
+	ID string `json:"id"`
+}
+
+func (rl *RLecture) Extract(l Lecture) {
+	rl = &RLecture{
+		l,
+		l.ID.Hex(),
+	}
 }
