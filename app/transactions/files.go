@@ -132,51 +132,59 @@ func DeleteFileTransaction(client *mongo.Client, collection *mongo.Collection) g
 		// select only the file object
 		rs, err := services.GetFileObject(ctx, collection, fileObjectId)
 		if err != nil {
-			log.Printf("Error getting file object: %v", err)
+			log.Printf("Error getting file object: %v", err.Error())
 			c.JSON(http.StatusNotFound, gin.H{"message": shared.FILE_NOT_DELETED})
 			return
 		}
 
 		session, errS := client.StartSession()
 		if errS != nil {
-			log.Printf("Error starting session: %v", errS)
+			log.Printf("Error starting session: %v", errS.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.FILE_NOT_DELETED})
 			return
 
+		}
+
+		dir, err := GetStorageFile("files")
+		if err != nil {
+			log.Printf("Error getting storage file: %v", err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.FILE_NOT_DELETED})
+			return
+		}
+		transactionOption := options.Transaction().SetReadPreference(readpref.Primary())
+		err = session.StartTransaction(transactionOption)
+		if err != nil {
+			log.Printf("Error starting transaction: %v", err)
+			err = session.AbortTransaction(c.Request.Context())
+			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.FILE_NOT_DELETED})
+			return
+
+		}
+		errOF := services.DeleteFileObject(c.Request.Context(), collection, fileObjectId)
+		if errOF != nil {
+			session.AbortTransaction(ctx)
+			log.Printf("Error deleting file object: %v", err.Error())
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.FILE_NOT_DELETED})
+			return
+
+		}
+		errDF := services.DeleteSavedFile(rs.File.Url, dir)
+		if errDF != nil {
+			log.Printf("Error deleting file object: %v", errDF.Error())
+			session.AbortTransaction(ctx)
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.FILE_NOT_DELETED})
+			return
+		}
+		err = session.CommitTransaction(ctx)
+		if err != nil {
+			log.Printf("Error While Commiting the Transaction: %v", err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.FILE_NOT_DELETED})
+			return
 		}
 		defer func() {
 			session.EndSession(ctx)
 			return
 		}()
-		dir, err := GetStorageFile("files")
-		if err != nil {
-			log.Printf("Error getting storage file: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.FILE_NOT_DELETED})
-			return
-		}
-		errDF := services.DeleteSavedFile(rs.File.Url, dir)
-
-		if errDF != nil {
-			log.Printf("Error deleting file object: %v", err)
-			session.AbortTransaction(ctx)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.FILE_NOT_DELETED})
-			return
-		}
-		errOF := services.DeleteFileObject(c.Request.Context(), collection, fileObjectId)
-		if errOF != nil {
-			session.AbortTransaction(ctx)
-			log.Printf("Error deleting file object: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.FILE_NOT_DELETED})
-			return
-
-		}
-		err = session.CommitTransaction(c.Request.Context())
-		if err != nil {
-			log.Printf("Error deleting saved file: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.FILE_NOT_DELETED})
-			return
-		}
-
 		c.JSON(http.StatusOK, gin.H{"message": shared.FILE_DELETED})
 		return
 
