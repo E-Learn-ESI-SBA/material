@@ -16,14 +16,23 @@ import (
 )
 
 func EditFile(ctx context.Context, collection *mongo.Collection, file models.Files) error {
-	up, err := collection.UpdateOne(ctx, bson.M{"_id": file.ID}, bson.M{"$set": bson.M{"name": file.Name}})
+	update := bson.M{
+		"$set": bson.A{
+			bson.M{"courses.$[course].sections.$[section].files.$[file].name": file.Name},
+			bson.M{"courses.$[course].sections.$[section].files.$[file].group": file.Group},
+		},
+	}
+	arrayFilters := bson.A{
+		bson.M{"course.sections.files._id": file.ID},
+		bson.M{"section.files._id": file.ID},
+		bson.M{"file._id": file.ID},
+	}
+	opts := options.FindOneAndUpdate().SetArrayFilters(options.ArrayFilters{Filters: arrayFilters})
+	up := collection.FindOneAndUpdate(ctx, bson.M{"courses.sections.files._id": file.ID}, update, opts)
+	err := up.Err()
 	if err != nil {
 		log.Println("Error updating file: ", err)
 		return errors.New(shared.FILE_NOT_UPDATED)
-	}
-	if up.ModifiedCount == 0 {
-		log.Println("File Note Found ", err)
-		return errors.New(shared.FILE_NOT_FOUND)
 	}
 
 	return nil
