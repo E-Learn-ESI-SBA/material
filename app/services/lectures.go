@@ -13,17 +13,38 @@ import (
 	"time"
 )
 
+type ResponseLecture struct {
+	models.Module
+	lecture models.Lecture `bson:"lecture"`
+}
+
 func GetTeacherLecture(collection *mongo.Collection, ctx context.Context, lectureId primitive.ObjectID) (models.Lecture, error) {
-	var lecture models.Lecture
-	filter := bson.D{{"courses.sections.lectures._id", lectureId}}
+	var lecture ResponseLecture
+	pipeline := bson.A{
+		bson.M{"$unwind": "$courses"},
+		bson.M{"$unwind": "$courses.sections"},
+		bson.M{"$unwind": "$courses.sections.lectures"},
+		bson.M{"$match": bson.M{"courses.sections.lectures._id": lectureId}},
+		bson.M{"$replaceRoot": bson.M{"newRoot": bson.M{"$mergeObjects": []interface{}{"$$ROOT", bson.M{"lecture": bson.M{"_id": "$courses.sections.lectures._id", "group": "$courses.sections.lectures.group", "name": "$courses.sections.lectures.name", "content": "$courses.sections.lectures.content"}}}}}},
+		bson.M{"$project": bson.M{"courses": 0}},
+	}
+	//	filter := bson.D{{"courses.sections.lectures._id", lectureId}}
 	// from module with  courses.sections.lectures , select only the lecture with the id lectureId
-	opts := options.FindOne().SetProjection(bson.D{{"courses.sections.lectures.$", 1}, {"_id", 1}})
-	err := collection.FindOne(ctx, filter, opts).Decode(&lecture)
+	//	opts := options.FindOne().SetProjection(bson.D{{"courses.sections.lectures.$", 1}, {"_id", 1}})
+	cursor, err := collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		log.Printf("Error While Getting Lecture: %v\n", err)
 		return models.Lecture{}, err
 	}
-	return lecture, nil
+	for cursor.Next(ctx) {
+		err := cursor.Decode(&lecture)
+		if err != nil {
+			log.Printf("Error While Decoding Lecture: %v\n", err)
+			return models.Lecture{}, err
+		}
+
+	}
+	return lecture.lecture, nil
 }
 
 func CreateLecture(collection *mongo.Collection, ctx context.Context, lecture models.Lecture, sectionId primitive.ObjectID) error {
