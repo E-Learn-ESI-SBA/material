@@ -21,8 +21,7 @@ func GetModulesByFilter(ctx context.Context, collection *mongo.Collection, filte
 	var filter bson.D
 	opts := options.Find().SetProjection(bson.D{{"courses", 0}})
 	if usage == "public" {
-		filter = bson.D{{"year", filterStruct.Year}, {"semester", filterStruct.Semester}, {"speciality", filterStruct.Speciality}, {
-			"isPublic", true}}
+		filter = bson.D{{"year", filterStruct.Year}, {"semester", filterStruct.Semester}, {"speciality", filterStruct.Speciality}}
 
 	} else if teacherId != nil {
 		filter = bson.D{{"year", filterStruct.Year}, {"semester", filterStruct.Semester}, {"speciality", filterStruct.Speciality}, {

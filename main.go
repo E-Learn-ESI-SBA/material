@@ -2,6 +2,9 @@ package main
 
 import (
 	"github.com/gin-contrib/cors"
+	"github.com/lpernett/godotenv"
+	"github.com/permitio/permit-golang/pkg/config"
+	"github.com/permitio/permit-golang/pkg/permit"
 	"log"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/routes"
@@ -28,6 +31,13 @@ import (
 // @host localhost:8080
 // @BasePath /
 func main() {
+	mode := os.Getenv("GIN_MODE")
+	if mode != "release" {
+		gin.SetMode(gin.DebugMode)
+		_ = godotenv.Load()
+	} else {
+		gin.SetMode(gin.ReleaseMode)
+	}
 	configCors := cors.Config{
 		AllowAllOrigins: true,
 		AllowMethods:    []string{"GET", "POST", "PUT", "DELETE", "PATCH"},
@@ -42,6 +52,12 @@ func main() {
 		log.Fatal("Database not connected")
 
 	}
+	/*
+		Enable Permit
+	*/
+
+	PermitConfig := config.NewConfigBuilder(os.Getenv("PERMIT_TOKEN")).WithPdpUrl(os.Getenv("PDP_SERVER")).Build()
+	Permit := permit.NewPermit(PermitConfig)
 	var app models.Application
 	app = *models.NewApp(client)
 
@@ -80,7 +96,7 @@ func main() {
 	// Start Middleware
 	server.Use(cors.New(configCors))
 	// End Middleware
-	routes.ModuleRoute(server, app.ModuleCollection)
+	routes.ModuleRoute(server, app.ModuleCollection, Permit)
 	routes.CourseRoute(server, app.ModuleCollection)
 	routes.SectionRouter(server, app.ModuleCollection)
 	routes.LectureRoute(server, app.ModuleCollection)

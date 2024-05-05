@@ -113,3 +113,12 @@ const LECTURE_NOT_UPDATED = "Lecture Not Updated"
 const LECTURE_NOT_DELETED = "Lecture Not Deleted"
 const LECTURE_NOT_RETRIEVED = "Lecture Not Retrieved"
 const LECTURE_RETRIEVED = "Lecture Retrieved Successfully"
+
+// Comments
+const COMMENT_NOT_FOUND = "Comment Not Found"
+const COMMENT_DELETED = "Comment Deleted Successfully"
+const COMMENT_UPDATED = "Comment Updated Successfully"
+const COMMENT_CREATED = "Comment Created Successfully"
+const COMMENT_NOT_CREATED = "Comment Not Created"
+const COMMENT_NOT_UPDATED = "Comment Not Updated"
+const COMMENT_NOT_DELETED = "Comment Not Deleted"

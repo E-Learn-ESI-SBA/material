@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -9,6 +10,8 @@ import (
 	"log"
 	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
+	"madaurus/dev/material/app/shared"
+	"time"
 )
 
 func GetCourseCommentsByCourseId(ctx context.Context, collection *mongo.Collection, courseId string, pagination interfaces.PaginationQuery) ([]models.Comments, error) {
@@ -169,10 +172,14 @@ func ReplayToComment(ctx context.Context, collection *mongo.Collection, replay m
 
 }
 func CreateComment(ctx context.Context, collection *mongo.Collection, comment models.Comments) error {
+	comment.ID = primitive.NewObjectID()
+	comment.CreatedAt = time.Now()
+	comment.UpdatedAt = comment.CreatedAt
+	comment.Replays = []models.Reply{}
 	_, err := collection.InsertOne(ctx, comment)
 	if err != nil {
 		log.Printf("Error While Creating the Comment: %v\n", err)
-		return err
+		return errors.New(shared.COMMENT_NOT_CREATED)
 	}
 	return nil
 }

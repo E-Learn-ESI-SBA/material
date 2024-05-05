@@ -19,10 +19,10 @@ const url = "http://localhost:8080"
 
 func TestCreateModule(t *testing.T) {
 	user := utils.LightUser{
-		Email:    "ameri.mohamedayoub@gmail.com",
+		Email:    "moha@gmail.com",
 		Username: "ayoub",
 		Role:     "admin",
-		ID:       "12",
+		ID:       "2",
 		Avatar:   "https://www.google.com",
 	}
 	const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"

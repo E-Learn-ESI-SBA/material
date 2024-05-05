@@ -3,6 +3,7 @@ package middlewares
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"log"
 	"madaurus/dev/material/app/shared"
 	"madaurus/dev/material/app/utils"
 	"net/http"
@@ -34,6 +35,7 @@ func Authentication() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		log.Printf("Token ", ClientToken)
 		c.Set("user", claims)
 		c.Next()
 	}

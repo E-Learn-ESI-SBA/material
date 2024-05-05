@@ -2,7 +2,11 @@ package middlewares
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/permitio/permit-golang/pkg/enforcement"
+	"github.com/permitio/permit-golang/pkg/permit"
+	"log"
 	"madaurus/dev/material/app/shared"
+	"madaurus/dev/material/app/shared/iam"
 	"madaurus/dev/material/app/utils"
 	"net/http"
 )
@@ -17,11 +21,11 @@ func BasicRBAC(role string) gin.HandlerFunc {
 			return
 		}
 		user := claim.(*utils.UserDetails)
-		if user.Role == shared.ADMIN {
+		if user.Role == iam.ADMIN {
 
 			c.Next()
-		} else if user.Role == shared.TEACHER {
-			if role == shared.STUDENT || role == shared.ADMIN {
+		} else if user.Role == iam.TEACHER {
+			if role == iam.STUDENT || role == iam.ADMIN {
 				c.JSON(http.StatusForbidden, gin.H{"message": shared.FORBIDDEN})
 				c.Abort()
 				return
@@ -31,4 +35,38 @@ func BasicRBAC(role string) gin.HandlerFunc {
 		c.Next()
 		return
 	}
+}
+
+func IAM(permit *permit.Client, resourceType string, RequestAction string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claim, err := c.Get("user")
+		if !err {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.USER_NOT_INJECTED})
+			c.Abort()
+			return
+		}
+		moduleId, _ := c.Params.Get("id")
+
+		user := claim.(*utils.UserDetails)
+		log.Printf("User Role: %v\n", user.Role)
+		module := enforcement.ResourceBuilder(resourceType).WithKey(moduleId).Build()
+		EnforceAction := enforcement.Action(RequestAction)
+		userRole := enforcement.UserBuilder(user.ID).Build()
+		decision, errC := permit.Check(userRole, EnforceAction, module)
+		if errC != nil {
+			log.Printf("Error While Checking the Permission: %v\n", errC)
+			c.JSON(http.StatusForbidden, gin.H{"message": shared.FORBIDDEN})
+			c.Abort()
+			return
+		}
+		if !decision {
+			c.JSON(http.StatusForbidden, gin.H{"message": shared.FORBIDDEN})
+			c.Abort()
+			return
+		}
+		c.Next()
+		return
+
+	}
+
 }

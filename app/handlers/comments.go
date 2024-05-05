@@ -12,22 +12,52 @@ import (
 	"net/http"
 )
 
+// @Summary Create Comment
+// @Description Protected Route used to create a comment
+// @Produce json
+// @Accept json
+// @Tags Comments
+// @Param comment body models.Comments true "Comment Object"
+// @Param courseId query string true "Course ID"
+// @Success 201 {object} interfaces.APiSuccess
+// @Failure 400 {object} interfaces.APiError
+// @Failure 500 {object} interfaces.APiError
+// @Router /comments [POST]
+// @Security Bearer
 func CreateComment(collection *mongo.Collection) gin.HandlerFunc {
 	return func(context *gin.Context) {
+		courseId := context.Query("courseId")
+		if courseId == "" {
+			context.JSON(http.StatusBadRequest, gin.H{"message": shared.INVALID_ID})
+			return
+		}
+		courseObjectId, err := primitive.ObjectIDFromHex(courseId)
+		if err != nil {
+			context.JSON(http.StatusBadRequest, gin.H{"message": shared.INVALID_ID})
+			return
+		}
+
 		var comment models.Comments
-		err := context.BindJSON(&comment)
+		err = context.BindJSON(&comment)
+
 		if err != nil {
-			context.JSON(400, gin.H{"error": err.Error()})
+			context.JSON(http.StatusNotAcceptable, gin.H{"message": shared.INVALID_BODY})
 			return
 		}
+		comment.CourseId = courseObjectId
+		value, errU := context.Get("user")
+		if errU != true {
+			context.JSON(http.StatusInternalServerError, gin.H{"message": shared.USER_NOT_INJECTED})
+			return
+		}
+		user := value.(*utils.UserDetails)
+		comment.UserId = user.ID
 		err = services.CreateComment(context.Request.Context(), collection, comment)
-
 		if err != nil {
-			context.JSON(400, gin.H{"error": err.Error()})
+			context.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
 		}
-		context.JSON(200, gin.H{"message": "Comment Created Successfully"})
-
+		context.JSON(http.StatusCreated, gin.H{"message": shared.COMMENT_CREATED})
 	}
 
 }
