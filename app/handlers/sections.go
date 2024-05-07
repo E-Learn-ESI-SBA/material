@@ -16,11 +16,11 @@ import (
 // @Accept json
 // @Tags Section
 // @Param courseId path string true "Course Id"
-// @Success 200 {object} []models.SectionResponse
+// @Success 200 {object} []models.Section
 // @Security Bearer
-// @Failure 400 {object} interfaces.APiError
-// @Failure 500 {object} interfaces.APiError
-// @Failure 401 {object} interfaces.APiError
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
+// @Failure 401 {object} interfaces.APIResponse
 // @Router /section/all/{courseId} [POST]
 func GetSections(collection *mongo.Collection) gin.HandlerFunc {
 	return func(g *gin.Context) {
@@ -45,10 +45,10 @@ func GetSections(collection *mongo.Collection) gin.HandlerFunc {
 // @Tags Section
 // @Security Bearer
 // @Param sectionId path string true "Section Id"
-// @Success 200 {object} models.SectionDetailsResponse
-// @Failure 400 {object} interfaces.APiError
-// @Failure 500 {object} interfaces.APiError
-// @Failure 401 {object} interfaces.APiError
+// @Success 200 {object} models.Section
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
+// @Failure 401 {object} interfaces.APIResponse
 // @Router /section/details/{sectionId} [GET]
 func GetSectionDetails(collection *mongo.Collection) gin.HandlerFunc {
 	return func(g *gin.Context) {
@@ -74,9 +74,9 @@ func GetSectionDetails(collection *mongo.Collection) gin.HandlerFunc {
 // @Param courseId query string true "Course Id"
 // @Security Bearer
 // @Success 200 {object} interfaces.APiSuccess
-// @Failure 400 {object} interfaces.APiError
-// @Failure 500 {object} interfaces.APiError
-// @Failure 401 {object} interfaces.APiError
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
+// @Failure 401 {object} interfaces.APIResponse
 func CreateSection(collection *mongo.Collection) gin.HandlerFunc {
 	return func(g *gin.Context) {
 		var section models.Section
@@ -123,7 +123,7 @@ func CreateSection(collection *mongo.Collection) gin.HandlerFunc {
 // @Tags Section
 // @Param object body models.Section true "Section Object"
 // @Success 200 {object} interfaces.APiSuccess
-// @Failure 400 {object} interfaces.APiError
+// @Failure 400 {object} interfaces.APIResponse
 // @Router /section [PUT]
 func EditSection(collection *mongo.Collection) gin.HandlerFunc {
 	return func(g *gin.Context) {
@@ -166,10 +166,10 @@ func EditSection(collection *mongo.Collection) gin.HandlerFunc {
 // @Tags Section
 // @Param sectionId path string true "Section Id"
 // @Success 200 {object} interfaces.APiSuccess
-// @Failure 400 {object} interfaces.APiError
-// @Failure 500 {object} interfaces.APiError
-// @Failure 401 {object} interfaces.APiError
-// @Failure 403 {object} interfaces.APiError
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
+// @Failure 401 {object} interfaces.APIResponse
+// @Failure 403 {object} interfaces.APIResponse
 // @Router /section/:id [DELETE]
 
 func DeleteSection(collection *mongo.Collection) gin.HandlerFunc {

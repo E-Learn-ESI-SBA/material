@@ -19,9 +19,9 @@ import (
 // @Tags Comments
 // @Param comment body models.Comments true "Comment Object"
 // @Param courseId query string true "Course ID"
-// @Success 201 {object} interfaces.APiSuccess
-// @Failure 400 {object} interfaces.APiError
-// @Failure 500 {object} interfaces.APiError
+// @Success 201 {object} interfaces.APIResponse
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
 // @Router /comments [POST]
 // @Security Bearer
 func CreateComment(collection *mongo.Collection) gin.HandlerFunc {

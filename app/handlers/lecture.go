@@ -17,11 +17,11 @@ import (
 // @Tags Lecture
 // @Produce json
 // @Param lectureId path string true "Lecture ID"
-// @Success 200 {object} gin.H
+// @Success 200 {object} interfaces.APIResponse
 // @Router /lecture [GET]
 // @Security Bearer
-// @Failure 400 {object} gin.H
-// @Failure 500 {object} gin.H
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
 // @Param Authorization header string true "Auth Token"
 func GetLecture(collection *mongo.Collection) gin.HandlerFunc {
 	return func(g *gin.Context) {
@@ -50,12 +50,12 @@ func GetLecture(collection *mongo.Collection) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param lecture body models.Lecture true "Lecture Object"
-// @Success 200 {object} gin.H
+// @Success 200 {object} interfaces.APIResponse
 // @Param sectionId path string true "Section ID"
 // @Router /lecture [post]
 // @Security Bearer
-// @Failure 400 {object} gin.H
-// @Failure 500 {object} gin.H
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
 // @Param Authorization header string true "Auth Token"
 func CreateLecture(collection *mongo.Collection) gin.HandlerFunc {
 	return func(g *gin.Context) {
@@ -99,12 +99,12 @@ func CreateLecture(collection *mongo.Collection) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param lecture body models.Lecture true "Lecture Object"
-// @Success 200 {object} gin.H
+// @Success 200 {object} interfaces.APIResponse
 // @Param lectureId path string true "Lecture ID"
 // @Router /lecture [put]
 // @Security Bearer
-// @Failure 400 {object} gin.H
-// @Failure 500 {object} gin.H
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
 // @Param Authorization header string true "Auth Token"
 func UpdateLecture(collection *mongo.Collection) gin.HandlerFunc {
 	return func(g *gin.Context) {
@@ -129,11 +129,11 @@ func UpdateLecture(collection *mongo.Collection) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param lectureId path string true "Lecture ID"
-// @Success 200 {object} gin.H
+// @Success 200 {object} interfaces.APIResponse
 // @Router /lecture [delete]
 // @Security Bearer
-// @Failure 400 {object} gin.H
-// @Failure 500 {object} gin.H
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
 // @Param Authorization header string true "Auth Token"
 func DeleteLecture(collection *mongo.Collection) gin.HandlerFunc {
 	return func(g *gin.Context) {

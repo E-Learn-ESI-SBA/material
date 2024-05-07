@@ -23,8 +23,8 @@ import (
 // @Param course body models.Course true "Course Object"
 // @Param module query string true "Module ID"
 // @Success 200 {object} interfaces.APiSuccess
-// @Failure 400 {object} interfaces.APiError
-// @Failure 500 {object} interfaces.APiError
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
 // @Router /courses [POST]
 func CreateCourse(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -70,7 +70,7 @@ func CreateCourse(collection *mongo.Collection) gin.HandlerFunc {
 // @Security ApiKeyAuth
 // @Param id path string true "Course ID"
 // @Success 200 {object} interfaces.APiSuccess
-// @Failure 400 {object} interfaces.APiError
+// @Failure 400 {object} interfaces.APIResponse
 // @Param module query string true "Module ID"
 // @Router /courses/update [PUT]
 
@@ -132,7 +132,7 @@ func UpdateCourse(collection *mongo.Collection) gin.HandlerFunc {
 // @Param id path string true "Course ID"
 // @Param moduleId query string true "Module ID"
 // @Success 200 {object} interfaces.APiSuccess
-// @Failure 400 {object} interfaces.APiError
+// @Failure 400 {object} interfaces.APIResponse
 // @Router /courses/delete/{id} [DELETE]
 func DeleteCourse(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -173,7 +173,7 @@ func DeleteCourse(collection *mongo.Collection) gin.HandlerFunc {
 // @Accept json
 // @Security ApiKeyAuth
 // @Success 200 {object} []models.Course
-// @Failure 400 {object} interfaces.APiError
+// @Failure 400 {object} interfaces.APIResponse
 // @Router /courses/admin [GET]
 func GetCoursesByAdmin(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -200,7 +200,7 @@ func GetCoursesByAdmin(collection *mongo.Collection) gin.HandlerFunc {
 // @Accept json
 // @Security ApiKeyAuth
 // @Success 200 {object} []models.Course
-// @Failure 400 {object} interfaces.APiError
+// @Failure 400 {object} interfaces.APIResponse
 // @Router /courses/teacher [GET]
 func GetCoursesByTeacher(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {

@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/permitio/permit-golang/pkg/permit"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
@@ -22,8 +23,8 @@ import (
 // @Param id path string true "Module ID"
 // @Param visibility query string true "Module Visibility"
 // @Success 200 {object} interfaces.APiSuccess
-// @Failure 400 {object} interfaces.APiError
-// @Failure 500 {object} interfaces.APiError
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
 // @Router /modules/visibility/{id} [PUT]
 func EditModuleVisibility(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -50,8 +51,8 @@ func EditModuleVisibility(collection *mongo.Collection) gin.HandlerFunc {
 // @Tags Modules
 // @Param filter body interfaces.ModuleFilter true "Module Filter"
 // @Success 200 {object} interfaces.APiSuccess
-// @Failure 400 {object} interfaces.APiError
-// @Failure 500 {object} interfaces.APiError
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
 // @Router /modules/public [POST]
 func GetPublicFilteredModules(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -78,8 +79,8 @@ func GetPublicFilteredModules(collection *mongo.Collection) gin.HandlerFunc {
 // @Accept json
 // @Param filter body interfaces.ModuleFilter true "Module Filter"
 // @Success 200 {object} interfaces.APiSuccess
-// @Failure 400 {object} interfaces.APiError
-// @Failure 500 {object} interfaces.APiError
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
 // @Router /modules/teacher [GET]
 func GetTeacherFilterModules(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -105,6 +106,47 @@ func GetTeacherFilterModules(collection *mongo.Collection) gin.HandlerFunc {
 	}
 }
 
+// @Summary Get Module By Teacher
+// @Description Protected Route used to get modules by teacher
+// @Produce json
+// @Accept json
+// @Tags Modules
+// @Success 200 {object} interfaces.APiSuccess
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
+// @Router /modules/teacher [GET]
+func GetModuleByTeacher(collection *mongo.Collection, permit *permit.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		value, notFound := c.Get("user")
+		if notFound != true {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.USER_NOT_INJECTED})
+			return
+		}
+		user := value.(*utils.UserDetails)
+		RKyes := utils.GetAllowedResources("read", "modules", user.ID, permit)
+		if len(RKyes) == 0 {
+			log.Println("The Key is null")
+			modules, err := services.GetModulesByTeacher(c.Request.Context(), collection, user.ID)
+			if err != nil {
+				log.Println("Error While Getting the keys modules %v ", err.Error())
+				c.JSON(http.StatusBadRequest, gin.H{"message": shared.UNABLE_GET_MODULE})
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{"data": modules})
+		} else {
+			log.Printf("Keys: %v\n", RKyes[0])
+			log.Println("Here")
+			modules, err := services.ModuleSelector(c.Request.Context(), collection, RKyes)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"message": shared.UNABLE_GET_MODULE})
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{"data": modules})
+
+		}
+	}
+}
+
 // @Summary Create Module
 // @Description Protected Route used to create a module
 // @Produce json
@@ -112,10 +154,10 @@ func GetTeacherFilterModules(collection *mongo.Collection) gin.HandlerFunc {
 // @Tags Modules
 // @Param module body models.Module true "Module Object"
 // @Success 200 {object} interfaces.APiSuccess
-// @Failure 400 {object} interfaces.APiError
-// @Failure 500 {object} interfaces.APiError
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
 // @Router /modules [POST]
-func CreateModule(collection *mongo.Collection) gin.HandlerFunc {
+func CreateModule(collection *mongo.Collection, permit *permit.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		print("Create Module Handler ...")
 		var module models.Module
@@ -125,7 +167,7 @@ func CreateModule(collection *mongo.Collection) gin.HandlerFunc {
 			c.JSON(http.StatusNotAcceptable, gin.H{"message": shared.INVALID_BODY})
 			return
 		}
-		err = services.CreateModule(c.Request.Context(), collection, module)
+		err = services.CreateModule(c.Request.Context(), collection, module, permit)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"message": shared.UNABLE_CREATE_MODULE})
 			return
@@ -143,8 +185,8 @@ func CreateModule(collection *mongo.Collection) gin.HandlerFunc {
 // @Param module body models.Module true "Module Object"
 // @Param moduleId path string true "Module Id"
 // @Success 200 {object} interfaces.APiSuccess
-// @Failure 400 {object} interfaces.APiError
-// @Failure 500 {object} interfaces.APiError
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
 // @Router /modules/{moduleId} [PUT]
 func UpdateModule(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -179,8 +221,8 @@ func UpdateModule(collection *mongo.Collection) gin.HandlerFunc {
 // @Tags Modules
 // @Param id path string true "Module ID"
 // @Success 200 {object} models.ExtendedModule
-// @Failure 400 {object} interfaces.APiError
-// @Failure 500 {object} interfaces.APiError
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
 // @Router /modules/{id} [GET]
 func GetModuleById(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -208,8 +250,8 @@ func GetModuleById(collection *mongo.Collection) gin.HandlerFunc {
 // @Produce json
 // @Success 200 {object} interfaces.APiSuccess
 // @Tags Modules
-// @Failure 400 {object} interfaces.APiError
-// @Failure 500 {object} interfaces.APiError
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
 // @Router /transaction/module/{id} [DELETE]
 func DeleteModule(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -241,8 +283,8 @@ func DeleteModule(collection *mongo.Collection) gin.HandlerFunc {
 // @Tags Modules
 // @Param module body []models.Module true "Module Object"
 // @Success 200 {object} interfaces.APiSuccess
-// @Failure 400 {object} interfaces.APiError
-// @Failure 500 {object} interfaces.APiError
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
 // @Router /modules/many [POST]
 func CreateManyModules(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {

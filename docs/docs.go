@@ -24,6 +24,117 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/comments": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Protected Route used to create a comment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Comments"
+                ],
+                "summary": "Create Comment",
+                "parameters": [
+                    {
+                        "description": "Comment Object",
+                        "name": "comment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Comments"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Course ID",
+                        "name": "courseId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/courses": {
+            "post": {
+                "description": "Protected Route used to create a course (chapter)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Create Course",
+                "parameters": [
+                    {
+                        "description": "Course Object",
+                        "name": "course",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Course"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Module ID",
+                        "name": "module",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APiSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/courses/admin": {
             "get": {
                 "security": [
@@ -55,53 +166,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
-                        }
-                    }
-                }
-            }
-        },
-        "/courses/create": {
-            "post": {
-                "description": "Protected Route used to create a course (chapter)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Courses"
-                ],
-                "summary": "Create Course",
-                "parameters": [
-                    {
-                        "description": "Course Object",
-                        "name": "course",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Course"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.APiSuccess"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     }
                 }
@@ -127,6 +192,13 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Module ID",
+                        "name": "moduleId",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -139,7 +211,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     }
                 }
@@ -176,15 +248,71 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     }
                 }
             }
         },
-        "/courses/update": {
+        "/lecture": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Get a Lecture",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lecture"
+                ],
+                "summary": "Get a Lecture",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lecture ID",
+                        "name": "lectureId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Auth Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    }
+                }
+            },
             "put": {
-                "description": "Protected Route used to update a course (chapter)",
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Update a Lecture",
                 "consumes": [
                     "application/json"
                 ],
@@ -192,31 +320,168 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Courses"
+                    "Lecture"
                 ],
-                "summary": "Update Course",
+                "summary": "Update a Lecture",
                 "parameters": [
                     {
-                        "description": "Course Object",
-                        "name": "course",
+                        "description": "Lecture Object",
+                        "name": "lecture",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Course"
+                            "$ref": "#/definitions/models.Lecture"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lecture ID",
+                        "name": "lectureId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Auth Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiSuccess"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Create a new Lecture",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lecture"
+                ],
+                "summary": "Create a new Lecture",
+                "parameters": [
+                    {
+                        "description": "Lecture Object",
+                        "name": "lecture",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Lecture"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Section ID",
+                        "name": "sectionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Auth Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Delete a Lecture",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lecture"
+                ],
+                "summary": "Delete a Lecture",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Lecture ID",
+                        "name": "lectureId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Auth Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     }
                 }
@@ -256,21 +521,21 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     }
                 }
             }
         },
-        "/modules/:moduleId": {
-            "put": {
-                "description": "Protected Route used to update a module",
+        "/modules/many": {
+            "post": {
+                "description": "Protected Route used to create a module",
                 "consumes": [
                     "application/json"
                 ],
@@ -280,7 +545,7 @@ const docTemplate = `{
                 "tags": [
                     "Modules"
                 ],
-                "summary": "Update Module",
+                "summary": "Create Module",
                 "parameters": [
                     {
                         "description": "Module Object",
@@ -288,15 +553,11 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Module"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Module"
+                            }
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Module Id",
-                        "name": "moduleId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -309,48 +570,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
-                        }
-                    }
-                }
-            }
-        },
-        "/modules/delete/{id}": {
-            "delete": {
-                "description": "Protected Route used to delete a module",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Modules"
-                ],
-                "summary": "Delete Module",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.APiSuccess"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     }
                 }
@@ -390,13 +616,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     }
                 }
@@ -404,7 +630,7 @@ const docTemplate = `{
         },
         "/modules/teacher": {
             "get": {
-                "description": "Protected Route used to get teacher modules",
+                "description": "Protected Route used to get modules by teacher",
                 "consumes": [
                     "application/json"
                 ],
@@ -414,18 +640,7 @@ const docTemplate = `{
                 "tags": [
                     "Modules"
                 ],
-                "summary": "Get Teacher Modules",
-                "parameters": [
-                    {
-                        "description": "Module Filter",
-                        "name": "filter",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.ModuleFilter"
-                        }
-                    }
-                ],
+                "summary": "Get Module By Teacher",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -436,13 +651,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     }
                 }
@@ -487,13 +702,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     }
                 }
@@ -531,20 +746,115 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     }
                 }
             }
         },
-        "/section/create": {
+        "/modules/{moduleId}": {
+            "put": {
+                "description": "Protected Route used to update a module",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Modules"
+                ],
+                "summary": "Update Module",
+                "parameters": [
+                    {
+                        "description": "Module Object",
+                        "name": "module",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Module"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Module Id",
+                        "name": "moduleId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APiSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/section": {
+            "put": {
+                "description": "Protected Route Edit Section",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Section"
+                ],
+                "summary": "Edit Section",
+                "parameters": [
+                    {
+                        "description": "Section Object",
+                        "name": "object",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Section"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APiSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/section/all/{courseId}": {
             "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Protected Route Get Sections",
                 "consumes": [
                     "application/json"
@@ -568,26 +878,26 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.SectionResponse"
+                                "$ref": "#/definitions/models.Section"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     }
                 }
@@ -595,6 +905,11 @@ const docTemplate = `{
         },
         "/section/details/{sectionId}": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Protected Route Get Section Details",
                 "consumes": [
                     "application/json"
@@ -616,25 +931,97 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.SectionDetailsResponse"
+                            "$ref": "#/definitions/models.Section"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/interfaces.APiError"
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/transaction/module/{id}": {
+            "delete": {
+                "description": "Protected Route used to delete a module",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Modules"
+                ],
+                "summary": "Delete Module",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APiSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/transactions/files/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Delete a file",
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Delete a file",
+                "responses": {
+                    "200": {
+                        "description": "File deleted",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "File not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "File not deleted",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
@@ -642,10 +1029,13 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "interfaces.APiError": {
+        "interfaces.APIResponse": {
             "type": "object",
             "properties": {
-                "error": {
+                "code": {
+                    "type": "integer"
+                },
+                "message": {
                     "type": "string"
                 }
             }
@@ -665,17 +1055,52 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "semester": {
-                    "type": "integer",
-                    "maximum": 2,
-                    "minimum": 1
+                    "type": "integer"
                 },
                 "speciality": {
                     "type": "string"
                 },
                 "year": {
-                    "type": "integer",
-                    "maximum": 5,
-                    "minimum": 1
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Comments": {
+            "type": "object",
+            "required": [
+                "content",
+                "course_id"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "course_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_edited": {
+                    "type": "boolean"
+                },
+                "replays": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Reply"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/utils.LightUser"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },
@@ -683,7 +1108,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "description",
-                "module_id",
                 "name"
             ],
             "properties": {
@@ -696,11 +1120,15 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "module_id": {
-                    "type": "string"
-                },
                 "name": {
                     "type": "string"
+                },
+                "sections": {
+                    "description": "ModuleId    primitive.ObjectID ` + "`" + `json:\"module_id\" bson:\"module_id\"` + "`" + `",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Section"
+                    }
                 },
                 "updated_at": {
                     "type": "string"
@@ -711,7 +1139,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "description",
-                "module_id",
                 "name"
             ],
             "properties": {
@@ -722,9 +1149,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
-                },
-                "module_id": {
                     "type": "string"
                 },
                 "name": {
@@ -773,7 +1197,7 @@ const docTemplate = `{
                 "instructors": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
                 "isPublic": {
@@ -796,7 +1220,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "teacher_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"
@@ -806,92 +1230,31 @@ const docTemplate = `{
                 }
             }
         },
-        "models.ExtendedSection": {
-            "type": "object",
-            "required": [
-                "course_id",
-                "name",
-                "order",
-                "teacher_id"
-            ],
-            "properties": {
-                "contents": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Lecture"
-                    }
-                },
-                "course_id": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "files": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Files"
-                    }
-                },
-                "id": {
-                    "type": "string"
-                },
-                "lectures": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Lecture"
-                    }
-                },
-                "name": {
-                    "type": "string"
-                },
-                "note": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.StudentNote"
-                    }
-                },
-                "order": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "teacher_id": {
-                    "type": "integer"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "videos": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Video"
-                    }
-                }
-            }
-        },
         "models.Files": {
             "type": "object",
             "required": [
                 "group",
-                "section_id",
-                "teacher_id",
-                "url"
+                "name"
             ],
             "properties": {
                 "created_at": {
                     "type": "string"
                 },
                 "group": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
                 },
-                "section_id": {
+                "name": {
                     "type": "string"
                 },
                 "teacher_id": {
-                    "type": "integer"
+                    "type": "string"
+                },
+                "type": {
+                    "description": "SectionId primitive.ObjectID ` + "`" + `json:\"section_id\" bson:\"section_id\"` + "`" + `",
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"
@@ -905,8 +1268,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "content",
-                "is_public",
-                "section_id",
+                "group",
                 "teacher_id"
             ],
             "properties": {
@@ -915,6 +1277,9 @@ const docTemplate = `{
                     "minLength": 250
                 },
                 "created_at": {
+                    "type": "string"
+                },
+                "group": {
                     "type": "string"
                 },
                 "id": {
@@ -926,11 +1291,9 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "section_id": {
-                    "type": "string"
-                },
                 "teacher_id": {
-                    "type": "integer"
+                    "description": "SectionId primitive.ObjectID ` + "`" + `json:\"section_id\" bson:\"section_id\" validate:\"required\" binding:\"required\"` + "`" + `",
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"
@@ -951,6 +1314,12 @@ const docTemplate = `{
                 "coefficient": {
                     "type": "integer"
                 },
+                "courses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Course"
+                    }
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -963,7 +1332,7 @@ const docTemplate = `{
                 "instructors": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
                 "isPublic": {
@@ -986,7 +1355,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "teacher_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"
@@ -996,18 +1365,41 @@ const docTemplate = `{
                 }
             }
         },
+        "models.Reply": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_edited": {
+                    "type": "boolean"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/utils.LightUser"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "models.Section": {
             "type": "object",
             "required": [
-                "course_id",
-                "name",
-                "order",
-                "teacher_id"
+                "name"
             ],
             "properties": {
-                "course_id": {
-                    "type": "string"
-                },
                 "created_at": {
                     "type": "string"
                 },
@@ -1029,12 +1421,8 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "order": {
-                    "type": "integer",
-                    "minimum": 1
-                },
                 "teacher_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"
@@ -1047,53 +1435,19 @@ const docTemplate = `{
                 }
             }
         },
-        "models.SectionDetailsResponse": {
-            "type": "object",
-            "properties": {
-                "section": {
-                    "$ref": "#/definitions/models.ExtendedSection"
-                }
-            }
-        },
-        "models.SectionResponse": {
-            "type": "object",
-            "properties": {
-                "sections": {
-                    "$ref": "#/definitions/models.Section"
-                }
-            }
-        },
-        "models.StudentNote": {
-            "type": "object",
-            "required": [
-                "content",
-                "section_id",
-                "student_id"
-            ],
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "section_id": {
-                    "type": "string"
-                },
-                "student_id": {
-                    "type": "integer"
-                }
-            }
-        },
         "models.Video": {
             "type": "object",
             "required": [
+                "group",
                 "section_id",
                 "teacher_id",
                 "url"
             ],
             "properties": {
                 "created_at": {
+                    "type": "string"
+                },
+                "group": {
                     "type": "string"
                 },
                 "id": {
@@ -1103,12 +1457,32 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "teacher_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"
                 },
                 "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "utils.LightUser": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }

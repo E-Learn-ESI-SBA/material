@@ -277,6 +277,71 @@ func TestCreateManyModules(t *testing.T) {
 
 }
 
+func TestGetModuleByTeacher(t *testing.T) {
+	user := utils.LightUser{
+		Email:    "moha@gmail.com",
+		Username: "ayoub",
+		Role:     "admin",
+		ID:       "2",
+		Avatar:   "https://www.google.com",
+	}
+	const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
+	authToken, _ := utils.GenerateToken(user, secret)
+	t.Run("Success Getting Modules By Teacher", func(t *testing.T) {
+		req, errR := http.NewRequest("GET", url+"/modules/teacher", nil)
+		if errR != nil {
+			t.Errorf("Error while creating request: %v", errR)
+		}
+		req.Header.Set("Authorization", "Bearer "+authToken)
+		client := &http.Client{}
+		res, errS := client.Do(req)
+		if errS != nil {
+			t.Errorf("Error while getting the response: %v", errS)
+
+		}
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+	})
+	t.Run("Unauthorized Access (Missing Auth Token)", func(t *testing.T) {
+		req, errR := http.NewRequest("GET", url+"/modules/teacher", nil)
+		if errR != nil {
+			t.Errorf("Error while creating request: %v", errR)
+		}
+		client := &http.Client{}
+		res, errS := client.Do(req)
+		if errS != nil {
+			t.Errorf("Error while getting the response: %v", errS)
+
+		}
+		assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
+
+	})
+	/*	t.Run("Forbidden Access (Teacher)", func(t *testing.T) {
+			user2 := utils.LightUser{
+				Email:    "qsqs",
+				Username: "ayoub",
+				Role:     "teacher",
+				ID:       "2",
+				Avatar:   "https://www.google.com",
+			}
+			authToken, _ = utils.GenerateToken(user2, secret)
+			req, errR := http.NewRequest("GET", url+"/modules/teacher", nil)
+			if errR != nil {
+				t.Errorf("Error while creating request: %v", errR)
+
+			}
+			req.Header.Set("Authorization", "Bearer "+authToken)
+			client := &http.Client{}
+			res, errS := client.Do(req)
+			if errS != nil {
+				t.Errorf("Error while getting the response: %v", errS)
+
+			}
+			assert.Equal(t, http.StatusForbidden, res.StatusCode)
+		})
+
+	*/
+}
+
 // Test The Edit Module
 /*
 func TestUpdateModule(t *testing.T) {

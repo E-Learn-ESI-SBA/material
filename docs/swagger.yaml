@@ -1,8 +1,10 @@
 basePath: /
 definitions:
-  interfaces.APiError:
+  interfaces.APIResponse:
     properties:
-      error:
+      code:
+        type: integer
+      message:
         type: string
     type: object
   interfaces.APiSuccess:
@@ -15,15 +17,37 @@ definitions:
   interfaces.ModuleFilter:
     properties:
       semester:
-        maximum: 2
-        minimum: 1
         type: integer
       speciality:
         type: string
       year:
-        maximum: 5
-        minimum: 1
         type: integer
+    type: object
+  models.Comments:
+    properties:
+      content:
+        type: string
+      course_id:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_edited:
+        type: boolean
+      replays:
+        items:
+          $ref: '#/definitions/models.Reply'
+        type: array
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/utils.LightUser'
+      user_id:
+        type: string
+    required:
+    - content
+    - course_id
     type: object
   models.Course:
     properties:
@@ -33,15 +57,17 @@ definitions:
         type: string
       id:
         type: string
-      module_id:
-        type: string
       name:
         type: string
+      sections:
+        description: ModuleId    primitive.ObjectID `json:"module_id" bson:"module_id"`
+        items:
+          $ref: '#/definitions/models.Section'
+        type: array
       updated_at:
         type: string
     required:
     - description
-    - module_id
     - name
     type: object
   models.ExtendCourse:
@@ -51,8 +77,6 @@ definitions:
       description:
         type: string
       id:
-        type: string
-      module_id:
         type: string
       name:
         type: string
@@ -64,7 +88,6 @@ definitions:
         type: string
     required:
     - description
-    - module_id
     - name
     type: object
   models.ExtendedModule:
@@ -83,7 +106,7 @@ definitions:
         type: string
       instructors:
         items:
-          type: integer
+          type: string
         type: array
       isPublic:
         type: boolean
@@ -99,7 +122,7 @@ definitions:
       speciality:
         type: string
       teacher_id:
-        type: integer
+        type: string
       updated_at:
         type: string
       year:
@@ -112,14 +135,121 @@ definitions:
     - teacher_id
     - year
     type: object
-  models.ExtendedSection:
+  models.Files:
     properties:
-      contents:
-        items:
-          $ref: '#/definitions/models.Lecture'
-        type: array
-      course_id:
+      created_at:
         type: string
+      group:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      teacher_id:
+        type: string
+      type:
+        description: SectionId primitive.ObjectID `json:"section_id" bson:"section_id"`
+        type: string
+      updated_at:
+        type: string
+      url:
+        type: string
+    required:
+    - group
+    - name
+    type: object
+  models.Lecture:
+    properties:
+      content:
+        minLength: 250
+        type: string
+      created_at:
+        type: string
+      group:
+        type: string
+      id:
+        type: string
+      is_public:
+        type: boolean
+      name:
+        type: string
+      teacher_id:
+        description: SectionId primitive.ObjectID `json:"section_id" bson:"section_id"
+          validate:"required" binding:"required"`
+        type: string
+      updated_at:
+        type: string
+    required:
+    - content
+    - group
+    - teacher_id
+    type: object
+  models.Module:
+    properties:
+      coefficient:
+        type: integer
+      courses:
+        items:
+          $ref: '#/definitions/models.Course'
+        type: array
+      created_at:
+        type: string
+      id:
+        type: string
+      image:
+        type: string
+      instructors:
+        items:
+          type: string
+        type: array
+      isPublic:
+        type: boolean
+      name:
+        type: string
+      plan:
+        items:
+          type: string
+        minItems: 1
+        type: array
+      semester:
+        type: integer
+      speciality:
+        type: string
+      teacher_id:
+        type: string
+      updated_at:
+        type: string
+      year:
+        type: integer
+    required:
+    - coefficient
+    - name
+    - plan
+    - semester
+    - teacher_id
+    - year
+    type: object
+  models.Reply:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_edited:
+        type: boolean
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/utils.LightUser'
+      user_id:
+        type: string
+    required:
+    - content
+    type: object
+  models.Section:
+    properties:
       created_at:
         type: string
       files:
@@ -134,15 +264,8 @@ definitions:
         type: array
       name:
         type: string
-      note:
-        items:
-          $ref: '#/definitions/models.StudentNote'
-        type: array
-      order:
-        minimum: 1
-        type: integer
       teacher_id:
-        type: integer
+        type: string
       updated_at:
         type: string
       videos:
@@ -150,23 +273,20 @@ definitions:
           $ref: '#/definitions/models.Video'
         type: array
     required:
-    - course_id
     - name
-    - order
-    - teacher_id
     type: object
-  models.Files:
+  models.Video:
     properties:
       created_at:
         type: string
       group:
-        type: integer
+        type: string
       id:
         type: string
       section_id:
         type: string
       teacher_id:
-        type: integer
+        type: string
       updated_at:
         type: string
       url:
@@ -177,150 +297,18 @@ definitions:
     - teacher_id
     - url
     type: object
-  models.Lecture:
+  utils.LightUser:
     properties:
-      content:
-        minLength: 250
+      avatar:
         type: string
-      created_at:
+      email:
         type: string
       id:
         type: string
-      is_public:
-        type: boolean
-      name:
+      role:
         type: string
-      section_id:
+      username:
         type: string
-      teacher_id:
-        type: integer
-      updated_at:
-        type: string
-    required:
-    - content
-    - is_public
-    - section_id
-    - teacher_id
-    type: object
-  models.Module:
-    properties:
-      coefficient:
-        type: integer
-      created_at:
-        type: string
-      id:
-        type: string
-      image:
-        type: string
-      instructors:
-        items:
-          type: integer
-        type: array
-      isPublic:
-        type: boolean
-      name:
-        type: string
-      plan:
-        items:
-          type: string
-        minItems: 1
-        type: array
-      semester:
-        type: integer
-      speciality:
-        type: string
-      teacher_id:
-        type: integer
-      updated_at:
-        type: string
-      year:
-        type: integer
-    required:
-    - coefficient
-    - name
-    - plan
-    - semester
-    - teacher_id
-    - year
-    type: object
-  models.Section:
-    properties:
-      course_id:
-        type: string
-      created_at:
-        type: string
-      files:
-        items:
-          $ref: '#/definitions/models.Files'
-        type: array
-      id:
-        type: string
-      lectures:
-        items:
-          $ref: '#/definitions/models.Lecture'
-        type: array
-      name:
-        type: string
-      order:
-        minimum: 1
-        type: integer
-      teacher_id:
-        type: integer
-      updated_at:
-        type: string
-      videos:
-        items:
-          $ref: '#/definitions/models.Video'
-        type: array
-    required:
-    - course_id
-    - name
-    - order
-    - teacher_id
-    type: object
-  models.SectionDetailsResponse:
-    properties:
-      section:
-        $ref: '#/definitions/models.ExtendedSection'
-    type: object
-  models.SectionResponse:
-    properties:
-      sections:
-        $ref: '#/definitions/models.Section'
-    type: object
-  models.StudentNote:
-    properties:
-      content:
-        type: string
-      id:
-        type: string
-      section_id:
-        type: string
-      student_id:
-        type: integer
-    required:
-    - content
-    - section_id
-    - student_id
-    type: object
-  models.Video:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: string
-      section_id:
-        type: string
-      teacher_id:
-        type: integer
-      updated_at:
-        type: string
-      url:
-        type: string
-    required:
-    - section_id
-    - teacher_id
-    - url
     type: object
 host: localhost:8080
 info:
@@ -336,6 +324,78 @@ info:
   title: Madaurus Material services
   version: "1.0"
 paths:
+  /comments:
+    post:
+      consumes:
+      - application/json
+      description: Protected Route used to create a comment
+      parameters:
+      - description: Comment Object
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/models.Comments'
+      - description: Course ID
+        in: query
+        name: courseId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+      security:
+      - Bearer: []
+      summary: Create Comment
+      tags:
+      - Comments
+  /courses:
+    post:
+      consumes:
+      - application/json
+      description: Protected Route used to create a course (chapter)
+      parameters:
+      - description: Course Object
+        in: body
+        name: course
+        required: true
+        schema:
+          $ref: '#/definitions/models.Course'
+      - description: Module ID
+        in: query
+        name: module
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/interfaces.APiSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+      summary: Create Course
+      tags:
+      - Courses
   /courses/admin:
     get:
       consumes:
@@ -353,40 +413,10 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/interfaces.APiError'
+            $ref: '#/definitions/interfaces.APIResponse'
       security:
       - ApiKeyAuth: []
       summary: Getting Course By Admin
-      tags:
-      - Courses
-  /courses/create:
-    post:
-      consumes:
-      - application/json
-      description: Protected Route used to create a course (chapter)
-      parameters:
-      - description: Course Object
-        in: body
-        name: course
-        required: true
-        schema:
-          $ref: '#/definitions/models.Course'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/interfaces.APiSuccess'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/interfaces.APiError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/interfaces.APiError'
-      summary: Create Course
       tags:
       - Courses
   /courses/delete/{id}:
@@ -400,6 +430,11 @@ paths:
         name: id
         required: true
         type: string
+      - description: Module ID
+        in: query
+        name: moduleId
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -410,7 +445,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/interfaces.APiError'
+            $ref: '#/definitions/interfaces.APIResponse'
       summary: Delete Course
       tags:
       - Courses
@@ -431,38 +466,163 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/interfaces.APiError'
+            $ref: '#/definitions/interfaces.APIResponse'
       security:
       - ApiKeyAuth: []
       summary: Getting Course By teacher
       tags:
       - Courses
-  /courses/update:
-    put:
+  /lecture:
+    delete:
       consumes:
       - application/json
-      description: Protected Route used to update a course (chapter)
+      description: Delete a Lecture
       parameters:
-      - description: Course Object
-        in: body
-        name: course
+      - description: Lecture ID
+        in: path
+        name: lectureId
         required: true
-        schema:
-          $ref: '#/definitions/models.Course'
+        type: string
+      - description: Auth Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/interfaces.APiSuccess'
+            $ref: '#/definitions/interfaces.APIResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/interfaces.APiError'
-      summary: Update Course
+            $ref: '#/definitions/interfaces.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+      security:
+      - Bearer: []
+      summary: Delete a Lecture
       tags:
-      - Courses
+      - Lecture
+    get:
+      description: Get a Lecture
+      parameters:
+      - description: Lecture ID
+        in: path
+        name: lectureId
+        required: true
+        type: string
+      - description: Auth Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+      security:
+      - Bearer: []
+      summary: Get a Lecture
+      tags:
+      - Lecture
+    post:
+      consumes:
+      - application/json
+      description: Create a new Lecture
+      parameters:
+      - description: Lecture Object
+        in: body
+        name: lecture
+        required: true
+        schema:
+          $ref: '#/definitions/models.Lecture'
+      - description: Section ID
+        in: path
+        name: sectionId
+        required: true
+        type: string
+      - description: Auth Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+      security:
+      - Bearer: []
+      summary: Create a new Lecture
+      tags:
+      - Lecture
+    put:
+      consumes:
+      - application/json
+      description: Update a Lecture
+      parameters:
+      - description: Lecture Object
+        in: body
+        name: lecture
+        required: true
+        schema:
+          $ref: '#/definitions/models.Lecture'
+      - description: Lecture ID
+        in: path
+        name: lectureId
+        required: true
+        type: string
+      - description: Auth Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+      security:
+      - Bearer: []
+      summary: Update a Lecture
+      tags:
+      - Lecture
   /modules:
     post:
       consumes:
@@ -485,15 +645,44 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/interfaces.APiError'
+            $ref: '#/definitions/interfaces.APIResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/interfaces.APiError'
+            $ref: '#/definitions/interfaces.APIResponse'
       summary: Create Module
       tags:
       - Modules
-  /modules/:moduleId:
+  /modules/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get Module By ID
+      parameters:
+      - description: Module ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ExtendedModule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+      summary: Get Module By ID
+      tags:
+      - Modules
+  /modules/{moduleId}:
     put:
       consumes:
       - application/json
@@ -520,48 +709,28 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/interfaces.APiError'
+            $ref: '#/definitions/interfaces.APIResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/interfaces.APiError'
+            $ref: '#/definitions/interfaces.APIResponse'
       summary: Update Module
       tags:
       - Modules
-  /modules/{id}:
-    get:
+  /modules/many:
+    post:
       consumes:
       - application/json
-      description: Get Module By ID
+      description: Protected Route used to create a module
       parameters:
-      - description: Module ID
-        in: path
-        name: id
+      - description: Module Object
+        in: body
+        name: module
         required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.ExtendedModule'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/interfaces.APiError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/interfaces.APiError'
-      summary: Get Module By ID
-      tags:
-      - Modules
-  /modules/delete/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Protected Route used to delete a module
+        schema:
+          items:
+            $ref: '#/definitions/models.Module'
+          type: array
       produces:
       - application/json
       responses:
@@ -572,12 +741,12 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/interfaces.APiError'
+            $ref: '#/definitions/interfaces.APIResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/interfaces.APiError'
-      summary: Delete Module
+            $ref: '#/definitions/interfaces.APIResponse'
+      summary: Create Module
       tags:
       - Modules
   /modules/public:
@@ -602,11 +771,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/interfaces.APiError'
+            $ref: '#/definitions/interfaces.APIResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/interfaces.APiError'
+            $ref: '#/definitions/interfaces.APIResponse'
       summary: Get Public Modules
       tags:
       - Modules
@@ -614,14 +783,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Protected Route used to get teacher modules
-      parameters:
-      - description: Module Filter
-        in: body
-        name: filter
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.ModuleFilter'
+      description: Protected Route used to get modules by teacher
       produces:
       - application/json
       responses:
@@ -632,12 +794,12 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/interfaces.APiError'
+            $ref: '#/definitions/interfaces.APIResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/interfaces.APiError'
-      summary: Get Teacher Modules
+            $ref: '#/definitions/interfaces.APIResponse'
+      summary: Get Module By Teacher
       tags:
       - Modules
   /modules/visibility/{id}:
@@ -666,15 +828,39 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/interfaces.APiError'
+            $ref: '#/definitions/interfaces.APIResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/interfaces.APiError'
+            $ref: '#/definitions/interfaces.APIResponse'
       summary: Edit Module Visibility
       tags:
       - Modules
-  /section/create:
+  /section:
+    put:
+      consumes:
+      - application/json
+      description: Protected Route Edit Section
+      parameters:
+      - description: Section Object
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/models.Section'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/interfaces.APiSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+      summary: Edit Section
+      tags:
+      - Section
+  /section/all/{courseId}:
     post:
       consumes:
       - application/json
@@ -690,20 +876,22 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.SectionResponse'
+              $ref: '#/definitions/models.Section'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/interfaces.APiError'
+            $ref: '#/definitions/interfaces.APIResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/interfaces.APiError'
+            $ref: '#/definitions/interfaces.APIResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/interfaces.APiError'
+            $ref: '#/definitions/interfaces.APIResponse'
+      security:
+      - Bearer: []
       summary: Create Module
       tags:
       - Section
@@ -722,20 +910,68 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.SectionDetailsResponse'
+            $ref: '#/definitions/models.Section'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/interfaces.APiError'
+            $ref: '#/definitions/interfaces.APIResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/interfaces.APiError'
+            $ref: '#/definitions/interfaces.APIResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/interfaces.APiError'
+            $ref: '#/definitions/interfaces.APIResponse'
+      security:
+      - Bearer: []
       summary: Get Section Details
       tags:
       - Section
+  /transaction/module/{id}:
+    delete:
+      description: Protected Route used to delete a module
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/interfaces.APiSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.APIResponse'
+      summary: Delete Module
+      tags:
+      - Modules
+  /transactions/files/{id}:
+    delete:
+      description: Delete a file
+      responses:
+        "200":
+          description: File deleted
+          schema:
+            type: string
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "404":
+          description: File not found
+          schema:
+            type: string
+        "500":
+          description: File not deleted
+          schema:
+            type: string
+      security:
+      - Bearer: []
+      summary: Delete a file
+      tags:
+      - Files
 swagger: "2.0"

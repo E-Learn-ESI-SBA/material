@@ -3,6 +3,8 @@ package services
 import (
 	"context"
 	"errors"
+	models2 "github.com/permitio/permit-golang/pkg/models"
+	"github.com/permitio/permit-golang/pkg/permit"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -11,6 +13,7 @@ import (
 	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/shared"
+	"madaurus/dev/material/app/shared/iam"
 	"time"
 )
 
@@ -72,7 +75,7 @@ func UpdateModule(ctx context.Context, collection *mongo.Collection, module mode
 	return nil
 }
 
-func CreateModule(ctx context.Context, collection *mongo.Collection, module models.Module) error {
+func CreateModule(ctx context.Context, collection *mongo.Collection, module models.Module, permit *permit.Client) error {
 	module.ID = primitive.NewObjectID()
 	module.Courses = []models.Course{}
 	module.CreatedAt = time.Now()
@@ -80,6 +83,22 @@ func CreateModule(ctx context.Context, collection *mongo.Collection, module mode
 	_, err := collection.InsertOne(ctx, module)
 	if err != nil {
 		log.Printf("error while trying to create the module")
+	}
+	tentant := iam.TENANT
+	_, errR := permit.Api.ResourceInstances.Create(ctx, models2.ResourceInstanceCreate{
+		Key:      module.ID.Hex(),
+		Tenant:   &tentant,
+		Resource: iam.MODULES,
+	})
+	if errR != nil {
+		log.Printf("error while trying to create PERMIT  module : %v", errR.Error())
+
+	} else {
+		_, errA := permit.Api.Users.AssignResourceRole(ctx, module.TeacherId, iam.ROLEModulesEditorKey, tentant, iam.MODULES+":"+module.ID.Hex())
+		if errA != nil {
+			log.Printf("error while trying to create PERMIT  module : %v", errA.Error())
+
+		}
 	}
 	return err
 }
@@ -252,4 +271,55 @@ func CreateManyModules(ctx context.Context, collection *mongo.Collection, module
 		log.Printf("error while trying to create the module")
 	}
 	return err
+}
+
+func GetModulesByTeacher(ctx context.Context, collection *mongo.Collection, teacherId string) ([]models.Module, error) {
+	var modules []models.Module
+	filter := bson.D{{"teacher_id", teacherId}}
+	opts := options.Find().SetProjection(bson.D{{"courses", 0}})
+	cursor, err := collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+	cursorError := cursor.All(ctx, &modules)
+	if cursorError != nil {
+		return nil, cursorError
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+
+			log.Println("failed to close cursor")
+
+		}
+	}(cursor, ctx)
+	return modules, nil
+}
+func ModuleSelector(ctx context.Context, collection *mongo.Collection, modulesId []string) ([]models.Module, error) {
+	var modules []models.Module
+	modulesIds := make([]primitive.ObjectID, len(modulesId))
+	for i, module := range modulesId {
+		modulesIds[i], _ = primitive.ObjectIDFromHex(module)
+	}
+	opts := options.Find().SetProjection(bson.D{{"courses", 0}})
+	filter := bson.D{{"_id", bson.D{{"$in", modulesIds}}}}
+	cursor, err := collection.Find(ctx, filter, opts)
+	if err != nil {
+		log.Printf("Error While Getting the Modules %v", err.Error())
+		return modules, errors.New(shared.UNABLE_GET_MODULES)
+	}
+	cursorError := cursor.All(ctx, &modules)
+	if cursorError != nil {
+		log.Printf("Error While Getting the Modules %v", cursorError.Error())
+		return modules, cursorError
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+
+			log.Println("failed to close cursor")
+
+		}
+	}(cursor, ctx)
+	return modules, nil
 }
