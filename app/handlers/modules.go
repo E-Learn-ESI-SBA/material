@@ -302,3 +302,30 @@ func CreateManyModules(collection *mongo.Collection) gin.HandlerFunc {
 		c.JSON(http.StatusCreated, gin.H{"message": shared.CREATE_MODULE})
 	}
 }
+
+// @Summary Get Module By Student
+// @Description Protected Route used to get modules by student
+// @Produce json
+// @param Authorization header string true "Bearer
+// @Tags Modules
+// @Success 200 {object} interfaces.APiSuccess
+// @Failure 400 {object} interfaces.APIResponse
+// @Failure 500 {object} interfaces.APIResponse
+// @Router /modules/student [GET]
+func GetModuleByStudent(collection *mongo.Collection) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		value, errV := context.Get("user")
+		if errV != true {
+			context.JSON(http.StatusInternalServerError, gin.H{"message": shared.USER_NOT_INJECTED})
+			return
+		}
+		user := value.(*utils.UserDetails)
+
+		modules, err := services.GetModuleByStudent(context.Request.Context(), collection, user.Yead)
+		if err != nil {
+			context.JSON(http.StatusBadRequest, gin.H{"message": shared.UNABLE_GET_MODULE})
+			return
+		}
+		context.JSON(http.StatusOK, gin.H{"data": modules})
+	}
+}

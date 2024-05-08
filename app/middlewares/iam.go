@@ -22,7 +22,6 @@ func BasicRBAC(role string) gin.HandlerFunc {
 		}
 		user := claim.(*utils.UserDetails)
 		if user.Role == iam.ROLEAdminKey {
-
 			c.Next()
 		} else if user.Role == iam.ROLETeacherKey {
 			if role == iam.ROLEStudentKey || role == iam.ROLEAdminKey {
@@ -36,7 +35,25 @@ func BasicRBAC(role string) gin.HandlerFunc {
 		return
 	}
 }
+func StaticRBAC(role string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claim, err := c.Get("user")
+		if !err {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.USER_NOT_INJECTED})
+			c.Abort()
+			return
+		}
+		user := claim.(*utils.UserDetails)
+		if user.Role != role {
+			c.JSON(http.StatusForbidden, gin.H{"message": shared.FORBIDDEN})
+			c.Abort()
+			return
 
+		}
+		c.Next()
+		return
+	}
+}
 func IAM(permit *permit.Client, resourceType string, RequestAction string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claim, err := c.Get("user")

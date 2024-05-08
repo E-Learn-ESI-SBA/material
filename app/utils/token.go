@@ -15,6 +15,8 @@ type LightUser struct {
 	Role     string `json:"role"`
 	ID       string `json:"id"`
 	Avatar   string `json:"avatar"`
+	Group    string `json:"group"`
+	Yead     string `json:"year"`
 }
 type UserDetails struct {
 	LightUser

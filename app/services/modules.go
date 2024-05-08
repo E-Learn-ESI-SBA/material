@@ -323,3 +323,28 @@ func ModuleSelector(ctx context.Context, collection *mongo.Collection, modulesId
 	}(cursor, ctx)
 	return modules, nil
 }
+
+func GetModuleByStudent(ctx context.Context, collection *mongo.Collection, year string) ([]models.Module, error) {
+	var modules []models.Module
+	filter := bson.D{{"year", year}}
+	opts := options.Find().SetProjection(bson.D{{"courses", 0}})
+	cursor, err := collection.Find(ctx, filter, opts)
+	if err != nil {
+		log.Printf("Error While Getting the Modules %v", err.Error())
+		return modules, errors.New(shared.UNABLE_GET_MODULES)
+	}
+	cursorError := cursor.All(ctx, &modules)
+	if cursorError != nil {
+		log.Printf("Error While Getting the Modules %v", cursorError.Error())
+		return modules, errors.New(shared.UNABLE_GET_MODULES)
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+
+			log.Println("failed to close cursor")
+
+		}
+	}(cursor, ctx)
+	return modules, nil
+}
