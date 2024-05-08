@@ -123,8 +123,8 @@ func GetModuleByTeacher(collection *mongo.Collection, permit *permit.Client) gin
 			return
 		}
 		user := value.(*utils.UserDetails)
-		RKyes := utils.GetAllowedResources("read", "modules", user.ID, permit)
-		if len(RKyes) == 0 {
+		RKeys := utils.GetAllowedResources("read", "modules", user.ID, permit)
+		if len(RKeys) == 0 {
 			log.Println("The Key is null")
 			modules, err := services.GetModulesByTeacher(c.Request.Context(), collection, user.ID)
 			if err != nil {
@@ -134,9 +134,9 @@ func GetModuleByTeacher(collection *mongo.Collection, permit *permit.Client) gin
 			}
 			c.JSON(http.StatusOK, gin.H{"data": modules})
 		} else {
-			log.Printf("Keys: %v\n", RKyes[0])
+			log.Printf("Keys: %v\n", RKeys[0])
 			log.Println("Here")
-			modules, err := services.ModuleSelector(c.Request.Context(), collection, RKyes)
+			modules, err := services.ModuleSelector(c.Request.Context(), collection, RKeys)
 			if err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{"message": shared.UNABLE_GET_MODULE})
 				return

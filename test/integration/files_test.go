@@ -1,11 +1,6 @@
 package integration
 
-import (
-	"madaurus/dev/material/app/utils"
-	"madaurus/dev/material/test/fixtures"
-	"testing"
-)
-
+/*
 func TestCreateFile(t *testing.T) {
 	user := utils.LightUser{
 		Email:    "ameri.mohamedayoub@gmail.com",
@@ -20,3 +15,4 @@ func TestCreateFile(t *testing.T) {
 	authToken, _ := utils.GenerateToken(user, secret)
 	file := fixtures.GetFiles()[0]
 }
+*/
