@@ -28,3 +28,5 @@ mongo/
 storage/
 material
 .idea
+
+*.cover.*
