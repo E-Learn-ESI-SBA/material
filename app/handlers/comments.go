@@ -38,7 +38,7 @@ func CreateComment(collection *mongo.Collection) gin.HandlerFunc {
 		}
 
 		var comment models.Comments
-		err = context.BindJSON(&comment)
+		err = context.ShouldBindJSON(&comment)
 
 		if err != nil {
 			context.JSON(http.StatusNotAcceptable, gin.H{"message": shared.INVALID_BODY})
@@ -189,13 +189,6 @@ func ReplayToComment(collection *mongo.Collection) gin.HandlerFunc {
 			return
 		}
 		replay.UserId = user.ID
-		replay.User = utils.LightUser{
-			ID:       user.ID,
-			Username: user.Username,
-			Email:    user.Email,
-			Role:     user.Role,
-			Avatar:   user.Avatar,
-		}
 
 		err = services.ReplayToComment(context.Request.Context(), collection, replay, commendObjectId)
 		if err != nil {

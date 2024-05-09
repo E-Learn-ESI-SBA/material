@@ -14,4 +14,5 @@ func TransactionRoute(e *gin.Engine, client *mongo.Client, collection *mongo.Col
 	transactions.DELETE("/files/:id", middlewares.Authentication(), transactions2.DeleteFileTransaction(client, collection))
 	transactions.POST("/videos/:sectionId", middlewares.Authentication(), transactions2.CreateVideo(collection, client, permitApi))
 	transactions.DELETE("videos/:id", middlewares.Authentication(), transactions2.DeleteVideo(collection, client))
+
 }

@@ -16,7 +16,7 @@ func GetModules() []models.Module {
 	modules = append(modules, models.Module{
 		ID:          primitive.NewObjectID(),
 		Name:        "Module 1",
-		Year:        1,
+		Year:        "1",
 		Speciality:  &speciality,
 		Semester:    1,
 		Coefficient: 1,
@@ -29,7 +29,7 @@ func GetModules() []models.Module {
 	modules = append(modules, models.Module{
 		ID:          primitive.NewObjectID(),
 		Name:        "Module 2",
-		Year:        2,
+		Year:        "2",
 		Speciality:  &speciality2,
 		IsPublic:    true,
 		Semester:    2,
@@ -42,7 +42,7 @@ func GetModules() []models.Module {
 	modules = append(modules, models.Module{
 		ID:          primitive.NewObjectID(),
 		Name:        "Module 3",
-		Year:        3,
+		Year:        "3",
 		Speciality:  &speciality,
 		Semester:    2,
 		IsPublic:    false,

@@ -15,7 +15,7 @@ func TestValidateToken(t *testing.T) {
 		ID:       "12",
 		Avatar:   "sqkddkslqdns",
 		Group:    "12",
-		Yead:     "2021",
+		Year:     "2021",
 	}
 	jwt_secret := "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
 	t.Run("Valid Token", func(t *testing.T) {

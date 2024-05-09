@@ -72,26 +72,22 @@ func CommentCollection(client *mongo.Client, CollectionName string) *mongo.Colle
 	collection := client.Database("materials").Collection(CollectionName)
 	return collection
 }
+func UserCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
+	collection := client.Database("materials").Collection(CollectionName)
+	return collection
+}
 
 type Application struct {
-	ContentCollection  *mongo.Collection
-	VideoCollection    *mongo.Collection
-	LectureCollection  *mongo.Collection
-	SectionCollection  *mongo.Collection
-	CourseCollection   *mongo.Collection
 	ModuleCollection   *mongo.Collection
 	CommentsCollection *mongo.Collection
+	UserCollection     *mongo.Collection
 }
 
 func NewApp(client *mongo.Client) *Application {
 	return &Application{
-		VideoCollection:   VideoCollection(client, "videos"),
-		LectureCollection: LectureCollection(client, "lectures"),
-		//	ContentCollection:  ContentCollection(client, "contents"),
-		SectionCollection:  SectionCollection(client, "sections"),
-		CourseCollection:   CourseCollection(client, "courses"),
 		ModuleCollection:   ModuleCollection(client, "modules"),
 		CommentsCollection: CommentCollection(client, "comments"),
+		UserCollection:     UserCollection(client, "users"),
 	}
 
 }
