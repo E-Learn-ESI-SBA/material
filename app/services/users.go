@@ -3,8 +3,9 @@ package services
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"log"
+	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/utils"
 )
 
@@ -25,9 +26,13 @@ func DeleteUser(ctx context.Context, user utils.LightUser, collection *mongo.Col
 	return rs.Err()
 }
 
-func GetUser(ctx context.Context, userId primitive.ObjectID, collection *mongo.Collection) (utils.LightUser, error) {
-	filter := bson.D{{"_id", userId}}
-	var user utils.LightUser
+func GetUserById(ctx context.Context, userId string, collection *mongo.Collection) (models.User, error) {
+	filter := bson.D{{"userId", userId}}
+	var user models.User
 	err := collection.FindOne(ctx, filter).Decode(&user)
-	return user, err
+	if err != nil {
+		log.Printf("Error While Getting the User: %v\n", err.Error())
+		return models.User{}, err
+	}
+	return user, nil
 }

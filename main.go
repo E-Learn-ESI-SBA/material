@@ -101,7 +101,7 @@ func main() {
 	routes.CourseRoute(server, app.ModuleCollection, Permit, client)
 	routes.SectionRouter(server, app.ModuleCollection, Permit, client)
 	routes.LectureRoute(server, app.ModuleCollection, Permit, client)
-	routes.CommentRoute(server, app.CommentsCollection, Permit, client)
+	routes.CommentRoute(server, app.CommentsCollection, Permit, client, app.UserCollection)
 	routes.TransactionRoute(server, client, app.ModuleCollection, Permit)
 	routes.FileRouter(server, app.ModuleCollection, Permit, client)
 	routes.VideoRouter(server, app.ModuleCollection, Permit, client)

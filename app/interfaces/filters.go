@@ -7,8 +7,8 @@ type ModuleFilter struct {
 }
 
 type PaginationQuery struct {
-	Page  int `json:"page,omitempty"`
-	Items int `json:"items" `
+	Page  int `json:"page" binding:"required,gte=0"`
+	Items int `json:"items" binding:"required,gte=1" `
 }
 
 func (p *PaginationQuery) newPagination(page int, items int) {
