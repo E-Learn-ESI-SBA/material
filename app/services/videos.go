@@ -22,6 +22,7 @@ type VideoQueryResponse struct {
 }
 
 func CreateVideo(ctx context.Context, collection *mongo.Collection, sectionId primitive.ObjectID, video models.Video) error {
+
 	video.CreatedAt = time.Now()
 	video.UpdatedAt = video.CreatedAt
 	filter := bson.D{{"courses.sections._id", sectionId}}
@@ -55,17 +56,25 @@ func GetVideo(ctx context.Context, collection *mongo.Collection, videoId primiti
 	}
 	cursor, err := collection.Aggregate(ctx, pipeline)
 	if err != nil {
+
+		log.Printf("Error while aggregate videos %v", err.Error())
 		return video, errors.New(shared.UNABLE_TO_GET_VIDEO)
 	}
-	if err = cursor.All(ctx, &videoResponse); err != nil {
-		return video, errors.New(shared.UNABLE_TO_GET_VIDEO)
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		err := cursor.Decode(&videoResponse)
+		if err != nil {
+			return models.Video{}, errors.New(shared.UNABLE_TO_GET_VIDEO)
+		}
+
 	}
 	video = videoResponse.Video
 	return video, nil
 
 }
 
-func GetVideoFile(ctx context.Context, videoUrl string) (os.File, error) {
+func GetVideoFile(videoUrl string) (os.File, error) {
 	dir, errD := utils.GetStorageFile("videos")
 	if errD != nil {
 		log.Printf("Error getting storage file: %v", errD.Error())

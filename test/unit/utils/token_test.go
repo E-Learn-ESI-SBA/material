@@ -2,6 +2,7 @@ package utils
 
 import (
 	"github.com/stretchr/testify/assert"
+	"log"
 	"madaurus/dev/material/app/utils"
 	"testing"
 )
@@ -13,10 +14,13 @@ func TestValidateToken(t *testing.T) {
 		Role:     "admin",
 		ID:       "12",
 		Avatar:   "sqkddkslqdns",
+		Group:    "12",
+		Yead:     "2021",
 	}
 	jwt_secret := "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
 	t.Run("Valid Token", func(t *testing.T) {
 		validJwt, err := utils.GenerateToken(user, jwt_secret)
+		log.Printf("Token %v", validJwt)
 		if err != nil {
 			t.Errorf("Error: %v", err.Error())
 		}

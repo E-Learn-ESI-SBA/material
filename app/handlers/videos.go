@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"io"
+	"log"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/services"
 	"madaurus/dev/material/app/shared"
@@ -14,18 +15,20 @@ import (
 func GetVideo(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		videoId := c.Param("id")
+		log.Printf("Here ")
 		videoObjId, errD := primitive.ObjectIDFromHex(videoId)
 		if errD != nil {
+
 			c.JSON(http.StatusBadRequest, gin.H{"message": shared.REQUIRED_ID})
 			return
 		}
 		video, err := services.GetVideo(c.Request.Context(), collection, videoObjId)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": shared.VIDEO_NOT_FOUND})
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
 		}
 
-		videoFile, errV := services.GetVideoFile(c.Request.Context(), video.Url)
+		videoFile, errV := services.GetVideoFile(video.Url)
 		if errV != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"message": errV.Error()})
 			return
@@ -33,7 +36,7 @@ func GetVideo(collection *mongo.Collection) gin.HandlerFunc {
 
 		c.Writer.Header().Set("Content-Type", "video/mp4")
 		c.Stream(func(w io.Writer) bool {
-			buffer := make([]byte, 512)
+			buffer := make([]byte, 1024)
 			for {
 				n, err := videoFile.Read(buffer)
 				if err != nil {

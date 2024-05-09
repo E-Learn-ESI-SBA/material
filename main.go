@@ -93,7 +93,7 @@ func main() {
 		c.JSON(200, gin.H{"message": "Welcome to Madaurus Material Services"})
 	})
 
-	server.MaxMultipartMemory = 6 << 32768000
+	server.MaxMultipartMemory = 250 * 1024 * 1024
 	// Start Middleware
 	server.Use(cors.New(configCors))
 	// End Middleware
@@ -102,7 +102,7 @@ func main() {
 	routes.SectionRouter(server, app.ModuleCollection)
 	routes.LectureRoute(server, app.ModuleCollection)
 	routes.CommentRoute(server, app.CommentsCollection)
-	routes.TransactionRoute(server, client, app.ModuleCollection)
+	routes.TransactionRoute(server, client, app.ModuleCollection, Permit)
 	routes.FileRouter(server, app.ModuleCollection)
 	routes.VideoRouter(server, Permit, app.ModuleCollection)
 	log.Println("Server Running on Port 8080")

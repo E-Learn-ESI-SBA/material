@@ -9,7 +9,7 @@ type Module struct {
 	ID primitive.ObjectID `json:"id" bson:"_id"`
 
 	Name        string    `json:"name" binding:"required" bson:"name" validate:"required"`
-	Year        int8      `json:"year" binding:"required" bson:"year" validate:"required"`
+	Year        string    `json:"year" binding:"required" bson:"year"`
 	Speciality  *string   `json:"speciality,omitempty"`
 	Semester    int8      `json:"semester" binding:"required" bson:"semester" validate:"required"`
 	Coefficient int8      `json:"coefficient" binding:"required" bson:"coefficient" validate:"required"`

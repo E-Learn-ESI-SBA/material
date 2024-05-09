@@ -34,6 +34,7 @@ func CreateVideo(collection *mongo.Collection, client *mongo.Client, permitApi *
 		user, errU := utils.GetUserPayload(c)
 		if errU != nil {
 			c.JSON(http.StatusInternalServerError, errU.Error())
+			return
 		}
 
 		sectionId := c.Param("sectionId")
@@ -46,6 +47,8 @@ func CreateVideo(collection *mongo.Collection, client *mongo.Client, permitApi *
 			c.JSON(http.StatusRequestEntityTooLarge, gin.H{"message": shared.FILE_TOO_LARGE})
 			return
 		}
+		typ := videoFile.Header.Get("Content-Type")
+		log.Printf("File type: %v", typ)
 		if errF != nil {
 			log.Printf("Error getting file: %v", errF)
 			c.JSON(http.StatusBadRequest, gin.H{"message": shared.FILE_NOT_DELETED})
@@ -56,6 +59,7 @@ func CreateVideo(collection *mongo.Collection, client *mongo.Client, permitApi *
 		if errD != nil {
 			log.Printf("Error , Not a valid section id %v", errD.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"message": shared.REQUIRED_ID})
+			return
 		}
 		transactionOption := options.Transaction().SetReadPreference(readpref.Primary())
 
@@ -75,6 +79,7 @@ func CreateVideo(collection *mongo.Collection, client *mongo.Client, permitApi *
 		if err != nil {
 			session.AbortTransaction(c.Request.Context())
 			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			return
 		}
 		dir, errD := utils.GetStorageFile("videos")
 		fileURI := path.Join(dir, video.Url)
@@ -85,6 +90,7 @@ func CreateVideo(collection *mongo.Collection, client *mongo.Client, permitApi *
 			session.AbortTransaction(c.Request.Context())
 			log.Printf("Error creating permit io instance: %v", err.Error())
 			c.JSON(http.StatusFailedDependency, gin.H{"message": shared.UNABLE_TO_CREATE_VIDEO})
+			return
 		}
 		videoFile.Filename = fileURI
 		err = c.SaveUploadedFile(videoFile, fileURI)
@@ -152,5 +158,6 @@ func DeleteVideo(collection *mongo.Collection, client *mongo.Client) gin.Handler
 			return
 		}
 		context.JSON(http.StatusOK, gin.H{"message": shared.VIDEO_DELETED})
+		return
 	}
 }
