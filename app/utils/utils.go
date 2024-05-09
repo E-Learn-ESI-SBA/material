@@ -108,7 +108,8 @@ func GetStorageFile(dir string) (string, error) {
 func GetUserPayload(c *gin.Context) (UserDetails, error) {
 	var user *UserDetails
 	value, err := c.Get("user")
-	if err {
+	if !err {
+		log.Printf("Error getting user from context: ")
 		return *user, errors.New(shared.USER_NOT_INJECTED)
 	}
 	user = value.(*UserDetails)

@@ -21,7 +21,7 @@ func TestCreateChapter(t *testing.T) {
 		Role:     "admin",
 		ID:       "12",
 		Avatar:   "sqkddkslqdns",
-		Yead:     "2021",
+		Year:     "2021",
 		Group:    "1A",
 	}
 	const module_id = "66356c454bf0cb9c986b9041"

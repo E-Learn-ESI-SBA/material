@@ -3,17 +3,17 @@ package services
 import (
 	"context"
 	"errors"
-	models2 "github.com/permitio/permit-golang/pkg/models"
 	"github.com/permitio/permit-golang/pkg/permit"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
 	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/shared"
-	"madaurus/dev/material/app/shared/iam"
+	"madaurus/dev/material/app/utils"
 	"time"
 )
 
@@ -75,32 +75,43 @@ func UpdateModule(ctx context.Context, collection *mongo.Collection, module mode
 	return nil
 }
 
-func CreateModule(ctx context.Context, collection *mongo.Collection, module models.Module, permit *permit.Client) error {
+func CreateModule(ctx context.Context, collection *mongo.Collection, module models.Module, permitApi *permit.Client, client *mongo.Client) error {
 	module.ID = primitive.NewObjectID()
 	module.Courses = []models.Course{}
 	module.CreatedAt = time.Now()
 	module.UpdatedAt = module.UpdatedAt
+	session, errS := client.StartSession()
+	transactionOption := options.Transaction().SetReadPreference(readpref.Primary())
+	if errS != nil {
+		log.Printf("Error While Trying to start session %v", errS.Error())
+		return errors.New(shared.UNABLE_CREATE_MODULE)
+	}
+	errS = session.StartTransaction(transactionOption)
+	if errS != nil {
+		log.Printf("Error While Trying to start session %v", errS.Error())
+		return errors.New(shared.UNABLE_CREATE_MODULE)
+	}
 	_, err := collection.InsertOne(ctx, module)
 	if err != nil {
+		session.AbortTransaction(ctx)
 		log.Printf("error while trying to create the module")
+		return errors.New(shared.UNABLE_CREATE_MODULE)
 	}
-	tentant := iam.TENANT
-	_, errR := permit.Api.ResourceInstances.Create(ctx, models2.ResourceInstanceCreate{
-		Key:      module.ID.Hex(),
-		Tenant:   &tentant,
-		Resource: iam.MODULES,
-	})
-	if errR != nil {
-		log.Printf("error while trying to create PERMIT  module : %v", errR.Error())
+	err = utils.CreateResourceInstance(permitApi, "modules", module.ID.Hex(), nil, nil, nil)
+	if err != nil {
+		session.AbortTransaction(ctx)
+		return errors.New(shared.UNABLE_CREATE_MODULE)
 
-	} else {
-		_, errA := permit.Api.Users.AssignResourceRole(ctx, module.TeacherId, iam.ROLEModulesEditorKey, tentant, iam.MODULES+":"+module.ID.Hex())
-		if errA != nil {
-			log.Printf("error while trying to create PERMIT  module : %v", errA.Error())
-
-		}
 	}
-	return err
+	err = session.CommitTransaction(ctx)
+	if err != nil {
+		return errors.New(shared.UNABLE_CREATE_MODULE)
+
+	}
+	defer func(ctx context.Context) {
+		session.EndSession(ctx)
+	}(ctx)
+	return nil
 }
 
 func vGetModuleById(ctx context.Context, collection *mongo.Collection, moduleId primitive.ObjectID) (models.ExtendedModule, error) {

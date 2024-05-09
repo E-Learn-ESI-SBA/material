@@ -10,12 +10,12 @@ import (
 	"madaurus/dev/material/app/utils"
 )
 
-func ModuleRoute(g *gin.Engine, collection *mongo.Collection, permitApi *permit.Client) {
+func ModuleRoute(g *gin.Engine, collection *mongo.Collection, permitApi *permit.Client, client *mongo.Client) {
 	moduleRoute := g.Group("/modules")
 	moduleRoute.GET("/:id", middlewares.Authentication(), handlers.GetModuleById(collection))
 	//moduleRoute.GET("/teacher/filter", middlewares.Authentication(), handlers.GetTeacherFilterModules(collection))
 	moduleRoute.GET("/teacher", middlewares.Authentication(), handlers.GetModuleByTeacher(collection, permitApi))
-	moduleRoute.POST("/", middlewares.Authentication(), middlewares.BasicRBAC("admin"), handlers.CreateModule(collection, permitApi))
+	moduleRoute.POST("/", middlewares.Authentication(), middlewares.BasicRBAC("admin"), handlers.CreateModule(collection, client, permitApi))
 	moduleRoute.PUT("/:moduleId", middlewares.Authentication(), handlers.UpdateModule(collection))
 	// Protected By the admin
 	moduleRoute.DELETE("/:id", middlewares.Authentication(), middlewares.BasicRBAC("admin"), handlers.DeleteModule(collection))

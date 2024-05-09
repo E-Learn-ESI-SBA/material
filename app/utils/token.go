@@ -16,7 +16,7 @@ type LightUser struct {
 	ID       string `json:"id"`
 	Avatar   string `json:"avatar"`
 	Group    string `json:"group"`
-	Yead     string `json:"year"`
+	Year     string `json:"year"`
 }
 type UserDetails struct {
 	LightUser

@@ -24,7 +24,7 @@ func TestCreateModule(t *testing.T) {
 		Role:     "admin",
 		ID:       "2",
 		Avatar:   "https://www.google.com",
-		Yead:     "2021",
+		Year:     "2021",
 		Group:    "1A",
 	}
 	const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
@@ -138,7 +138,7 @@ func TestCreateManyModules(t *testing.T) {
 		Role:     "admin",
 		ID:       "12",
 		Avatar:   "https://www.google.com",
-		Yead:     "2021",
+		Year:     "2021",
 		Group:    "1A",
 	}
 	const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
@@ -253,7 +253,7 @@ func TestCreateManyModules(t *testing.T) {
 			Role:     "teacher",
 			ID:       "12",
 			Avatar:   "https://www.google.com",
-			Yead:     "2021",
+			Year:     "2021",
 			Group:    "1A",
 		}
 		authToken, _ = utils.GenerateToken(user2, secret)
@@ -290,7 +290,7 @@ func TestGetModuleByTeacher(t *testing.T) {
 		Role:     "admin",
 		ID:       "2",
 		Avatar:   "https://www.google.com",
-		Yead:     "2021",
+		Year:     "2021",
 		Group:    "1A",
 	}
 	const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
@@ -358,7 +358,7 @@ func TestGetModuleByStudent(t *testing.T) {
 			Role:     "student",
 			ID:       "2",
 			Avatar:   "https://www.google.com",
-			Yead:     "2021",
+			Year:     "2021",
 			Group:    "1A",
 		}
 		const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"

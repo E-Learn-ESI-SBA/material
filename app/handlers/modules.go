@@ -157,7 +157,7 @@ func GetModuleByTeacher(collection *mongo.Collection, permit *permit.Client) gin
 // @Failure 400 {object} interfaces.APIResponse
 // @Failure 500 {object} interfaces.APIResponse
 // @Router /modules [POST]
-func CreateModule(collection *mongo.Collection, permit *permit.Client) gin.HandlerFunc {
+func CreateModule(collection *mongo.Collection, client *mongo.Client, permit *permit.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		print("Create Module Handler ...")
 		var module models.Module
@@ -167,7 +167,7 @@ func CreateModule(collection *mongo.Collection, permit *permit.Client) gin.Handl
 			c.JSON(http.StatusNotAcceptable, gin.H{"message": shared.INVALID_BODY})
 			return
 		}
-		err = services.CreateModule(c.Request.Context(), collection, module, permit)
+		err = services.CreateModule(c.Request.Context(), collection, module, permit, client)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"message": shared.UNABLE_CREATE_MODULE})
 			return
@@ -321,7 +321,7 @@ func GetModuleByStudent(collection *mongo.Collection) gin.HandlerFunc {
 		}
 		user := value.(*utils.UserDetails)
 
-		modules, err := services.GetModuleByStudent(context.Request.Context(), collection, user.Yead)
+		modules, err := services.GetModuleByStudent(context.Request.Context(), collection, user.Year)
 		if err != nil {
 			context.JSON(http.StatusBadRequest, gin.H{"message": shared.UNABLE_GET_MODULE})
 			return

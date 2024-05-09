@@ -8,7 +8,7 @@ import (
 	"madaurus/dev/material/app/middlewares"
 )
 
-func VideoRouter(e *gin.Engine, permitApi *permit.Client, collection *mongo.Collection) {
+func VideoRouter(e *gin.Engine, collection *mongo.Collection, permitApi *permit.Client, client *mongo.Client) {
 	videos := e.Group("/videos")
 	videos.GET("/:id", middlewares.Authentication(), handlers.GetVideo(collection))
 	videos.PUT("/:id", middlewares.Authentication(), handlers.EditVideo(collection))
