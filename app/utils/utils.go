@@ -2,11 +2,17 @@ package utils
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/permitio/permit-golang/pkg/enforcement"
 	"github.com/permitio/permit-golang/pkg/permit"
 	"log"
+	"madaurus/dev/material/app/shared"
 	"madaurus/dev/material/app/shared/iam"
 	"mime/multipart"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -46,6 +52,7 @@ func GetAllowedResources(actionName string, resourceType string, userKey string,
 		resourcesBuilders = append(resourcesBuilders, singleResourceBuilder)
 
 	}
+
 	allowedResources, err := GetFilterObject(user, action, permitApi, resourcesBuilders...)
 	if err != nil {
 		log.Printf("Error While Checking the Permission: %v\n", err)
@@ -77,4 +84,33 @@ func GetFilterObject(user enforcement.User, action enforcement.Action, permitApi
 	}
 	return allowedResources, nil
 
+}
+
+func GetStorageFile(dir string) (string, error) {
+
+	// Get the current working directory
+	pwd, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error getting current directory:", err)
+		return "", err
+	}
+
+	// Go up two directories to get to the project root
+	log.Printf("Current working directory: %v", pwd)
+
+	// Construct the path to the storage/files directory
+	storageFilesPath := filepath.Join(pwd, "storage", dir)
+
+	log.Printf("Path to storage/files: %v", storageFilesPath)
+	return storageFilesPath, nil
+}
+
+func GetUserPayload(c *gin.Context) (UserDetails, error) {
+	var user *UserDetails
+	value, err := c.Get("user")
+	if err {
+		return *user, errors.New(shared.USER_NOT_INJECTED)
+	}
+	user = value.(*UserDetails)
+	return *user, nil
 }

@@ -7,7 +7,9 @@ import (
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/services"
 	"madaurus/dev/material/app/shared"
+	"madaurus/dev/material/app/utils"
 	"net/http"
+	"path"
 )
 
 func EditFile(collection *mongo.Collection) gin.HandlerFunc {
@@ -34,4 +36,28 @@ func EditFile(collection *mongo.Collection) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"message": shared.FILE_UPDATED})
 	}
 
+}
+
+// @Summary Get a file by id
+// @Description Get a file by id
+func GetFileById(collection *mongo.Collection) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		fileId := c.Param("id")
+		fileObjectId, errD := primitive.ObjectIDFromHex(fileId)
+		if errD != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.REQUIRED_ID})
+			return
+		}
+		objectFile, err := services.GetFileObject(c.Request.Context(), collection, fileObjectId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			return
+		}
+		dir, _ := utils.GetStorageFile("files")
+		filePath := path.Join(dir, objectFile.Url)
+		c.Header("Content-Disposition", "attachment; filename="+objectFile.Name)
+		c.Header("Content-Type", "application/"+objectFile.Type)
+		// Send the file to the client
+		c.File(filePath)
+	}
 }

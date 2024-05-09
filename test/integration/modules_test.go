@@ -24,6 +24,8 @@ func TestCreateModule(t *testing.T) {
 		Role:     "admin",
 		ID:       "2",
 		Avatar:   "https://www.google.com",
+		Yead:     "2021",
+		Group:    "1A",
 	}
 	const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
 	authToken, _ := utils.GenerateToken(user, secret)
@@ -136,6 +138,8 @@ func TestCreateManyModules(t *testing.T) {
 		Role:     "admin",
 		ID:       "12",
 		Avatar:   "https://www.google.com",
+		Yead:     "2021",
+		Group:    "1A",
 	}
 	const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
 	authToken, _ := utils.GenerateToken(user, secret)
@@ -249,6 +253,8 @@ func TestCreateManyModules(t *testing.T) {
 			Role:     "teacher",
 			ID:       "12",
 			Avatar:   "https://www.google.com",
+			Yead:     "2021",
+			Group:    "1A",
 		}
 		authToken, _ = utils.GenerateToken(user2, secret)
 		jsonModules, err := json.Marshal(modules)
@@ -284,6 +290,8 @@ func TestGetModuleByTeacher(t *testing.T) {
 		Role:     "admin",
 		ID:       "2",
 		Avatar:   "https://www.google.com",
+		Yead:     "2021",
+		Group:    "1A",
 	}
 	const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
 	authToken, _ := utils.GenerateToken(user, secret)
@@ -340,6 +348,36 @@ func TestGetModuleByTeacher(t *testing.T) {
 		})
 
 	*/
+}
+func TestGetModuleByStudent(t *testing.T) {
+	t.Run("Success getting Modules By Student", func(t *testing.T) {
+
+		user := utils.LightUser{
+			Email:    "moha@gmail.com",
+			Username: "ayoub",
+			Role:     "student",
+			ID:       "2",
+			Avatar:   "https://www.google.com",
+			Yead:     "2021",
+			Group:    "1A",
+		}
+		const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
+		authToken, _ := utils.GenerateToken(user, secret)
+		req, errR := http.NewRequest("GET", url+"/modules/student", nil)
+		if errR != nil {
+			t.Errorf("Error while creating request: %v", errR)
+
+		}
+		req.Header.Set("Authorization", "Bearer "+authToken)
+		client := &http.Client{}
+		res, errS := client.Do(req)
+		if errS != nil {
+			t.Errorf("Error while getting the response: %v", errS)
+		}
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+
+	})
+
 }
 
 // Test The Edit Module

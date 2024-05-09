@@ -20,6 +20,8 @@ func TestCreateSection(t *testing.T) {
 		Role:     "admin",
 		ID:       "12",
 		Avatar:   "https://www.google.com",
+		Yead:     "2021",
+		Group:    "1A",
 	}
 	const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
 	const url = "http://localhost:8080/section/"

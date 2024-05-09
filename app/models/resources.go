@@ -28,12 +28,11 @@ type Lecture struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty" bson:"updated_at"`
 }
 type Video struct {
-	ID    primitive.ObjectID `json:"id" bson:"_id"`
-	Group string             `json:"group" bson:"group" binding:"required"`
-
+	ID        primitive.ObjectID `json:"id" bson:"_id"`
+	Group     string             `json:"group" bson:"group"`
 	Url       string             `json:"url" bson:"url" validate:"required"`
-	SectionId primitive.ObjectID `json:"section_id" bson:"section_id" binding:"required"`
-	TeacherId string             `json:"teacher_id" bson:"teacher_id" binding:"required"`
+	TeacherId string             `json:"teacher_id" bson:"teacher_id"`
+	Name      string             `json:"name" bson:"name"  binding:"required"`
 	CreatedAt time.Time          `json:"created_at,omitempty" bson:"created_at"`
 	UpdatedAt time.Time          `json:"updated_at,omitempty" bson:"updated_at"`
 }

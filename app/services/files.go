@@ -89,7 +89,7 @@ type FileResponse struct {
 	File models.Files `bson:"file"`
 }
 
-func GetFileObject(ctx context.Context, collection *mongo.Collection, fileId primitive.ObjectID) (FileResponse, error) {
+func GetFileObject(ctx context.Context, collection *mongo.Collection, fileId primitive.ObjectID) (models.Files, error) {
 
 	var module FileResponse
 	pipeline := bson.A{
@@ -102,18 +102,18 @@ func GetFileObject(ctx context.Context, collection *mongo.Collection, fileId pri
 	}
 	cursor, err := collection.Aggregate(ctx, pipeline)
 	if err != nil {
-		return module, err
+		return models.Files{}, errors.New(shared.UNABLE_GET_FILE)
 
 	}
 	defer cursor.Close(ctx)
 	for cursor.Next(ctx) {
 		err := cursor.Decode(&module)
 		if err != nil {
-			return module, err
+			return models.Files{}, errors.New(shared.UNABLE_GET_FILE)
 		}
 
 	}
-	return module, nil
+	return module.File, nil
 
 }
 

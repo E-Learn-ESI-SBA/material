@@ -21,6 +21,8 @@ func TestCreateChapter(t *testing.T) {
 		Role:     "admin",
 		ID:       "12",
 		Avatar:   "sqkddkslqdns",
+		Yead:     "2021",
+		Group:    "1A",
 	}
 	const module_id = "66356c454bf0cb9c986b9041"
 	const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"

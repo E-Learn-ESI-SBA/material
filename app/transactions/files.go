@@ -24,7 +24,9 @@ import (
 func CreateFileTransaction(client *mongo.Client, collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// start  Mongo session
-		dir, err := GetStorageFile("files")
+		// define the request size
+
+		dir, err := utils.GetStorageFile("files")
 		sectionId := c.Query("sectionId")
 
 		sectionObjId, errD := primitive.ObjectIDFromHex(sectionId)
@@ -50,6 +52,12 @@ func CreateFileTransaction(client *mongo.Client, collection *mongo.Collection) g
 			log.Printf("Error getting file: %v", errF)
 			c.JSON(http.StatusBadRequest, gin.H{"message": shared.UNABLE_CREATE_FILE})
 			return
+		}
+
+		// Make sure the file's size lower than 30MB
+		if file.Size > 30*1024*1024 {
+			log.Printf("Error , File too large")
+			c.JSON(http.StatusRequestEntityTooLarge, gin.H{"message": shared.FILE_TOO_LARGE})
 		}
 
 		session, err := client.StartSession()
@@ -145,7 +153,7 @@ func DeleteFileTransaction(client *mongo.Client, collection *mongo.Collection) g
 
 		}
 
-		dir, err := GetStorageFile("files")
+		dir, err := utils.GetStorageFile("files")
 		if err != nil {
 			log.Printf("Error getting storage file: %v", err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"message": shared.FILE_NOT_DELETED})
@@ -166,9 +174,8 @@ func DeleteFileTransaction(client *mongo.Client, collection *mongo.Collection) g
 			log.Printf("Error deleting file object: %v", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"message": shared.FILE_NOT_DELETED})
 			return
-
 		}
-		errDF := services.DeleteSavedFile(rs.File.Url, dir)
+		errDF := services.DeleteSavedFile(rs.Url, dir)
 		if errDF != nil {
 			log.Printf("Error deleting file object: %v", errDF.Error())
 			session.AbortTransaction(ctx)

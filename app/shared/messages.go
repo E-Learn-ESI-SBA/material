@@ -57,6 +57,7 @@ const UNABLE_UPDATE_FILE = "unable to update the file"
 const UNABLE_DELETE_FILE = "unable to delete the file"
 const UNABLE_GET_FILE = "unable to get the file"
 const DELETE_FILE = "File Deleted Successfully"
+const FILE_TOO_LARGE = "File Too Large please try with another file"
 
 // Server Errors :
 
@@ -122,3 +123,23 @@ const COMMENT_CREATED = "Comment Created Successfully"
 const COMMENT_NOT_CREATED = "Comment Not Created"
 const COMMENT_NOT_UPDATED = "Comment Not Updated"
 const COMMENT_NOT_DELETED = "Comment Not Deleted"
+
+// videos
+
+const VIDEO_NOT_FOUND = "Video Not Found"
+const VIDEO_DELETED = "Video Deleted Successfully"
+const VIDEO_UPDATED = "Video Updated Successfully"
+const VIDEO_CREATED = "Video Created Successfully"
+const VIDEO_NOT_CREATED = "Video Not Created"
+const VIDEO_NOT_UPDATED = "Video Not Updated"
+const VIDEO_NOT_DELETED = "Video Not Deleted"
+const UNABLE_TO_CREATE_VIDEO = "unable to create the video"
+const UNABLE_TO_UPDATE_VIDEO = "unable to update the video"
+const UNABLE_TO_DELETE_VIDEO = "unable to delete the video"
+const UNABLE_TO_GET_VIDEO = "unable to get the video"
+const UNABLE_TO_GET_VIDEOS = "unable to get the videos"
+
+// Api Permit
+
+const INSTANCE_CREATED = "Instance Created Successfully"
+const UNABLE_CREATE_INSTANCE = "Unable to Create the instance"

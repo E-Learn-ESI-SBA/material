@@ -93,6 +93,7 @@ func main() {
 		c.JSON(200, gin.H{"message": "Welcome to Madaurus Material Services"})
 	})
 
+	server.MaxMultipartMemory = 6 << 32768000
 	// Start Middleware
 	server.Use(cors.New(configCors))
 	// End Middleware
@@ -103,6 +104,7 @@ func main() {
 	routes.CommentRoute(server, app.CommentsCollection)
 	routes.TransactionRoute(server, client, app.ModuleCollection)
 	routes.FileRouter(server, app.ModuleCollection)
+	routes.VideoRouter(server, Permit, app.ModuleCollection)
 	log.Println("Server Running on Port 8080")
 	err = server.Run(":8080")
 	defer sentry.Flush(2 * time.Second)
