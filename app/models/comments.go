@@ -14,6 +14,7 @@ type Comments struct {
 	CreatedAt time.Time          `json:"created_at,omitempty" bson:"created_at"`
 	UpdatedAt time.Time          `json:"updated_at,omitempty" bson:"updated_at"`
 	Replays   []Reply            `json:"replays" bson:"replays"`
+	User      User               `json:"user" bson:"user"`
 }
 
 type Reply struct {
@@ -23,4 +24,5 @@ type Reply struct {
 	IsEdited  bool               `json:"is_edited" bson:"is_edited" `
 	CreatedAt time.Time          `json:"created_at,omitempty" bson:"created_at"`
 	UpdatedAt time.Time          `json:"updated_at,omitempty" bson:"updated_at"`
+	User      User               `json:"user" bson:"user"`
 }
