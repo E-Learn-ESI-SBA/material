@@ -1,7 +1,6 @@
 package fixtures
 
 import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"madaurus/dev/material/app/models"
 )
 
@@ -14,7 +13,6 @@ func GetModules() []models.Module {
 	instructors := []string{"1", "2"}
 
 	modules = append(modules, models.Module{
-		ID:          primitive.NewObjectID(),
 		Name:        "Module 1",
 		Year:        "1",
 		Speciality:  &speciality,
@@ -27,7 +25,6 @@ func GetModules() []models.Module {
 		Image:       &image,
 	})
 	modules = append(modules, models.Module{
-		ID:          primitive.NewObjectID(),
 		Name:        "Module 2",
 		Year:        "2",
 		Speciality:  &speciality2,
@@ -40,7 +37,6 @@ func GetModules() []models.Module {
 		Image:       &image,
 	})
 	modules = append(modules, models.Module{
-		ID:          primitive.NewObjectID(),
 		Name:        "Module 3",
 		Year:        "3",
 		Speciality:  &speciality,

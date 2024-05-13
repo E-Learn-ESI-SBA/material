@@ -24,7 +24,7 @@ func ModuleRoute(g *gin.Engine, collection *mongo.Collection, permitApi *permit.
 	moduleRoute.GET("/student", middlewares.Authentication(), middlewares.StaticRBAC(iam.ROLEStudentKey), handlers.GetModuleByStudent(collection))
 	moduleRoute.GET("/public/:id", handlers.GetPublicFilteredModules(collection))
 	moduleRoute.POST("/many", middlewares.Authentication(), middlewares.BasicRBAC("admin"), handlers.CreateManyModules(collection))
-	moduleRoute.POST("/test/:id", middlewares.Authentication(), middlewares.IAM(permitApi, "sections", "delete"), func(context *gin.Context) {
+	moduleRoute.POST("/test", middlewares.Authentication(), func(context *gin.Context) {
 		context.JSON(200, gin.H{"message": "Hello"})
 	})
 	moduleRoute.PATCH("/visibility/:id", middlewares.Authentication(), func(context *gin.Context) {
