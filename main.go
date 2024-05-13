@@ -9,6 +9,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/gin-contrib/cors"
+	"github.com/lpernett/godotenv"
+	"github.com/permitio/permit-golang/pkg/config"
+	"github.com/permitio/permit-golang/pkg/permit"
+
 	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
@@ -27,13 +32,33 @@ import (
 // @host localhost:8080
 // @BasePath /
 func main() {
+	mode := os.Getenv("GIN_MODE")
+	if mode != "release" {
+		gin.SetMode(gin.DebugMode)
+		_ = godotenv.Load()
+	} else {
+		gin.SetMode(gin.ReleaseMode)
+	}
+	configCors := cors.Config{
+		AllowAllOrigins: true,
+		AllowMethods:    []string{"GET", "POST", "PUT", "DELETE", "PATCH"},
+		AllowFiles:      true,
+		AllowHeaders:    []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-CSRF-Token", "hx-request", "hx-current-url"},
+		MaxAge:          12 * time.Hour,
+	}
 	k := shared.GetSecrets()
-	var uri string = k.String("database_uri")
+	uri := k.String("database_uri")
 	client, err := models.DBHandler(uri)
 	if err != nil {
 		log.Fatal("Database not connected")
 
 	}
+	/*
+		Enable Permit
+	*/
+
+	PermitConfig := config.NewConfigBuilder(os.Getenv("PERMIT_TOKEN")).WithPdpUrl(os.Getenv("PDP_SERVER")).Build()
+	Permit := permit.NewPermit(PermitConfig)
 	var app models.Application
 	app = *models.NewApp(client)
 
@@ -50,7 +75,6 @@ func main() {
 
 				}
 			}
-
 			return event
 		},
 		Debug: true,
@@ -69,11 +93,19 @@ func main() {
 	server.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "Welcome to Madaurus Material Services"})
 	})
-	routes.ModuleRoute(server, app.ModuleCollection)
-	routes.CourseRoute(server, app.CourseCollection)
-	routes.SectionRouter(server, app.SectionCollection)
-	routes.LectureRoute(server, app.LectureCollection)
-	routes.CommentRoute(server, app.CommentsCollection)
+
+	server.MaxMultipartMemory = 250 * 1024 * 1024
+	// Start Middleware
+	server.Use(cors.New(configCors))
+	// End Middleware
+	routes.ModuleRoute(server, app.ModuleCollection, Permit, client)
+	routes.CourseRoute(server, app.ModuleCollection, Permit, client)
+	routes.SectionRouter(server, app.ModuleCollection, Permit, client)
+	routes.LectureRoute(server, app.ModuleCollection, Permit, client)
+	routes.CommentRoute(server, app.CommentsCollection, Permit, client, app.UserCollection)
+	routes.TransactionRoute(server, client, app.ModuleCollection, Permit)
+	routes.FileRouter(server, app.ModuleCollection, Permit, client)
+	routes.VideoRouter(server, app.ModuleCollection, Permit, client)
 	routes.QuizRoute(server, app.QuizesCollection, app.ModuleCollection, app.SubmissionsCollection)
 	log.Println("Server Running on Port 8080")
 	err = server.Run(":8080")

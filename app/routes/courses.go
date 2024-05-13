@@ -2,17 +2,18 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/permitio/permit-golang/pkg/permit"
 	"go.mongodb.org/mongo-driver/mongo"
-	handlers "madaurus/dev/material/app/handlers/courses"
+	handlers "madaurus/dev/material/app/handlers"
 	"madaurus/dev/material/app/middlewares"
 )
 
-func CourseRoute(c *gin.Engine, collection *mongo.Collection) {
+func CourseRoute(c *gin.Engine, collection *mongo.Collection, permitApi *permit.Client, client *mongo.Client) {
 	courseRoute := c.Group("/courses")
-	courseRoute.GET("/teacher", middlewares.Authentication(), handlers.GetCoursesByTeacher(collection))
+	courseRoute.GET("/", middlewares.Authentication(), handlers.GetCoursesByTeacher(collection))
 	courseRoute.GET("/admin", middlewares.Authentication(), handlers.GetCoursesByAdmin(collection))
-	courseRoute.POST("/create", middlewares.Authentication(), handlers.CreateCourse(collection))
-	courseRoute.PUT("/update", middlewares.Authentication(), handlers.UpdateCourse(collection))
-	courseRoute.DELETE("/delete/:id", middlewares.Authentication(), handlers.DeleteCourse(collection))
+	courseRoute.POST("/", middlewares.Authentication(), handlers.CreateCourse(collection))
+	courseRoute.PUT("/", middlewares.Authentication(), handlers.UpdateCourse(collection))
+	courseRoute.DELETE("/:id", middlewares.Authentication(), handlers.DeleteCourse(collection))
 
 }

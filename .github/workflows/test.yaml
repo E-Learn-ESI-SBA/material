@@ -2,9 +2,9 @@ name: Testing & Building  Material Service Go (Gin)
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "production" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "production" ]
 env:
     ACR_RESOURCE_GROUP: madaurus
     AZURE_CONTAINER_REGISTRY: madaurus
@@ -27,8 +27,8 @@ jobs:
         run: go test -v ./test/unit/...
   build:
         runs-on: ubuntu-latest
-       # needs:
-       #   - test
+        needs:
+         - test
         steps:
             - uses: actions/checkout@v3
             - name: Login To Azure ACR

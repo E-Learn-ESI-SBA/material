@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
+
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -50,17 +52,30 @@ func SectionCollection(client *mongo.Client, CollectionName string) *mongo.Colle
 }
 func LectureCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
 	collection := client.Database("materials").Collection(CollectionName)
+	collection.Indexes().CreateOne(context.Background(), mongo.IndexModel{
+		Keys: bson.D{{"name", 1}},
+	})
 	return collection
 }
 func VideoCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
 	collection := client.Database("materials").Collection(CollectionName)
 	return collection
 }
-func ContentCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
+
+/*
+	func ContentCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
+		collection := client.Database("materials").Collection(CollectionName)
+		collection.Indexes().CreateOne(context.Background(), mongo.IndexModel{
+			Keys: bson.D{{"name", 1}},
+		})
+		return collection
+	}
+*/
+func CommentCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
 	collection := client.Database("materials").Collection(CollectionName)
 	return collection
 }
-func CommentCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
+func UserCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
 	collection := client.Database("materials").Collection(CollectionName)
 	return collection
 }
@@ -81,28 +96,20 @@ func GradesCollection(client *mongo.Client, CollectionName string) *mongo.Collec
 }
 
 type Application struct {
-	ContentCollection  		*mongo.Collection
-	VideoCollection    		*mongo.Collection
-	LectureCollection  		*mongo.Collection
-	SectionCollection  		*mongo.Collection
-	CourseCollection   		*mongo.Collection
-	ModuleCollection   		*mongo.Collection
-	CommentsCollection 		*mongo.Collection
-	QuizesCollection   		*mongo.Collection
-	SubmissionsCollection   *mongo.Collection
+	ModuleCollection      *mongo.Collection
+	CommentsCollection    *mongo.Collection
+	UserCollection        *mongo.Collection
+	QuizesCollection      *mongo.Collection
+	SubmissionsCollection *mongo.Collection
 }
 
 func NewApp(client *mongo.Client) *Application {
 	return &Application{
-		VideoCollection:    	VideoCollection(client, "videos"),
-		LectureCollection:  	LectureCollection(client, "lectures"),
-		ContentCollection:  	ContentCollection(client, "contents"),
-		SectionCollection:  	SectionCollection(client, "sections"),
-		CourseCollection:   	CourseCollection(client, "courses"),
-		ModuleCollection:   	ModuleCollection(client, "modules"),
-		CommentsCollection: 	CommentCollection(client, "comments"),
-		QuizesCollection:   	QuizesCollection(client, "quizes"),
-		SubmissionsCollection:  GradesCollection(client, "submissions"),
+		ModuleCollection:      ModuleCollection(client, "modules"),
+		CommentsCollection:    CommentCollection(client, "comments"),
+		UserCollection:        UserCollection(client, "users"),
+		QuizesCollection:      QuizesCollection(client, "quizes"),
+		SubmissionsCollection: GradesCollection(client, "submissions"),
 	}
 
 }

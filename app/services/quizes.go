@@ -13,18 +13,16 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-
-
 func CreateQuiz(
-	ctx context.Context, 
-	collection *mongo.Collection, 
-	moduleCollection *mongo.Collection, 
+	ctx context.Context,
+	collection *mongo.Collection,
+	moduleCollection *mongo.Collection,
 	quiz models.Quiz,
-	) error {
+) error {
 	var module models.Module
 	filter := bson.D{{"_id", quiz.ModuleId}, {"teacher_id", quiz.TeacherId}}
 	moduleCollection.FindOne(ctx, filter).Decode(&module)
-	
+
 	if module.ID.IsZero() {
 		return errors.New("module not found")
 	}
@@ -37,9 +35,9 @@ func CreateQuiz(
 			quiz.Questions[i].Image = "new path"
 		}
 	}
-	
-	currTime := time.Now()
-	quiz.Date.CreatedAt = &currTime
+
+	quiz.CreatedAt = time.Now()
+	quiz.UpdatedAt = quiz.CreatedAt
 	_, err := collection.InsertOne(ctx, quiz)
 	if err != nil {
 		log.Printf("Error While Creating Quiz: %v\n", err)
@@ -48,13 +46,12 @@ func CreateQuiz(
 	return nil
 }
 
-
 func UpdateQuiz(
-	ctx context.Context, 
-	collection *mongo.Collection, 
-	quiz models.Quiz, 
+	ctx context.Context,
+	collection *mongo.Collection,
+	quiz models.Quiz,
 	teacherID int,
-	) error {
+) error {
 	filter := bson.D{{"_id", quiz.ID}, {"teacher_id", teacherID}}
 	// should be updated field by field to avoid overriding existing data with nulls
 	updates := bson.D{{"$set", bson.D{
@@ -76,13 +73,12 @@ func UpdateQuiz(
 	return nil
 }
 
-
 func DeleteQuiz(
-	ctx context.Context, 
-	collection *mongo.Collection, 
-	quizID string, 
+	ctx context.Context,
+	collection *mongo.Collection,
+	quizID string,
 	teacherID int,
-	) error {
+) error {
 	objectId, err := primitive.ObjectIDFromHex(quizID)
 	if err != nil {
 		log.Printf("Error While Converting ID: %v\n", err)
@@ -99,12 +95,11 @@ func DeleteQuiz(
 	return nil
 }
 
-
 func GetQuiz(
 	ctx context.Context,
 	collection *mongo.Collection,
 	quizID string,
-	) (models.Quiz, error) {
+) (models.Quiz, error) {
 	var quiz models.Quiz
 	objectId, err := primitive.ObjectIDFromHex(quizID)
 	if err != nil {
@@ -120,12 +115,11 @@ func GetQuiz(
 	return quiz, nil
 }
 
-
 func GetQuizesByModuleId(
 	ctx context.Context,
 	collection *mongo.Collection,
 	moduleID string,
-	) ([]models.Quiz, error) {
+) ([]models.Quiz, error) {
 	var quizes []models.Quiz
 	objectId, err := primitive.ObjectIDFromHex(moduleID)
 	if err != nil {
@@ -146,11 +140,10 @@ func GetQuizesByModuleId(
 	return quizes, nil
 }
 
-
 func GetQuizesByAdmin(
 	ctx context.Context,
 	collection *mongo.Collection,
-	) ([]models.Quiz, error) {
+) ([]models.Quiz, error) {
 	var quizes []models.Quiz
 	cursor, err := collection.Find(ctx, bson.M{})
 	if err != nil {
@@ -172,7 +165,7 @@ func GetQuizResults(
 	submissionsCollection *mongo.Collection,
 	quizID string,
 	teacherId int,
-	) ([]models.Submission, error) {
+) ([]models.Submission, error) {
 	objectId, err := primitive.ObjectIDFromHex(quizID)
 	if err != nil {
 		log.Printf("Error While Converting ID: %v\n", err)
@@ -202,14 +195,13 @@ func GetQuizResults(
 	return submissions, nil
 }
 
-
 func SubmitQuizAnswers(
 	ctx context.Context,
 	collection *mongo.Collection,
 	SubmissionsCollection *mongo.Collection,
 	submission models.Submission,
-	) error {
-	
+) error {
+
 	// check if the quiz exists
 	var quiz models.Quiz
 	filter := bson.D{{"_id", submission.QuizId}}
@@ -250,7 +242,7 @@ func GetQuizResultByStudentId(
 	submissionsCollection *mongo.Collection,
 	quizID string,
 	studentID int,
-	) (models.Submission, error) {
+) (models.Submission, error) {
 	objectId, err := primitive.ObjectIDFromHex(quizID)
 	if err != nil {
 		log.Printf("Error While Converting ID: %v\n", err)
@@ -272,7 +264,6 @@ func GetQuizResultByStudentId(
 	}
 	return submission, nil
 }
-
 
 func CalcFinalScore(questions []models.Question, answers []models.Answer) float64 {
 	var totalScore float64
@@ -301,7 +292,6 @@ func GetGrade(score float64, grades []models.Grade) string {
 	}
 	return ""
 }
-
 
 func isIn(val int, arr []int) bool {
 	for _, v := range arr {
