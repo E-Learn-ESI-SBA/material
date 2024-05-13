@@ -28,6 +28,15 @@ func CreateQuiz(
 	if module.ID.IsZero() {
 		return errors.New("module not found")
 	}
+
+	// upload files in question.image to /storage/unique_name.extension
+	for i, question := range quiz.Questions {
+		if question.Image != "" {
+			// upload file
+			// update question.image to the new path
+			quiz.Questions[i].Image = "new path"
+		}
+	}
 	
 	currTime := time.Now()
 	quiz.Date.CreatedAt = &currTime
@@ -157,6 +166,42 @@ func GetQuizesByAdmin(
 	return quizes, nil
 }
 
+func GetQuizResults(
+	ctx context.Context,
+	collection *mongo.Collection,
+	submissionsCollection *mongo.Collection,
+	quizID string,
+	teacherId int,
+	) ([]models.Submission, error) {
+	objectId, err := primitive.ObjectIDFromHex(quizID)
+	if err != nil {
+		log.Printf("Error While Converting ID: %v\n", err)
+		return nil, err
+	}
+	// check if the quiz exists
+	var quiz models.Quiz
+	filter := bson.D{{"_id", objectId}, {"teacher_id", teacherId}}
+	_ = collection.FindOne(ctx, filter).Decode(&quiz)
+	if quiz.ID.IsZero() {
+		return nil, errors.New("quiz not found")
+	}
+	filter = bson.D{{"quiz_id", objectId}}
+	var submissions []models.Submission
+	cursor, err := submissionsCollection.Find(ctx, filter)
+	if err != nil {
+		log.Printf("Error While Getting Submissions: %v\n", err)
+		return submissions, err
+	}
+	defer cursor.Close(ctx)
+	for cursor.Next(ctx) {
+		var submission models.Submission
+		cursor.Decode(&submission)
+		submissions = append(submissions, submission)
+	}
+
+	return submissions, nil
+}
+
 
 func SubmitQuizAnswers(
 	ctx context.Context,
@@ -197,6 +242,35 @@ func SubmitQuizAnswers(
 	}
 
 	return nil
+}
+
+func GetQuizResultByStudentId(
+	ctx context.Context,
+	collection *mongo.Collection,
+	submissionsCollection *mongo.Collection,
+	quizID string,
+	studentID int,
+	) (models.Submission, error) {
+	objectId, err := primitive.ObjectIDFromHex(quizID)
+	if err != nil {
+		log.Printf("Error While Converting ID: %v\n", err)
+		return models.Submission{}, err
+	}
+	// check if the quiz exists
+	var quiz models.Quiz
+	filter := bson.D{{"_id", objectId}}
+	_ = collection.FindOne(ctx, filter).Decode(&quiz)
+	if quiz.ID.IsZero() {
+		return models.Submission{}, errors.New("quiz not found")
+	}
+	filter = bson.D{{"quiz_id", objectId}, {"student_id", studentID}}
+	var submission models.Submission
+	err = submissionsCollection.FindOne(ctx, filter).Decode(&submission)
+	if err != nil {
+		log.Printf("Error While Getting Submission: %v\n", err)
+		return submission, err
+	}
+	return submission, nil
 }
 
 

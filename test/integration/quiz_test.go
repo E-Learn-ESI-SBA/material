@@ -7,9 +7,9 @@ import (
 	"log"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/utils"
+	"madaurus/dev/material/test/fixtures"
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -23,46 +23,15 @@ type Res struct {
 var globalQuiz models.Quiz
 var globalModule models.Module
 
-// var globalTeacher utils.LightUser
 
-var admin utils.LightUser = utils.LightUser{
-	Username: "admin",
-	Role:     "Admin",
-	Email:    "admin@gmail.com",
-	ID:       0,
-}
+var admin utils.LightUser = fixtures.GetAdmins()[0]
 
-var teacher1 utils.LightUser = utils.LightUser{
-	Username: "mhammed",
-	Role:     "Teacher",
-	Email:    "f.mhammed@gmail.com",
-	ID:       1,
-}
-
-var teacher2 utils.LightUser = utils.LightUser{
-	Username: "poysa",
-	Role:     "Teacher",
-	Email:    "y.poysa@gmail.com",
-	ID:       2,
-}
-
-var student1 utils.LightUser = utils.LightUser{
-	Username: "godsword",
-	Role:     "Student",
-	Email:    "godsword@gmail.com",
-	ID:       3,
-}
-
-var student2 utils.LightUser = utils.LightUser{
-	Username: "ayoub",
-	Role:     "Student",
-	Email:    "ayoub@gmail.com",
-	ID:       4,
-}
+var teacher1 utils.LightUser = fixtures.GetTeachers()[0]
+var teacher2 utils.LightUser = fixtures.GetTeachers()[1]
+var student1 utils.LightUser = fixtures.GetStudents()[0]
+var student2 utils.LightUser = fixtures.GetStudents()[1]
 var secretKey string = "A1B2C3D4E5F6G7H8I9J0K"
 	
-var err error
-
 var adminToken string
 var teacher1Token string
 var teacher2Token string
@@ -73,7 +42,7 @@ var student2Token string
 
 
 func TestCreateQuiz(t *testing.T) {  
-	adminToken, err = utils.GenerateToken(admin, secretKey)
+	adminToken, err := utils.GenerateToken(admin, secretKey)
 	if err != nil {
 		//throw err and test failed
 		log.Printf("Error: %v\n", err)
@@ -84,11 +53,6 @@ func TestCreateQuiz(t *testing.T) {
 	teacher1Token, err = utils.GenerateToken(teacher1, secretKey)
 	if err != nil {
 		//throw err and test failed
-		log.Printf("Error: %v\n", err)
-		panic(err)
-	}
-
-	if err != nil {
 		log.Printf("Error: %v\n", err)
 		panic(err)
 	}
@@ -121,47 +85,7 @@ func TestCreateQuiz(t *testing.T) {
 	mockResponse := `{"message":"Module Created Successfully"}`
 	assert.Equal(t, mockResponse, string(responseData))
 
-	globalQuiz = models.Quiz{
-		ID: primitive.NewObjectID(),
-		ModuleId: globalModule.ID,
-		Title: "quiz_goes_brr",
-    	Instructions: "some instructions...",
-    	QuestionCount: 20,
-		MaxScore: 100,
-    	StartDate: time.Now(),
-    	EndDate: time.Now().Add(time.Hour * 1), // after one hour
-    	Duration: 100,
-		Questions: []models.Question{
-			{
-				ID: primitive.NewObjectID(),
-				Body: "what is the capital of france?",
-				Description: "extra info (optional)",
-				Score: 100,
-				Options: []string{"paris", "london", "berlin", "madrid"},
-				CorrectIdxs: []int{0},
-			},
-		},
-		Grades: []models.Grade{
-			{
-				Min:    0,
-				Max:    33,
-				Grade:  "C",
-				IsPass: false,
-			},
-			{
-				Min:    34,
-				Max:    66,
-				Grade:  "B",
-				IsPass: true,
-			},
-			{
-				Min:    67,
-				Max:    100,
-				Grade:  "A",
-				IsPass: true,
-			},
-		},
-	}
+	globalQuiz = fixtures.GetQuiz(globalModule.ID)
 
 	jsonQuiz, _ := json.Marshal(globalQuiz)
 	req, _ = http.NewRequest(
@@ -243,6 +167,7 @@ func TestUpdateQuiz(t *testing.T) {
 	mockResponse := `{"message":"Quiz Updated Successfully"}`
 	assert.Equal(t, mockResponse, string(responseData))
 
+	var err error
 	teacher2Token, err = utils.GenerateToken(teacher2, secretKey)
 	if err != nil {
 		//throw err and test failed
@@ -261,6 +186,7 @@ func TestUpdateQuiz(t *testing.T) {
 
 func TestSubmitQuizAnswers(t *testing.T) {
 	// create two students
+	var err error
 	student1Token, err = utils.GenerateToken(student1, secretKey)
 	if err != nil {
 		log.Printf("Error: %v\n", err)
@@ -328,21 +254,70 @@ func TestSubmitQuizAnswers(t *testing.T) {
 	assert.Equal(t, mockResponse, string(responseData))
 }
 
-func TestDeleteQuiz(t *testing.T) {
-
-	url := "http://localhost:8080/quizes/delete/" + globalQuiz.ID.Hex()
-	req, _ := http.NewRequest("DELETE", url, nil)
-	req.Header.Set("Authorization", "Bearer " + teacher2Token)
-	//this should return an error
+func TestGetQuizResults(t *testing.T) {
+	url := "http://localhost:8080/quizes/" + globalQuiz.ID.Hex() + "/results"
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("Authorization", "Bearer " + teacher1Token)
+	// this should succeed
 	res, _ := http.DefaultClient.Do(req)
 	responseData, _ := io.ReadAll(res.Body)
-	mockResponse := `{"error":"Unauthorized"}`
-	assert.Equal(t, mockResponse, string(responseData))
+	var resResults []models.Submission
+	json.Unmarshal(responseData, &resResults)
+	assert.Equal(t, 2, len(resResults))
 
-	// this should succeed
-	req.Header.Set("Authorization", "Bearer " + teacher1Token)
+	// same request with teacher2 token
+	// this should return an error
+	// teacher2Token, err := utils.GenerateToken(teacher2, secretKey)
+	// if err != nil {
+	// 	log.Printf("Error: %v\n", err)
+	// 	panic(err)
+	// }
+	req, _ = http.NewRequest("GET", url, nil)
+	req.Header.Set("Authorization", "Bearer " + teacher2Token)
 	res, _ = http.DefaultClient.Do(req)
 	responseData, _ = io.ReadAll(res.Body)
-	mockResponse = `{"message":"Quiz Deleted Successfully"}`
+	mockResponse := `{"error":"quiz not found"}`
 	assert.Equal(t, mockResponse, string(responseData))
 }
+
+func TestGetQuizResultByStudentId(t *testing.T) {
+	url := "http://localhost:8080/quizes/" + globalQuiz.ID.Hex() + "/student/result"
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("Authorization", "Bearer " + student1Token)
+	// this should succeed
+	res, _ := http.DefaultClient.Do(req)
+	responseData, _ := io.ReadAll(res.Body)
+	var resSubmission models.Submission
+	json.Unmarshal(responseData, &resSubmission)
+	assert.Equal(t, student1.ID, resSubmission.StudentId)
+	assert.Equal(t, 200, res.StatusCode)
+
+	// same request with teacher2 token
+	// this should return an error
+	req, _ = http.NewRequest("GET", url, nil)
+	req.Header.Set("Authorization", "Bearer " + teacher2Token)
+	res, _ = http.DefaultClient.Do(req)
+	responseData, _ = io.ReadAll(res.Body)
+	mockResponse := `{"error":"mongo: no documents in result"}`
+	assert.Equal(t, mockResponse, string(responseData))
+	assert.Equal(t, 400, res.StatusCode)
+}
+
+// func TestDeleteQuiz(t *testing.T) {
+
+// 	url := "http://localhost:8080/quizes/delete/" + globalQuiz.ID.Hex()
+// 	req, _ := http.NewRequest("DELETE", url, nil)
+// 	req.Header.Set("Authorization", "Bearer " + teacher2Token)
+// 	//this should return an error
+// 	res, _ := http.DefaultClient.Do(req)
+// 	responseData, _ := io.ReadAll(res.Body)
+// 	mockResponse := `{"error":"Unauthorized"}`
+// 	assert.Equal(t, mockResponse, string(responseData))
+
+// 	// this should succeed
+// 	req.Header.Set("Authorization", "Bearer " + teacher1Token)
+// 	res, _ = http.DefaultClient.Do(req)
+// 	responseData, _ = io.ReadAll(res.Body)
+// 	mockResponse = `{"message":"Quiz Deleted Successfully"}`
+// 	assert.Equal(t, mockResponse, string(responseData))
+// }

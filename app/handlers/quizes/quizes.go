@@ -80,10 +80,10 @@ func UpdateQuiz(collection *mongo.Collection) gin.HandlerFunc {
 // @Produce json
 // @Tags Quizes
 // @Accept json
-// @Param quiz_id path string true "Quiz ID"
+// @Param id path string true "Quiz ID"
 // @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
-// @Router /quizes/delete/{quiz_id} [DELETE]
+// @Router /quizes/delete/{id} [DELETE]
 func DeleteQuiz(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user := c.MustGet("user").(*utils.UserDetails)
@@ -108,10 +108,10 @@ func DeleteQuiz(collection *mongo.Collection) gin.HandlerFunc {
 // @Produce json
 // @Tags Quizes
 // @Accept json
-// @Param quiz_id path string true "Quiz ID"
+// @Param id path string true "Quiz ID"
 // @Success 200 {object} models.Quiz
 // @Failure 400 {object} interfaces.APiError
-// @Router /quizes/get/{quiz_id} [GET]
+// @Router /quizes/get/{id} [GET]
 func GetQuiz(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		quizID, errP := c.Params.Get("id")
@@ -154,10 +154,10 @@ func GetQuizesByAdmin(collection *mongo.Collection) gin.HandlerFunc {
 // @Produce json
 // @Tags Quizes
 // @Accept json
-// @Param module_id path string true "Module ID"
+// @Param id path string true "Module ID"
 // @Success 200 {object} models.Quiz
 // @Failure 400 {object} interfaces.APiError
-// @Router /quizes/module/{module_id} [GET]
+// @Router /quizes/module/{id} [GET]
 func GetQuizesByModuleId(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		moduleID, errP := c.Params.Get("id")
@@ -180,11 +180,11 @@ func GetQuizesByModuleId(collection *mongo.Collection) gin.HandlerFunc {
 // @Produce json
 // @Tags Quizes
 // @Accept json
-// @Param quiz_id path string true "Quiz ID"
+// @Param id path string true "Quiz ID"
 // @Param answer body models.QuizAnswer true "Quiz Answer Object"
 // @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
-// @Router /quizes/submit/{quiz_id} [POST]
+// @Router /quizes/submit/{id} [POST]
 func SubmitQuizAnswers(collection *mongo.Collection, SubmissionsCollection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user := c.MustGet("user").(*utils.UserDetails)
@@ -211,5 +211,59 @@ func SubmitQuizAnswers(collection *mongo.Collection, SubmissionsCollection *mong
 			return
 		}
 		c.JSON(200, gin.H{"message": "Quiz Answer Submitted Successfully"})
+	}
+}
+
+
+
+// @Summary Get Quiz Results By teacher
+// @Description Protected Route used to get quiz results by teacher
+// @Produce json
+// @Tags Quizes Submissions
+// @Accept json
+// @Param id path string true "Quiz ID"
+// @Success 200 {object} models.QuizResults
+// @Failure 400 {object} interfaces.APiError
+// @Router /quizes/{id}/results [GET]
+func GetQuizResults(collection *mongo.Collection, SubmissionsCollection *mongo.Collection) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user := c.MustGet("user").(*utils.UserDetails)
+		quizID, errP := c.Params.Get("id")
+		if !errP {
+			c.JSON(400, gin.H{"error": errors.New("quiz ID is Required")})
+			return
+		}
+		quizResults, err := services.GetQuizResults(c.Request.Context(), collection, SubmissionsCollection, quizID, user.ID)
+		if err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(200, quizResults)
+	}
+}
+
+
+// @Summary Get Quiz Result By Student ID
+// @Description Protected Route used to get quiz result by student ID
+// @Produce json
+// @Tags Quizes Submissions
+// @Accept json
+// @Success 200 {object} models.QuizResults
+// @Failure 400 {object} interfaces.APiError
+// @Router /quizes/:id/student/result [GET]
+func GetQuizResultByStudentId(collection *mongo.Collection, SubmissionsCollection *mongo.Collection) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user := c.MustGet("user").(*utils.UserDetails)
+		quizID, errP := c.Params.Get("id")
+		if !errP {
+			c.JSON(400, gin.H{"error": errors.New("quiz ID is Required")})
+			return
+		}
+		quizResults, err := services.GetQuizResultByStudentId(c.Request.Context(), collection, SubmissionsCollection, quizID, user.ID)
+		if err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(200, quizResults)
 	}
 }
