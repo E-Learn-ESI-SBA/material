@@ -2,9 +2,10 @@ package models
 
 import (
 	"context"
-	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -29,6 +30,8 @@ func DBHandler(uri string) (*mongo.Client, error) {
 		log.Println("failed to connect to mongodb")
 		return nil, err
 	}
+	// drop the database
+	client.Database("materials").Drop(context.Background())
 	log.Println("Successfully Connected to the mongodb")
 	return client, nil
 }
@@ -77,17 +80,36 @@ func UserCollection(client *mongo.Client, CollectionName string) *mongo.Collecti
 	return collection
 }
 
+func QuizesCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
+	collection := client.Database("materials").Collection(CollectionName)
+	return collection
+}
+
+func QuestionCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
+	collection := client.Database("materials").Collection(CollectionName)
+	return collection
+}
+
+func GradesCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
+	collection := client.Database("materials").Collection(CollectionName)
+	return collection
+}
+
 type Application struct {
-	ModuleCollection   *mongo.Collection
-	CommentsCollection *mongo.Collection
-	UserCollection     *mongo.Collection
+	ModuleCollection      *mongo.Collection
+	CommentsCollection    *mongo.Collection
+	UserCollection        *mongo.Collection
+	QuizesCollection      *mongo.Collection
+	SubmissionsCollection *mongo.Collection
 }
 
 func NewApp(client *mongo.Client) *Application {
 	return &Application{
-		ModuleCollection:   ModuleCollection(client, "modules"),
-		CommentsCollection: CommentCollection(client, "comments"),
-		UserCollection:     UserCollection(client, "users"),
+		ModuleCollection:      ModuleCollection(client, "modules"),
+		CommentsCollection:    CommentCollection(client, "comments"),
+		UserCollection:        UserCollection(client, "users"),
+		QuizesCollection:      QuizesCollection(client, "quizes"),
+		SubmissionsCollection: GradesCollection(client, "submissions"),
 	}
 
 }

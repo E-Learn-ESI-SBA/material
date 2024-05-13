@@ -2,11 +2,6 @@ package transactions
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/services"
@@ -15,6 +10,12 @@ import (
 	"net/http"
 	"path"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 // @Summary Create a file
@@ -197,51 +198,3 @@ func DeleteFileTransaction(client *mongo.Client, collection *mongo.Collection) g
 
 	}
 }
-
-/*
-
-
-
-db.modules.aggregate([
-    {
-        "$unwind": "$courses"
-    },
-{
-        "$unwind": "$courses.sections"
-    },
-{
-        "$unwind": "$courses.sections.files"
-    },
-    {
-        "$match": {
-            "courses.sections.files._id":ObjectId("6636a46fa59f3297bb0f9577")
-        }
-    },
-    {
-        "$replaceRoot": {
-            "newRoot": {
-                "$mergeObjects": [
-                    "$$ROOT",
-                    {
-            "file": {
-              _id: "$courses.sections.files._id",
-              name: "$courses.sections.files.name",
-              url: "$courses.sections.files.url",
-              // Add other desired file fields here
-            }
-          }
-                ]
-            }
-        }
-    },
-    {
-        "$project": {
-			"courses": 0,
-        }
-    },
-
-])
-
-
-
-*/

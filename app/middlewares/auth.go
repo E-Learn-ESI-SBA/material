@@ -2,12 +2,13 @@ package middlewares
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"log"
 	"madaurus/dev/material/app/shared"
 	"madaurus/dev/material/app/utils"
 	"net/http"
 	"os"
+
+	"github.com/gin-gonic/gin"
 )
 
 func Authentication() gin.HandlerFunc {

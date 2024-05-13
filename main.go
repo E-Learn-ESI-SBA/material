@@ -1,10 +1,6 @@
 package main
 
 import (
-	"github.com/gin-contrib/cors"
-	"github.com/lpernett/godotenv"
-	"github.com/permitio/permit-golang/pkg/config"
-	"github.com/permitio/permit-golang/pkg/permit"
 	"log"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/routes"
@@ -12,6 +8,11 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/gin-contrib/cors"
+	"github.com/lpernett/godotenv"
+	"github.com/permitio/permit-golang/pkg/config"
+	"github.com/permitio/permit-golang/pkg/permit"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
@@ -105,6 +106,7 @@ func main() {
 	routes.TransactionRoute(server, client, app.ModuleCollection, Permit)
 	routes.FileRouter(server, app.ModuleCollection, Permit, client)
 	routes.VideoRouter(server, app.ModuleCollection, Permit, client)
+	routes.QuizRoute(server, app.QuizesCollection, app.ModuleCollection, app.SubmissionsCollection)
 	log.Println("Server Running on Port 8080")
 	err = server.Run(":8080")
 	defer sentry.Flush(2 * time.Second)
