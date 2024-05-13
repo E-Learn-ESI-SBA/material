@@ -143,3 +143,14 @@ const UNABLE_TO_GET_VIDEOS = "unable to get the videos"
 
 const INSTANCE_CREATED = "Instance Created Successfully"
 const UNABLE_CREATE_INSTANCE = "Unable to Create the instance"
+
+// quiz messages
+const QUIZ_NOT_FOUND = "Quiz Not Found"
+const QUIZ_DELETED = "Quiz Deleted Successfully"
+const QUIZ_UPDATED = "Quiz Updated Successfully"
+const QUIZ_CREATED = "Quiz Created Successfully"
+const QUIZ_NOT_CREATED = "Quiz Not Created"
+const QUIZ_NOT_UPDATED = "Quiz Not Updated"
+const QUIZ_NOT_DELETED = "Quiz Not Deleted"
+const QUIZ_NOT_RETRIEVED = "Quiz Not Retrieved"
+const QUIZ_RETRIEVED = "Quiz Retrieved Successfully"

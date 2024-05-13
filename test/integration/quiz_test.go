@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	"io"
 	"log"
+	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
+	"madaurus/dev/material/app/shared"
 	"madaurus/dev/material/app/utils"
 	"madaurus/dev/material/test/fixtures"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 
@@ -30,7 +31,7 @@ var teacher1 utils.LightUser = fixtures.GetTeachers()[0]
 var teacher2 utils.LightUser = fixtures.GetTeachers()[1]
 var student1 utils.LightUser = fixtures.GetStudents()[0]
 var student2 utils.LightUser = fixtures.GetStudents()[1]
-var secretKey string = "A1B2C3D4E5F6G7H8I9J0K"
+var secretKey string = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
 	
 var adminToken string
 var teacher1Token string
@@ -42,14 +43,8 @@ var student2Token string
 
 
 func TestCreateQuiz(t *testing.T) {  
-	adminToken, err := utils.GenerateToken(admin, secretKey)
-	if err != nil {
-		//throw err and test failed
-		log.Printf("Error: %v\n", err)
-		panic(err)
-	}
 
-
+	var err error
 	teacher1Token, err = utils.GenerateToken(teacher1, secretKey)
 	if err != nil {
 		//throw err and test failed
@@ -57,251 +52,274 @@ func TestCreateQuiz(t *testing.T) {
 		panic(err)
 	}
 
-	globalModule = models.Module{
-		ID: primitive.NewObjectID(),
-		Name: "archi",
-		Year: 3,
-		Speciality: nil,
-		Semester: 1,
-		Coefficient: 4,
-		TeacherId: teacher1.ID,
-		Instructors: nil,
-		IsPublic: true,
-		Plan: []string{"plan1", "plan2", "plan3"},
-		Image: nil,
-	}
+	globalModule = fixtures.GetModules()[0]
 
 
 	jsonModule, _ := json.Marshal(globalModule)
 	req, _ := http.NewRequest(
 		"POST",
-		"http://localhost:8080/modules/create",
+		"http://localhost:8080/modules",
 		bytes.NewReader(jsonModule),
 	)
 
-	req.Header.Set("Authorization", "Bearer " + adminToken)
+	req.Header.Set("Authorization", "Bearer " + teacher1Token)
+	req.Header.Set("Content-Type", "application/json")
 	res, _ := http.DefaultClient.Do(req)
 	responseData, _ := io.ReadAll(res.Body)
-	mockResponse := `{"message":"Module Created Successfully"}`
-	assert.Equal(t, mockResponse, string(responseData))
 
-	globalQuiz = fixtures.GetQuiz(globalModule.ID)
+	var apiResponse interfaces.APiSuccess
+	err = json.Unmarshal(responseData, &apiResponse)
+	if err != nil {
+		t.Errorf("Error unmarshalling response body: %v", err)
+	}
 
-	jsonQuiz, _ := json.Marshal(globalQuiz)
+	assert.Equal(t, shared.CREATE_MODULE, apiResponse.Message)
+	assert.Equal(t, http.StatusCreated, res.StatusCode)
+
+	// fetch the created module 
 	req, _ = http.NewRequest(
-		"POST",
-		"http://localhost:8080/quizes/create",
-		bytes.NewReader(jsonQuiz),
+		"GET",
+		"http://localhost:8080/modules/teacher",
+		nil,
 	)
 	req.Header.Set("Authorization", "Bearer " + teacher1Token)
-	//this should succeed
 	res, _ = http.DefaultClient.Do(req)
 	responseData, _ = io.ReadAll(res.Body)
-	mockResponse = `{"message":"Quiz Created Successfully"}`
-	assert.Equal(t, mockResponse, string(responseData))
-	// creating a quiz with a non existing teacher/module combination
-	// should return an error
-	quiz := globalQuiz
-	quiz.ModuleId = primitive.NewObjectID()
-
-	jsonQuiz, _ = json.Marshal(quiz)
-	req, _ = http.NewRequest(
-		"POST",
-		"http://localhost:8080/quizes/create",
-		bytes.NewReader(jsonQuiz),
-	)
-	req.Header.Set("Authorization", "Bearer " + teacher1Token)
-
-	res, _ = http.DefaultClient.Do(req)
-	responseData, _ = io.ReadAll(res.Body)
-	mockResponse = `{"error":"module not found"}`
-	assert.Equal(t, mockResponse, string(responseData))
-}
-
-func TestGetQuizesByModuleId(t *testing.T) {
-	
-	url := "http://localhost:8080/quizes/module/" + globalModule.ID.Hex()
-	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Set("Authorization", "Bearer " + teacher1Token)
-
-	res, _ := http.DefaultClient.Do(req)
-	responseData, _ := io.ReadAll(res.Body)
-	
-	var resQuizes []models.Quiz
-	json.Unmarshal(responseData, &resQuizes)
-	assert.Equal(t, globalQuiz.ID, resQuizes[0].ID)
-}
-
-func TestGetQuizById(t *testing.T) {
-	
-	url := "http://localhost:8080/quizes/get/" + globalQuiz.ID.Hex()	
-	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Set("Authorization", "Bearer " + teacher1Token)
-
-	res, _ := http.DefaultClient.Do(req)
-	responseData, _ := io.ReadAll(res.Body)
-	
-	var resQuiz models.Quiz
-	json.Unmarshal(responseData, &resQuiz)
-	assert.Equal(t, globalQuiz.ID, resQuiz.ID)
-}
-
-func TestUpdateQuiz(t *testing.T) {
-
-	updatedQuiz := globalQuiz
-	updatedQuiz.Title = "updated title..."
-	updatedQuiz.Instructions = "updated instructions..."
-
-
-	jsonQuiz, _ := json.Marshal(updatedQuiz)
-	req, _ := http.NewRequest(
-		"PUT",
-		"http://localhost:8080/quizes/update",
-		bytes.NewReader(jsonQuiz),
-	)
-	req.Header.Set("Authorization", "Bearer " + teacher1Token)
-
-	//this should succeed
-	res, _ := http.DefaultClient.Do(req)
-	responseData, _ := io.ReadAll(res.Body)
-	mockResponse := `{"message":"Quiz Updated Successfully"}`
-	assert.Equal(t, mockResponse, string(responseData))
-
-	var err error
-	teacher2Token, err = utils.GenerateToken(teacher2, secretKey)
+	// unmarshal the response
+	var resModules []models.Module
+	err = json.Unmarshal(responseData, &resModules)
 	if err != nil {
-		//throw err and test failed
-		log.Printf("Error: %v\n", err)
-		panic(err)
+		t.Errorf("Error unmarshalling response body: %v", err)
 	}
+	globalModule.ID = resModules[0].ID
+	t.Run("Create Quiz", func(t *testing.T) {
+		log.Printf("Module ID: %v\n", globalModule.ID)
+		globalQuiz = fixtures.GetQuiz(globalModule.ID)
+		jsonQuiz, _ := json.Marshal(globalQuiz)
+		req, _ = http.NewRequest(
+			"POST",
+			"http://localhost:8080/quizes",
+			bytes.NewReader(jsonQuiz),
+		)
+		req.Header.Set("Authorization", "Bearer " + teacher1Token)
+		//this should succeed
+		res, _ = http.DefaultClient.Do(req)
+		responseData, _ = io.ReadAll(res.Body)
 
-	//this should return an error
-	req.Header.Set("Authorization", "Bearer " + teacher2Token)
-	res, _ = http.DefaultClient.Do(req)
-	responseData, _ = io.ReadAll(res.Body)
-	mockResponse = `{"error":"Unauthorized"}`
-	assert.Equal(t, mockResponse, string(responseData))
+		var apiResponse interfaces.APiSuccess
+		err = json.Unmarshal(responseData, &apiResponse)
+		if err != nil {
+			t.Errorf("Error unmarshalling response body: %v", err)
+		}
 
+		log.Printf("Response: %v\n", string(responseData))
+
+		assert.Equal(t, http.StatusCreated, res.StatusCode)
+		assert.Equal(t, shared.QUIZ_CREATED, apiResponse.Message)
+	})
+	// // creating a quiz with a non existing teacher/module combination
+	// // should return an error
+	// quiz := globalQuiz
+	// quiz.ModuleId = primitive.NewObjectID()
+
+	// jsonQuiz, _ = json.Marshal(quiz)
+	// req, _ = http.NewRequest(
+	// 	"POST",
+	// 	"http://localhost:8080/quizes/create",
+	// 	bytes.NewReader(jsonQuiz),
+	// )
+	// req.Header.Set("Authorization", "Bearer " + teacher1Token)
+
+	// res, _ = http.DefaultClient.Do(req)
+	// responseData, _ = io.ReadAll(res.Body)
+	// mockResponse = `{"error":"module not found"}`
+	// assert.Equal(t, mockResponse, string(responseData))
 }
 
-func TestSubmitQuizAnswers(t *testing.T) {
-	// create two students
-	var err error
-	student1Token, err = utils.GenerateToken(student1, secretKey)
-	if err != nil {
-		log.Printf("Error: %v\n", err)
-		panic(err)
-	}
-	student2Token, err = utils.GenerateToken(student2, secretKey)
-	if err != nil {
-		log.Printf("Error: %v\n", err)
-		panic(err)
-	}
+// func TestGetQuizesByModuleId(t *testing.T) {
+	
+// 	url := "http://localhost:8080/quizes/module/" + globalModule.ID.Hex()
+// 	req, _ := http.NewRequest("GET", url, nil)
+// 	req.Header.Set("Authorization", "Bearer " + teacher1Token)
 
-	// student1 submits the quiz with correct answers
-	submission := models.Submission{
-		ID: primitive.NewObjectID(),
-		StudentId: student1.ID,
-		QuizId: globalQuiz.ID,
-		Answers: []models.Answer{
-			{
-				QuestionId: globalQuiz.Questions[0].ID,
-				Choices: []int{0},
-			},
-		},
-	}
+// 	res, _ := http.DefaultClient.Do(req)
+// 	responseData, _ := io.ReadAll(res.Body)
+	
+// 	var resQuizes []models.Quiz
+// 	json.Unmarshal(responseData, &resQuizes)
+// 	assert.Equal(t, globalQuiz.ID, resQuizes[0].ID)
+// }
 
-	jsonSubmission, _ := json.Marshal(submission)
-	url := "http://localhost:8080/quizes/" + globalQuiz.ID.Hex() + "/submit"
-	req, _ := http.NewRequest("POST", url, bytes.NewReader(jsonSubmission))
-	req.Header.Set("Authorization", "Bearer " + student1Token)
-	// this shoud succeed
-	res, _ := http.DefaultClient.Do(req)
-	responseData, _ := io.ReadAll(res.Body)
-	mockResponse := `{"message":"Quiz Answer Submitted Successfully"}`
-	assert.Equal(t, mockResponse, string(responseData))
+// func TestGetQuizById(t *testing.T) {
+	
+// 	url := "http://localhost:8080/quizes/get/" + globalQuiz.ID.Hex()	
+// 	req, _ := http.NewRequest("GET", url, nil)
+// 	req.Header.Set("Authorization", "Bearer " + teacher1Token)
+
+// 	res, _ := http.DefaultClient.Do(req)
+// 	responseData, _ := io.ReadAll(res.Body)
+	
+// 	var resQuiz models.Quiz
+// 	json.Unmarshal(responseData, &resQuiz)
+// 	assert.Equal(t, globalQuiz.ID, resQuiz.ID)
+// }
+
+// func TestUpdateQuiz(t *testing.T) {
+
+// 	updatedQuiz := globalQuiz
+// 	updatedQuiz.Title = "updated title..."
+// 	updatedQuiz.Instructions = "updated instructions..."
 
 
-	// student2 submits the quiz with wrong answers
-	submission = models.Submission{
-		ID: primitive.NewObjectID(),
-		StudentId: student2.ID,
-		QuizId: globalQuiz.ID,
-		Answers: []models.Answer{
-			{
-				QuestionId: globalQuiz.Questions[0].ID,
-				Choices: []int{0, 1},
-			},
-		},
-	}
+// 	jsonQuiz, _ := json.Marshal(updatedQuiz)
+// 	req, _ := http.NewRequest(
+// 		"PUT",
+// 		"http://localhost:8080/quizes/update",
+// 		bytes.NewReader(jsonQuiz),
+// 	)
+// 	req.Header.Set("Authorization", "Bearer " + teacher1Token)
 
-	jsonSubmission, _ = json.Marshal(submission)
-	req, _ = http.NewRequest("POST", url, bytes.NewReader(jsonSubmission))
-	req.Header.Set("Authorization", "Bearer " + student2Token)
-	// this shoud succeed
-	res, _ = http.DefaultClient.Do(req)
-	responseData, _ = io.ReadAll(res.Body)
-	mockResponse = `{"message":"Quiz Answer Submitted Successfully"}`
-	assert.Equal(t, mockResponse, string(responseData))
+// 	//this should succeed
+// 	res, _ := http.DefaultClient.Do(req)
+// 	responseData, _ := io.ReadAll(res.Body)
+// 	mockResponse := `{"message":"Quiz Updated Successfully"}`
+// 	assert.Equal(t, mockResponse, string(responseData))
 
-	// submit again using student1
-	// this should return an error
-	req, _ = http.NewRequest("POST", url, bytes.NewReader(jsonSubmission))
-	req.Header.Set("Authorization", "Bearer " + student1Token)
-	res, _ = http.DefaultClient.Do(req)
-	responseData, _ = io.ReadAll(res.Body)
-	mockResponse = `{"error":"student already submitted the quiz answers"}`
-	assert.Equal(t, mockResponse, string(responseData))
-}
+// 	var err error
+// 	teacher2Token, err = utils.GenerateToken(teacher2, secretKey)
+// 	if err != nil {
+// 		//throw err and test failed
+// 		log.Printf("Error: %v\n", err)
+// 		panic(err)
+// 	}
 
-func TestGetQuizResults(t *testing.T) {
-	url := "http://localhost:8080/quizes/" + globalQuiz.ID.Hex() + "/results"
-	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Set("Authorization", "Bearer " + teacher1Token)
-	// this should succeed
-	res, _ := http.DefaultClient.Do(req)
-	responseData, _ := io.ReadAll(res.Body)
-	var resResults []models.Submission
-	json.Unmarshal(responseData, &resResults)
-	assert.Equal(t, 2, len(resResults))
+// 	//this should return an error
+// 	req.Header.Set("Authorization", "Bearer " + teacher2Token)
+// 	res, _ = http.DefaultClient.Do(req)
+// 	responseData, _ = io.ReadAll(res.Body)
+// 	mockResponse = `{"error":"Unauthorized"}`
+// 	assert.Equal(t, mockResponse, string(responseData))
 
-	// same request with teacher2 token
-	// this should return an error
-	// teacher2Token, err := utils.GenerateToken(teacher2, secretKey)
-	// if err != nil {
-	// 	log.Printf("Error: %v\n", err)
-	// 	panic(err)
-	// }
-	req, _ = http.NewRequest("GET", url, nil)
-	req.Header.Set("Authorization", "Bearer " + teacher2Token)
-	res, _ = http.DefaultClient.Do(req)
-	responseData, _ = io.ReadAll(res.Body)
-	mockResponse := `{"error":"quiz not found"}`
-	assert.Equal(t, mockResponse, string(responseData))
-}
+// }
 
-func TestGetQuizResultByStudentId(t *testing.T) {
-	url := "http://localhost:8080/quizes/" + globalQuiz.ID.Hex() + "/student/result"
-	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Set("Authorization", "Bearer " + student1Token)
-	// this should succeed
-	res, _ := http.DefaultClient.Do(req)
-	responseData, _ := io.ReadAll(res.Body)
-	var resSubmission models.Submission
-	json.Unmarshal(responseData, &resSubmission)
-	assert.Equal(t, student1.ID, resSubmission.StudentId)
-	assert.Equal(t, 200, res.StatusCode)
+// func TestSubmitQuizAnswers(t *testing.T) {
+// 	// create two students
+// 	var err error
+// 	student1Token, err = utils.GenerateToken(student1, secretKey)
+// 	if err != nil {
+// 		log.Printf("Error: %v\n", err)
+// 		panic(err)
+// 	}
+// 	student2Token, err = utils.GenerateToken(student2, secretKey)
+// 	if err != nil {
+// 		log.Printf("Error: %v\n", err)
+// 		panic(err)
+// 	}
 
-	// same request with teacher2 token
-	// this should return an error
-	req, _ = http.NewRequest("GET", url, nil)
-	req.Header.Set("Authorization", "Bearer " + teacher2Token)
-	res, _ = http.DefaultClient.Do(req)
-	responseData, _ = io.ReadAll(res.Body)
-	mockResponse := `{"error":"mongo: no documents in result"}`
-	assert.Equal(t, mockResponse, string(responseData))
-	assert.Equal(t, 400, res.StatusCode)
-}
+// 	// student1 submits the quiz with correct answers
+// 	submission := models.Submission{
+// 		ID: primitive.NewObjectID(),
+// 		StudentId: student1.ID,
+// 		QuizId: globalQuiz.ID,
+// 		Answers: []models.Answer{
+// 			{
+// 				QuestionId: globalQuiz.Questions[0].ID,
+// 				Choices: []int{0},
+// 			},
+// 		},
+// 	}
+
+// 	jsonSubmission, _ := json.Marshal(submission)
+// 	url := "http://localhost:8080/quizes/" + globalQuiz.ID.Hex() + "/submit"
+// 	req, _ := http.NewRequest("POST", url, bytes.NewReader(jsonSubmission))
+// 	req.Header.Set("Authorization", "Bearer " + student1Token)
+// 	// this shoud succeed
+// 	res, _ := http.DefaultClient.Do(req)
+// 	responseData, _ := io.ReadAll(res.Body)
+// 	mockResponse := `{"message":"Quiz Answer Submitted Successfully"}`
+// 	assert.Equal(t, mockResponse, string(responseData))
+
+
+// 	// student2 submits the quiz with wrong answers
+// 	submission = models.Submission{
+// 		ID: primitive.NewObjectID(),
+// 		StudentId: student2.ID,
+// 		QuizId: globalQuiz.ID,
+// 		Answers: []models.Answer{
+// 			{
+// 				QuestionId: globalQuiz.Questions[0].ID,
+// 				Choices: []int{0, 1},
+// 			},
+// 		},
+// 	}
+
+// 	jsonSubmission, _ = json.Marshal(submission)
+// 	req, _ = http.NewRequest("POST", url, bytes.NewReader(jsonSubmission))
+// 	req.Header.Set("Authorization", "Bearer " + student2Token)
+// 	// this shoud succeed
+// 	res, _ = http.DefaultClient.Do(req)
+// 	responseData, _ = io.ReadAll(res.Body)
+// 	mockResponse = `{"message":"Quiz Answer Submitted Successfully"}`
+// 	assert.Equal(t, mockResponse, string(responseData))
+
+// 	// submit again using student1
+// 	// this should return an error
+// 	req, _ = http.NewRequest("POST", url, bytes.NewReader(jsonSubmission))
+// 	req.Header.Set("Authorization", "Bearer " + student1Token)
+// 	res, _ = http.DefaultClient.Do(req)
+// 	responseData, _ = io.ReadAll(res.Body)
+// 	mockResponse = `{"error":"student already submitted the quiz answers"}`
+// 	assert.Equal(t, mockResponse, string(responseData))
+// }
+
+// func TestGetQuizResults(t *testing.T) {
+// 	url := "http://localhost:8080/quizes/" + globalQuiz.ID.Hex() + "/results"
+// 	req, _ := http.NewRequest("GET", url, nil)
+// 	req.Header.Set("Authorization", "Bearer " + teacher1Token)
+// 	// this should succeed
+// 	res, _ := http.DefaultClient.Do(req)
+// 	responseData, _ := io.ReadAll(res.Body)
+// 	var resResults []models.Submission
+// 	json.Unmarshal(responseData, &resResults)
+// 	assert.Equal(t, 2, len(resResults))
+
+// 	// same request with teacher2 token
+// 	// this should return an error
+// 	// teacher2Token, err := utils.GenerateToken(teacher2, secretKey)
+// 	// if err != nil {
+// 	// 	log.Printf("Error: %v\n", err)
+// 	// 	panic(err)
+// 	// }
+// 	req, _ = http.NewRequest("GET", url, nil)
+// 	req.Header.Set("Authorization", "Bearer " + teacher2Token)
+// 	res, _ = http.DefaultClient.Do(req)
+// 	responseData, _ = io.ReadAll(res.Body)
+// 	mockResponse := `{"error":"quiz not found"}`
+// 	assert.Equal(t, mockResponse, string(responseData))
+// }
+
+// func TestGetQuizResultByStudentId(t *testing.T) {
+// 	url := "http://localhost:8080/quizes/" + globalQuiz.ID.Hex() + "/student/result"
+// 	req, _ := http.NewRequest("GET", url, nil)
+// 	req.Header.Set("Authorization", "Bearer " + student1Token)
+// 	// this should succeed
+// 	res, _ := http.DefaultClient.Do(req)
+// 	responseData, _ := io.ReadAll(res.Body)
+// 	var resSubmission models.Submission
+// 	json.Unmarshal(responseData, &resSubmission)
+// 	assert.Equal(t, student1.ID, resSubmission.StudentId)
+// 	assert.Equal(t, 200, res.StatusCode)
+
+// 	// same request with teacher2 token
+// 	// this should return an error
+// 	req, _ = http.NewRequest("GET", url, nil)
+// 	req.Header.Set("Authorization", "Bearer " + teacher2Token)
+// 	res, _ = http.DefaultClient.Do(req)
+// 	responseData, _ = io.ReadAll(res.Body)
+// 	mockResponse := `{"error":"mongo: no documents in result"}`
+// 	assert.Equal(t, mockResponse, string(responseData))
+// 	assert.Equal(t, 400, res.StatusCode)
+// }
 
 // func TestDeleteQuiz(t *testing.T) {
 

@@ -17,13 +17,13 @@ func GetTeachers() []utils.LightUser {
 			Username: "mhammed",
 			Role:     "Teacher",
 			Email:    "f.mhammed@gmail.com",
-			ID:       1,
+			ID:       "1",
 		},
 		utils.LightUser{
 			Username: "poysa",
 			Role:     "Teacher",
 			Email:    "y.poysa@gmail.com",
-			ID:       2,
+			ID:       "2",
 		},
 	}
 
@@ -36,13 +36,13 @@ func GetStudents() []utils.LightUser {
 			Username: "godsword",
 			Role:     "Student",
 			Email:    "godsword@gmail.com",
-			ID:       3,
+			ID:       "3",
 		},
 		utils.LightUser{
 			Username: "ayoub",
 			Role:     "Student",
 			Email:    "ayoub@gmail.com",
-			ID:       4,
+			ID:       "4",
 		},
 	}
 }
@@ -54,7 +54,7 @@ func GetAdmins() []utils.LightUser {
 			Username: "admin",
 			Role:     "Admin",
 			Email:    "admin@gmail.com",
-			ID:       0,
+			ID:       "0",
 		},
 	}
 }

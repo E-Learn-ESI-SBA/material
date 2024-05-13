@@ -50,7 +50,7 @@ func UpdateQuiz(
 	ctx context.Context,
 	collection *mongo.Collection,
 	quiz models.Quiz,
-	teacherID int,
+	teacherID string,
 ) error {
 	filter := bson.D{{"_id", quiz.ID}, {"teacher_id", teacherID}}
 	// should be updated field by field to avoid overriding existing data with nulls
@@ -77,7 +77,7 @@ func DeleteQuiz(
 	ctx context.Context,
 	collection *mongo.Collection,
 	quizID string,
-	teacherID int,
+	teacherID string,
 ) error {
 	objectId, err := primitive.ObjectIDFromHex(quizID)
 	if err != nil {
@@ -164,7 +164,7 @@ func GetQuizResults(
 	collection *mongo.Collection,
 	submissionsCollection *mongo.Collection,
 	quizID string,
-	teacherId int,
+	teacherId string,
 ) ([]models.Submission, error) {
 	objectId, err := primitive.ObjectIDFromHex(quizID)
 	if err != nil {
@@ -241,7 +241,7 @@ func GetQuizResultByStudentId(
 	collection *mongo.Collection,
 	submissionsCollection *mongo.Collection,
 	quizID string,
-	studentID int,
+	studentID string,
 ) (models.Submission, error) {
 	objectId, err := primitive.ObjectIDFromHex(quizID)
 	if err != nil {
