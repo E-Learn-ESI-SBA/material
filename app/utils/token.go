@@ -63,6 +63,8 @@ func ValidateToken(signedtoken string, secretKey string) (*UserDetails, error) {
 	user.Role = claims["role"].(string)
 	user.ID = claims["id"].(string)
 	user.Avatar = claims["avatar"].(string)
+	user.Group = claims["group"].(string)
+	user.Year = claims["year"].(string)
 	return &user, nil
 
 }
@@ -74,6 +76,8 @@ func GenerateToken(user LightUser, secretKey string) (string, error) {
 		"role":     user.Role,
 		"id":       user.ID,
 		"avatar":   user.Avatar,
+		"group":    user.Group,
+		"year":     user.Year,
 	}
 	// add expiration time
 	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
