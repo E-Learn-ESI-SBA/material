@@ -9,7 +9,7 @@ import (
 type Quiz struct {
 	ID            primitive.ObjectID `json:"id" bson:"_id"`
 	ModuleId      primitive.ObjectID `json:"module_id" bson:"module_id" validate:"required" binding:"required"`
-	TeacherId     int                `json:"teacher_id" bson:"teacher_id"`
+	TeacherId     string             `json:"teacher_id" bson:"teacher_id"`
 	Title         string             `json:"title" bson:"title" validate:"required" binding:"required"`
 	Instructions  string             `json:"instructions" bson:"instructions" validate:"required" binding:"required"`
 	QuestionCount int                `json:"question_count" bson:"question_count" validate:"required" binding:"required"`
@@ -48,7 +48,7 @@ type Answer struct {
 
 type Submission struct {
 	ID        primitive.ObjectID `json:"id" bson:"_id"`
-	StudentId int                `json:"student_id" bson:"student_id"`
+	StudentId string                `json:"student_id" bson:"student_id"`
 	QuizId    primitive.ObjectID `json:"quiz_id" bson:"quiz_id"`
 	Answers   []Answer           `json:"answers" bson:"answers" validate:"required" binding:"required"`
 	CreatedAt time.Time          `json:"created_at" bson:"created_at"`

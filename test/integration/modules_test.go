@@ -3,7 +3,6 @@ package integration
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"log"
 	"madaurus/dev/material/app/interfaces"
@@ -13,6 +12,8 @@ import (
 	"madaurus/dev/material/test/fixtures"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const url = "http://localhost:8080"

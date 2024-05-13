@@ -1,9 +1,10 @@
-package quizes
+package handlers
 
 import (
 	"errors"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/services"
+	"madaurus/dev/material/app/shared"
 	"madaurus/dev/material/app/utils"
 	"time"
 
@@ -21,7 +22,7 @@ import (
 // @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
 // @Failure 500 {object} interfaces.APiError
-// @Router /quizes/create [POST]
+// @Router /quizes [POST]
 func CreateQuiz(collection *mongo.Collection, moduleCollection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var quiz models.Quiz
@@ -37,7 +38,7 @@ func CreateQuiz(collection *mongo.Collection, moduleCollection *mongo.Collection
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(200, gin.H{"message": "Quiz Created Successfully"})
+		c.JSON(200, gin.H{"message": shared.QUIZ_CREATED})
 	}
 }
 
@@ -61,8 +62,7 @@ func UpdateQuiz(collection *mongo.Collection) gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		updatedAt := time.Now()
-		quiz.UpdatedAt = &updatedAt
+		quiz.UpdatedAt = time.Now()
 		err = services.UpdateQuiz(c.Request.Context(), collection, quiz, user.ID)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
