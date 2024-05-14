@@ -1,0 +1,29 @@
+version: '3'
+services:
+  materials:
+    build: .
+    depends_on:
+      - mongo
+    ports:
+      - 8080:8080
+
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_NAME=material
+
+  pdp:
+    image: permitio/pdp-v2:latest
+    ports:
+      - 7766:7000
+    environment:
+      - PDP_API_KEY=permit_key_dyl2zhOIm2EXssDKP33JGbqGKKPiZarQjl0AcL7ZYvsYsLz2zFGDWcdRghccmR0EEJF5TS8c99g5ItDHl87alV
+      - PDP_DEBUG=True
+
+volumes:
+  mongodb_data:
