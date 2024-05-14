@@ -2,10 +2,6 @@ package handlers
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
-	"github.com/permitio/permit-golang/pkg/permit"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
@@ -13,6 +9,11 @@ import (
 	"madaurus/dev/material/app/shared"
 	"madaurus/dev/material/app/utils"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/permitio/permit-golang/pkg/permit"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // @Summary Edit Module Visibility
@@ -134,7 +135,7 @@ func GetModuleByTeacher(collection *mongo.Collection, permit *permit.Client) gin
 			}
 			c.JSON(http.StatusOK, gin.H{"data": modules})
 		} else {
-			log.Printf("Keys: %v\n", RKeys[0])
+			log.Printf("Keys: %v\n", RKeys)
 			log.Println("Here")
 			modules, err := services.ModuleSelector(c.Request.Context(), collection, RKeys)
 			if err != nil {

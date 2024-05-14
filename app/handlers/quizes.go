@@ -62,13 +62,23 @@ func UpdateQuiz(collection *mongo.Collection) gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
+		quizID, errP := c.Params.Get("id")
+		if !errP {
+			c.JSON(400, gin.H{"error": errors.New("quiz ID is Required")})
+			return
+		}
+		quiz.ID, err = primitive.ObjectIDFromHex(quizID)
+		if err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
 		quiz.UpdatedAt = time.Now()
 		err = services.UpdateQuiz(c.Request.Context(), collection, quiz, user.ID)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(200, gin.H{"message": "Quiz Updated Successfully"})
+		c.JSON(200, gin.H{"message": shared.QUIZ_UPDATED})
 	}
 
 }
@@ -97,7 +107,7 @@ func DeleteQuiz(collection *mongo.Collection) gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(200, gin.H{"message": "Quiz Deleted Successfully"})
+		c.JSON(200, gin.H{"message": shared.QUIZ_DELETED})
 	}
 }
 
@@ -265,5 +275,51 @@ func GetQuizResultByStudentId(collection *mongo.Collection, SubmissionsCollectio
 			return
 		}
 		c.JSON(200, quizResults)
+	}
+}
+
+// @Summary Get Quizes Results By Student ID
+// @Description Protected Route used to get all quizes results by student ID
+// @Produce json
+// @Tags Quizes Submissions
+// @Accept json
+// @Success 200 {object} models.QuizResults
+// @Failure 400 {object} interfaces.APiError
+// @Router /quizes/results [GET]
+func GetQuizesResultsByStudentId(collection *mongo.Collection, SubmissionsCollection *mongo.Collection) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user := c.MustGet("user").(*utils.UserDetails)
+		quizResults, err := services.GetQuizesResultsByStudentId(c.Request.Context(), collection, SubmissionsCollection, user.ID)
+		if err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(200, quizResults)
+	}
+}
+
+// @Summary Get Quiz Questions By student
+// @Description Protected Route used to get quiz questions by student
+// @Produce json
+// @Tags Quizes
+// @Accept json
+// @Param id path string true "Quiz ID"
+// @Success 200 {object} models.Quiz
+// @Failure 400 {object} interfaces.APiError
+// @Router /quizes/:id/questions [GET]
+func GetQuizQuestions(collection *mongo.Collection) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user := c.MustGet("user").(*utils.UserDetails)
+		quizID, errP := c.Params.Get("id")
+		if !errP {
+			c.JSON(400, gin.H{"error": errors.New("quiz ID is Required")})
+			return
+		}
+		questions, err := services.GetQuizQuestions(c.Request.Context(), collection, quizID, user.ID)
+		if err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(200, questions)
 	}
 }

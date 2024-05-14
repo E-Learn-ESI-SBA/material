@@ -288,6 +288,7 @@ func CreateManyModules(ctx context.Context, collection *mongo.Collection, module
 func GetModulesByTeacher(ctx context.Context, collection *mongo.Collection, teacherId string) ([]models.Module, error) {
 	var modules []models.Module
 	filter := bson.D{{"teacher_id", teacherId}}
+	log.Printf("teacher id %v", teacherId)
 	opts := options.Find().SetProjection(bson.D{{"courses", 0}})
 	cursor, err := collection.Find(ctx, filter, opts)
 	if err != nil {

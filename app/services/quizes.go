@@ -5,12 +5,14 @@ import (
 	"errors"
 	"log"
 	"madaurus/dev/material/app/models"
+	"madaurus/dev/material/app/shared"
 	"math"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func CreateQuiz(
@@ -23,18 +25,11 @@ func CreateQuiz(
 	filter := bson.D{{"_id", quiz.ModuleId}, {"teacher_id", quiz.TeacherId}}
 	moduleCollection.FindOne(ctx, filter).Decode(&module)
 
-	if module.ID.IsZero() {
-		return errors.New("module not found")
-	}
+	// will uncomment this when i fix permit io
+	// if module.ID.IsZero() {
+	// 	return errors.New("module not found")
+	// }
 
-	// upload files in question.image to /storage/unique_name.extension
-	for i, question := range quiz.Questions {
-		if question.Image != "" {
-			// upload file
-			// update question.image to the new path
-			quiz.Questions[i].Image = "new path"
-		}
-	}
 
 	quiz.CreatedAt = time.Now()
 	quiz.UpdatedAt = quiz.CreatedAt
@@ -68,7 +63,7 @@ func UpdateQuiz(
 		log.Printf("Error While Updating Quiz: %v\n", err)
 		return err
 	} else if res.MatchedCount == 0 {
-		return errors.New("Unauthorized")
+		return errors.New(shared.UNAUTHORIZED)
 	}
 	return nil
 }
@@ -90,7 +85,7 @@ func DeleteQuiz(
 		log.Printf("Error While Deleting Course: %v\n", err)
 		return err
 	} else if res.DeletedCount == 0 {
-		return errors.New("Unauthorized")
+		return errors.New(shared.UNAUTHORIZED)
 	}
 	return nil
 }
@@ -176,7 +171,7 @@ func GetQuizResults(
 	filter := bson.D{{"_id", objectId}, {"teacher_id", teacherId}}
 	_ = collection.FindOne(ctx, filter).Decode(&quiz)
 	if quiz.ID.IsZero() {
-		return nil, errors.New("quiz not found")
+		return nil, errors.New(shared.QUIZ_NOT_FOUND)
 	}
 	filter = bson.D{{"quiz_id", objectId}}
 	var submissions []models.Submission
@@ -220,13 +215,16 @@ func SubmitQuizAnswers(
 	var existingSubmission models.Submission
 	err = SubmissionsCollection.FindOne(ctx, filter).Decode(&existingSubmission)
 	if err == nil {
-		return errors.New("student already submitted the quiz answers")
+		return errors.New(shared.QUIZ_ANSWER_ALREADY_SUBMITTED)
 	}
 
 	questions := quiz.Questions
 	submission.CreatedAt = time.Now()
 	submission.Score = CalcFinalScore(questions, submission.Answers)
 	submission.Grade = GetGrade(submission.Score, quiz.Grades)
+	if submission.Score >= quiz.MinScore {
+		submission.IsPassed = true
+	}
 	_, err = SubmissionsCollection.InsertOne(ctx, submission)
 	if err != nil {
 		log.Printf("Error While Submitting Quiz Answers: %v\n", err)
@@ -253,16 +251,91 @@ func GetQuizResultByStudentId(
 	filter := bson.D{{"_id", objectId}}
 	_ = collection.FindOne(ctx, filter).Decode(&quiz)
 	if quiz.ID.IsZero() {
-		return models.Submission{}, errors.New("quiz not found")
+		return models.Submission{}, errors.New(shared.QUIZ_NOT_FOUND)
+	}
+	// check if quiz has ended
+	if time.Now().Before(quiz.EndDate) {
+		return models.Submission{}, errors.New(shared.QUIZ_STILL_ONGOING)
 	}
 	filter = bson.D{{"quiz_id", objectId}, {"student_id", studentID}}
 	var submission models.Submission
 	err = submissionsCollection.FindOne(ctx, filter).Decode(&submission)
 	if err != nil {
-		log.Printf("Error While Getting Submission: %v\n", err)
+		if err == mongo.ErrNoDocuments {
+			return submission, errors.New(shared.QUIZ_ANSWER_NOT_FOUND)
+		}
 		return submission, err
 	}
 	return submission, nil
+}
+
+func GetQuizesResultsByStudentId(
+	ctx context.Context,
+	collection *mongo.Collection,
+	submissionsCollection *mongo.Collection,
+	studentID string,
+) ([]models.Submission, error) {
+	var submissions []models.Submission
+	// fetch submissions by student id where time.Now() > quiz.end_date
+	pipe := mongo.Pipeline{
+		bson.D{{"$match", bson.D{{"student_id", studentID}}}},
+		bson.D{{"$lookup", bson.D{
+			{"from", "quizes"},
+			{"localField", "quiz_id"},
+			{"foreignField", "_id"},
+			{"as", "quiz"},
+		}}},
+		bson.D{{"$unwind", "$quiz"}},
+		bson.D{{"$match", bson.D{{"quiz.end_date", bson.D{{"$lt", time.Now()}}}}}},
+	}
+	cursor, err := submissionsCollection.Aggregate(ctx, pipe)
+	if err != nil {
+		log.Printf("Error While Getting Submissions: %v\n", err)
+		return submissions, err
+	}
+	defer cursor.Close(ctx)
+	for cursor.Next(ctx) {
+		var submission models.Submission
+		cursor.Decode(&submission)
+		submissions = append(submissions, submission)
+	}
+	// cursor, err := submissionsCollection.Find(ctx, bson.M{"student_id": studentID})
+	// if err != nil {
+	// 	log.Printf("Error While Getting Submissions: %v\n", err)
+	// 	return submissions, err
+	// }
+	// defer cursor.Close(ctx)
+	// for cursor.Next(ctx) {
+	// 	var submission models.Submission
+	// 	cursor.Decode(&submission)
+	// 	submissions = append(submissions, submission)
+	// }
+	
+	return submissions, nil
+}
+
+func GetQuizQuestions(
+	ctx context.Context,
+	collection *mongo.Collection,
+	quizID string,
+	studentID string,
+) ([]models.Question, error) {
+	objectId, err := primitive.ObjectIDFromHex(quizID)
+	if err != nil {
+		log.Printf("Error While Converting ID: %v\n", err)
+		return []models.Question{}, err
+	}
+	// check if the quiz exists
+	var quiz models.Quiz
+	opts := options.FindOne().SetProjection(bson.M{"questions": 1})
+	_ = collection.FindOne(ctx, bson.M{"_id": objectId}, opts).Decode(&quiz)
+	if quiz.ID.IsZero() {
+		return nil, errors.New("quiz not found")
+	}
+
+	questions := quiz.Questions
+	
+	return questions, nil
 }
 
 func CalcFinalScore(questions []models.Question, answers []models.Answer) float64 {
