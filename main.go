@@ -5,6 +5,7 @@ import (
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/routes"
 	"madaurus/dev/material/app/shared"
+	"madaurus/dev/material/app/utils"
 	"net/http"
 	"os"
 	"time"
@@ -107,6 +108,21 @@ func main() {
 	routes.FileRouter(server, app.ModuleCollection, Permit, client)
 	routes.VideoRouter(server, app.ModuleCollection, Permit, client)
 	routes.QuizRoute(server, app.QuizesCollection, app.ModuleCollection, app.SubmissionsCollection)
+	server.GET("/auth", func(c *gin.Context) {
+		user := utils.LightUser{
+			Group:    "2021-8",
+			Role:     "admin",
+			Username: "admin",
+			ID:       "2",
+			Email:    "ameri@gmail.com",
+			Avatar:   "",
+			Year:     "3",
+		}
+		token, _ := utils.GenerateToken(user, k.String("JWT_SECRET"))
+		c.Request.Header.Set("Authorization", "Bearer "+token)
+		c.SetCookie("token", token, 3600, "/", "localhost", false, false)
+		c.JSON(200, gin.H{"token": token})
+	})
 	log.Println("Server Running on Port 8080")
 	err = server.Run(":8080")
 	defer sentry.Flush(2 * time.Second)
