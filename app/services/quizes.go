@@ -338,6 +338,11 @@ func GetQuizQuestions(
 		return nil, errors.New("quiz not found")
 	}
 
+	//check if start date is before now
+	if time.Now().Before(quiz.StartDate) {
+		return nil, errors.New(shared.QUIZ_NOT_STARTED)
+	}
+
 	questions := quiz.Questions
 	
 	return questions, nil
