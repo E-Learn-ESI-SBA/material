@@ -8,7 +8,7 @@ import (
 
 type Quiz struct {
 	ID            primitive.ObjectID `json:"id" bson:"_id"`
-	ModuleId      primitive.ObjectID `json:"module_id" bson:"module_id" validate:"required" binding:"required"`
+	ModuleId      string 			 `json:"module_id" bson:"module_id" validate:"required" binding:"required"`
 	TeacherId     string             `json:"teacher_id" bson:"teacher_id"`
 	Title         string             `json:"title" bson:"title" validate:"required" binding:"required"`
 	Instructions  string             `json:"instructions" bson:"instructions" validate:"required" binding:"required"`

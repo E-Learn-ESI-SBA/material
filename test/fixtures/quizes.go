@@ -61,7 +61,7 @@ func GetAdmins() []utils.LightUser {
 }
 
 
-func GetQuiz(moduleId primitive.ObjectID) models.Quiz {
+func GetQuiz(moduleId string) models.Quiz {
 	return models.Quiz{
 		ID: primitive.NewObjectID(),
 		ModuleId: moduleId,

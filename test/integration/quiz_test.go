@@ -105,7 +105,8 @@ func TestCreateQuiz(t *testing.T) {
 	// }
 	// // globalModule.ID = resModules[0].ID
 	t.Run("Create Quiz", func(t *testing.T) {
-		globalQuiz = fixtures.GetQuiz(globalModule.ID)
+		moduleHexId := globalModule.ID.Hex()
+		globalQuiz = fixtures.GetQuiz(moduleHexId)
 		jsonQuiz, _ := json.Marshal(globalQuiz)
 		req, _ = http.NewRequest(
 			"POST",
