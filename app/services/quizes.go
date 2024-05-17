@@ -22,7 +22,12 @@ func CreateQuiz(
 	quiz models.Quiz,
 ) error {
 	var module models.Module
-	filter := bson.D{{"_id", quiz.ModuleId}, {"teacher_id", quiz.TeacherId}}
+	moduleObjectID, err := primitive.ObjectIDFromHex(quiz.ModuleId)
+	if err != nil {
+		log.Printf("Error While Converting ID: %v\n", err)
+		return err
+	}
+	filter := bson.D{{"_id", moduleObjectID}, {"teacher_id", quiz.TeacherId}}
 	moduleCollection.FindOne(ctx, filter).Decode(&module)
 
 	// will uncomment this when i fix permit io
@@ -33,7 +38,7 @@ func CreateQuiz(
 
 	quiz.CreatedAt = time.Now()
 	quiz.UpdatedAt = quiz.CreatedAt
-	_, err := collection.InsertOne(ctx, quiz)
+	_, err = collection.InsertOne(ctx, quiz)
 	if err != nil {
 		log.Printf("Error While Creating Quiz: %v\n", err)
 		return err
