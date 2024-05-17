@@ -16,17 +16,6 @@ type Section struct {
 	UpdatedAt time.Time          `json:"updated_at,omitempty" bson:"updated_at"`
 }
 
-type Lecture struct {
-	ID      primitive.ObjectID `json:"id" bson:"_id"`
-	Group   string             `json:"group" bson:"group" binding:"required"`
-	Name    string             `json:"name"`
-	Content string             `json:"content" bson:"content"  binding:"required,min=250"`
-	//	SectionId primitive.ObjectID `json:"section_id" bson:"section_id" validate:"required" binding:"required"`
-	TeacherId string    `json:"teacher_id" bson:"teacher_id" validate:"required" binding:"required"`
-	IsPublic  bool      `json:"is_public" bson:"is_public"`
-	CreatedAt time.Time `json:"created_at,omitempty" bson:"created_at"`
-	UpdatedAt time.Time `json:"updated_at,omitempty" bson:"updated_at"`
-}
 type Video struct {
 	ID        primitive.ObjectID `json:"id" bson:"_id"`
 	Group     string             `json:"group" bson:"group"`
@@ -48,16 +37,8 @@ type Files struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty" bson:"updated_at"`
 }
 
-type StudentNote struct {
-	ID primitive.ObjectID `json:"id" bson:"_id"`
-
-	StudentID string `json:"student_id" bson:"student_id" binding:"required"`
-	//	SectionId primitive.ObjectID `json:"section_id" bson:"section_id" binding:"required" binding:"required"`
-	Content string `json:"content" bson:"content" validate:"required" binding:"required"`
-}
 type ExtendedSection struct {
 	Section
-
 	Files    []Files        `json:"files"`
 	Videos   []Video        `json:"videos"`
 	Lectures []Lecture      `json:"contents"`
