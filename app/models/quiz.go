@@ -30,8 +30,13 @@ type Question struct {
 	Body        string             `json:"body" bson:"body" validate:"required" binding:"required"`
 	Score       float64            `json:"score" bson:"score" validate:"required" binding:"required"`
 	Image       string             `json:"image" bson:"image"`
-	Options     []string           `json:"options" bson:"options" validate:"required" binding:"required"`
+	Options     []Option           `json:"options" bson:"options" validate:"required" binding:"required"`
 	CorrectIdxs []int              `json:"correct_idxs" bson:"correct_idxs" validate:"required" binding:"required"`
+}
+
+type Option struct {
+	ID 		int 	`json:"id" bson:"id"`
+	Option 	string 	`json:"option" bson:"option" validate:"required" binding:"required"` 
 }
 
 type Grade struct {
