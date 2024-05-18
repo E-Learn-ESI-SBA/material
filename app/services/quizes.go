@@ -50,19 +50,28 @@ func CreateQuiz(
 func UpdateQuiz(
 	ctx context.Context,
 	collection *mongo.Collection,
-	quiz models.Quiz,
+	quizUpdates models.QuizUpdate,
+	quizID string,
 	teacherID string,
 ) error {
-	filter := bson.D{{"_id", quiz.ID}, {"teacher_id", teacherID}}
+	objectID, err := primitive.ObjectIDFromHex(quizID)
+	if err != nil {
+		log.Printf("Error While Converting ID: %v\n", err)
+		return err
+	}
+
+	log.Printf("quizUpdates: %v\n", quizUpdates)
+	log.Printf("here")
+	filter := bson.D{{"_id", objectID}, {"teacher_id", teacherID}}
 	// should be updated field by field to avoid overriding existing data with nulls
 	updates := bson.D{{"$set", bson.D{
-		{"title", quiz.Title},
-		{"instructions", quiz.Instructions},
-		{"question_count", quiz.QuestionCount},
-		{"start_date", quiz.StartDate},
-		{"end_date", quiz.EndDate},
-		{"duration", quiz.Duration},
-		{"date.updated_at", time.Now()},
+		{"title", quizUpdates.Title},
+		{"instructions", quizUpdates.Instructions},
+		{"start_date", quizUpdates.StartDate},
+		{"end_date", quizUpdates.EndDate},
+		{"duration", quizUpdates.Duration},
+		{"image", quizUpdates.Image},
+		{"updated_at", time.Now()},
 	}}}
 	res, err := collection.UpdateOne(ctx, filter, updates)
 	if err != nil {
@@ -100,20 +109,31 @@ func GetQuiz(
 	ctx context.Context,
 	collection *mongo.Collection,
 	quizID string,
-) (models.Quiz, error) {
+	studentId string,
+) (models.Quiz, error, bool) {
 	var quiz models.Quiz
 	objectId, err := primitive.ObjectIDFromHex(quizID)
 	if err != nil {
 		log.Printf("Error While Converting ID: %v\n", err)
-		return quiz, err
+		return quiz, err, false
 	}
 	filter := bson.D{{"_id", objectId}}
-	err = collection.FindOne(ctx, filter).Decode(&quiz)
+	projection := bson.D{{"questions", 0}}
+	err = collection.FindOne(ctx, filter, options.FindOne().SetProjection(projection)).Decode(&quiz)
 	if err != nil {
 		log.Printf("Error While Getting Quiz: %v\n", err)
-		return quiz, err
+		return quiz, err, false
 	}
-	return quiz, nil
+
+	// check if submissuion exists
+	var submission models.Submission
+	filter = bson.D{{"quiz_id", quizID}, {"student_id", studentId}}
+	err = collection.FindOne(ctx, filter).Decode(&submission)
+	if (err == mongo.ErrNoDocuments) {
+		return quiz, nil, false
+	}
+
+	return quiz, nil, true
 }
 
 func GetQuizesByModuleId(
@@ -225,6 +245,7 @@ func SubmitQuizAnswers(
 	}
 
 	questions := quiz.Questions
+	submission.ID = primitive.NewObjectID()
 	submission.CreatedAt = time.Now()
 	submission.Score = CalcFinalScore(questions, submission.Answers)
 	submission.Grade = GetGrade(submission.Score, quiz.Grades)
@@ -314,28 +335,38 @@ func GetQuizQuestions(
 	collection *mongo.Collection,
 	quizID string,
 	studentID string,
-) ([]models.Question, error) {
+) (models.Quiz, error) {
 	objectId, err := primitive.ObjectIDFromHex(quizID)
 	if err != nil {
 		log.Printf("Error While Converting ID: %v\n", err)
-		return []models.Question{}, err
+		return models.Quiz{}, err
+	}
+	// check if submissuion exists
+	var submission models.Submission
+	filter := bson.D{{"quiz_id", objectId}, {"student_id", studentID}}
+	_ = collection.FindOne(ctx, filter).Decode(&submission)
+	if (!submission.ID.IsZero()) {
+		return models.Quiz{}, errors.New(shared.QUIZ_ANSWER_ALREADY_SUBMITTED)
 	}
 	// check if the quiz exists
 	var quiz models.Quiz
-	opts := options.FindOne().SetProjection(bson.M{"questions": 1})
+	opts := options.FindOne().SetProjection(bson.M{
+		"questions": 1,
+		"duration": 1,
+		"title": 1,
+	})
 	_ = collection.FindOne(ctx, bson.M{"_id": objectId}, opts).Decode(&quiz)
 	if quiz.ID.IsZero() {
-		return nil, errors.New("quiz not found")
+		return models.Quiz{}, errors.New("quiz not found")
 	}
 
 	//check if start date is before now
 	if time.Now().Before(quiz.StartDate) {
-		return nil, errors.New(shared.QUIZ_NOT_STARTED)
+		return models.Quiz{}, errors.New(shared.QUIZ_NOT_STARTED)
 	}
 
-	questions := quiz.Questions
 	
-	return questions, nil
+	return quiz, nil
 }
 
 func CalcFinalScore(questions []models.Question, answers []models.Answer) float64 {
