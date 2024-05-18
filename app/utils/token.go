@@ -34,6 +34,7 @@ func ParseJwt(signedtoken string, secretKey string) (*jwt.Token, error) {
 
 func ValidateToken(signedtoken string, secretKey string) (*UserDetails, error) {
 	var user UserDetails
+
 	log.Printf("Getting token .. %v", signedtoken)
 	token, err := ParseJwt(signedtoken, secretKey)
 	if err != nil {
@@ -43,13 +44,14 @@ func ValidateToken(signedtoken string, secretKey string) (*UserDetails, error) {
 	if !token.Valid {
 		return nil, errors.New(shared.UNAUTHORIZED)
 	}
+
 	claims, ok := token.Claims.(jwt.MapClaims)
 
 	if !ok {
 
 		log.Printf("Error in converting claims: %v", err.Error())
 
-		return nil, errors.New(shared.INVALID_TOKEN)
+		return nil, errors.New(shared.INVALID_CREDENTIALS)
 
 	}
 

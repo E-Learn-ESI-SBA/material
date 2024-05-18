@@ -19,7 +19,7 @@ func EditFile(ctx context.Context, collection *mongo.Collection, file models.Fil
 	update := bson.M{
 		"$set": bson.A{
 			bson.M{"courses.$[course].sections.$[section].files.$[file].name": file.Name},
-			bson.M{"courses.$[course].sections.$[section].files.$[file].group": file.Group},
+			bson.M{"courses.$[course].sections.$[section].files.$[file].groups": file.Groups},
 		},
 	}
 	arrayFilters := bson.A{

@@ -5,8 +5,6 @@ import (
 	"log"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
-
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -30,8 +28,6 @@ func DBHandler(uri string) (*mongo.Client, error) {
 		log.Println("failed to connect to mongodb")
 		return nil, err
 	}
-	// drop the database
-	client.Database("materials").Drop(context.Background())
 	log.Println("Successfully Connected to the mongodb")
 	return client, nil
 }
@@ -39,27 +35,6 @@ func DBHandler(uri string) (*mongo.Client, error) {
 func ModuleCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
 	return client.Database("materials").Collection(CollectionName)
 
-}
-
-func CourseCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
-	collection := client.Database("materials").Collection(CollectionName)
-	return collection
-}
-
-func SectionCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
-	collection := client.Database("materials").Collection(CollectionName)
-	return collection
-}
-func LectureCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
-	collection := client.Database("materials").Collection(CollectionName)
-	collection.Indexes().CreateOne(context.Background(), mongo.IndexModel{
-		Keys: bson.D{{"name", 1}},
-	})
-	return collection
-}
-func VideoCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
-	collection := client.Database("materials").Collection(CollectionName)
-	return collection
 }
 
 /*

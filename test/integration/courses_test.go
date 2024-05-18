@@ -24,7 +24,7 @@ func TestCreateChapter(t *testing.T) {
 		Year:     "2021",
 		Group:    "1A",
 	}
-	const module_id = "66356c454bf0cb9c986b9041"
+	const module_id = "6647fb86ee41dfb53b32c9e5"
 	const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
 	authToken, _ := utils.GenerateToken(user, secret)
 	course := fixtures.GetCourse()[0]

@@ -40,9 +40,9 @@ type Option struct {
 }
 
 type Grade struct {
-	Min    uint   `json:"min" bson:"min" validate:"required" binding:"required"`
-	Max    uint   `json:"max" bson:"max" validate:"required" binding:"required"`
-	Grade  string `json:"grade" bson:"grade" validate:"required" binding:"required"`
+	Min   uint   `json:"min" bson:"min" validate:"required" binding:"required"`
+	Max   uint   `json:"max" bson:"max" validate:"required" binding:"required"`
+	Grade string `json:"grade" bson:"grade" validate:"required" binding:"required"`
 }
 
 type Answer struct {

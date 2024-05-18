@@ -23,7 +23,7 @@ func TestCreateLecture(t *testing.T) {
 	}
 	const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
 	const url = "http://localhost:8080/lecture/"
-	const id1 = "66357cea8551700b413c5885"
+	const id1 = "6647fc44ee41dfb53b32c9ed"
 	const notValidId = "66357cea8551700b4asc5885"
 	lecture := fixtures.GetLectures()[1]
 	authToken, _ := utils.GenerateToken(user, secret)

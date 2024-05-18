@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-func GetVideo(collection *mongo.Collection) gin.HandlerFunc {
+func GetStreamVideo(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		videoId := c.Param("id")
 		log.Printf("Here ")
@@ -33,7 +33,6 @@ func GetVideo(collection *mongo.Collection) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"message": errV.Error()})
 			return
 		}
-
 		c.Writer.Header().Set("Content-Type", "video/mp4")
 		c.Stream(func(w io.Writer) bool {
 			buffer := make([]byte, 1024)
@@ -52,6 +51,25 @@ func GetVideo(collection *mongo.Collection) gin.HandlerFunc {
 
 }
 
+func GetVideo(collection *mongo.Collection) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		videoId := c.Param("id")
+		videoObjId, errD := primitive.ObjectIDFromHex(videoId)
+		if errD != nil {
+
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.REQUIRED_ID})
+			return
+		}
+		video, err := services.GetDetailVideo(c.Request.Context(), collection, videoObjId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"data": video})
+	}
+
+}
 func EditVideo(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var video models.Video

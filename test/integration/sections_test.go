@@ -25,8 +25,8 @@ func TestCreateSection(t *testing.T) {
 	}
 	const secret = "aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K"
 	const url = "http://localhost:8080/section/"
-	const id1 = "66357c998551700b413c587e"
-	const id2 = "66327ca0547f7f30e5b2a733"
+	const id1 = "6647fbedee41dfb53b32c9e6"
+	const id2 = "6647fc00ee41dfb53b32c9e7"
 	section := fixtures.GetSections()[0]
 	authToken, _ := utils.GenerateToken(user, secret)
 
@@ -36,7 +36,7 @@ func TestCreateSection(t *testing.T) {
 			t.Errorf("Error marshalling section: %v", errJ.Error())
 		}
 
-		req, errQ := http.NewRequest("POST", url+"?courseId="+id1, bytes.NewBuffer(jsonSection))
+		req, errQ := http.NewRequest("POST", url+"?courseId="+id2, bytes.NewBuffer(jsonSection))
 
 		if errQ != nil {
 			t.Errorf("Error creating request: %v", errQ.Error())

@@ -3,494 +3,64 @@ package fixtures
 import "madaurus/dev/material/app/models"
 
 func GetLectures() []models.Lecture {
+	linkMark := models.Mark{
+		Type: "link",
+		Attrs: map[string]string{
+			"href":   "https://example.com",
+			"target": "_blank",
+		},
+	}
+
+	// Create sample Nodes
+	textNode1 := models.Node{
+		Type: "text",
+		Text: "This is a link",
+		Marks: []models.Mark{
+			linkMark,
+		},
+	}
+
+	paragraphNode := models.Node{
+		Type: "paragraph",
+		Content: []models.Node{
+			textNode1,
+		},
+	}
+
+	headingNode := models.Node{
+		Type:  "heading",
+		Attrs: map[string]interface{}{"level": 2},
+		Content: []models.Node{
+			{Type: "text", Text: "Sample Heading"},
+		},
+	}
+
+	// Create Content struct
+	content := models.Content{
+		Type: "doc",
+		Content: []models.Node{
+			headingNode,
+			paragraphNode,
+		},
+	}
 	var lectures []models.Lecture
 	lectures = append(lectures, models.Lecture{
-		Name: "Lecture 1",
-		Content: `package fixtures
-
-import (
-	"madaurus/dev/material/app/models"
-)
-
-func GetCourse() []models.Course {
-	var courses []models.Course
-	courses = append(courses, models.Course{
-		Name:        "Course 1",
-		Description: "Course 1 Description",
-	},
-		models.Course{
-			Name:        "Course 2",
-			Description: "Course 2 Description",
-		},
-
-		models.Course{
-			Name:        "Course 3",
-			Description: "Course 3 Description",
-		},
-		models.Course{
-			Name:        "Course 4",
-			Description: "Course 4 Description",
-		},
-		models.Course{
-			Name:        "Course 5",
-			Description: "Course 5 Description",
-		},
-		models.Course{
-			Name:        "Course 6",
-			Description: "Course 6 Description",
-		},
-	)
-	return courses
-}
-`,
+		Name:      "Lecture 1",
+		Content:   content,
 		TeacherId: "12",
 		IsPublic:  false,
 		Group:     "Group 1",
 	})
 	lectures = append(lectures, models.Lecture{
-		Name:  "Lecture 2",
-		Group: "Group 1",
-		Content: `package fixtures
-
-import (
-	"madaurus/dev/material/app/models"
-)
-
-func GetCourse() []models.Course {
-	var courses []models.Course
-	courses = append(courses, models.Course{
-		Name:        "Course 1",
-		Description: "Course 1 Description",
-	},
-		models.Course{
-			Name:        "Course 2",
-			Description: "Course 2 Description",
-		},
-
-		models.Course{
-			Name:        "Course 3",
-			Description: "Course 3 Description",
-		},
-		models.Course{
-			Name:        "Course 4",
-			Description: "Course 4 Description",
-		},
-		models.Course{
-			Name:        "Course 5",
-			Description: "Course 5 Description",
-		},
-		models.Course{
-			Name:        "Course 6",
-			Description: "Course 6 Description",
-		},
-	)
-	return courses
-}
-package fixtures
-
-import (
-	"madaurus/dev/material/app/models"
-)
-
-func GetCourse() []models.Course {
-	var courses []models.Course
-	courses = append(courses, models.Course{
-		Name:        "Course 1",
-		Description: "Course 1 Description",
-	},
-		models.Course{
-			Name:        "Course 2",
-			Description: "Course 2 Description",
-		},
-
-		models.Course{
-			Name:        "Course 3",
-			Description: "Course 3 Description",
-		},
-		models.Course{
-			Name:        "Course 4",
-			Description: "Course 4 Description",
-		},
-		models.Course{
-			Name:        "Course 5",
-			Description: "Course 5 Description",
-		},
-		models.Course{
-			Name:        "Course 6",
-			Description: "Course 6 Description",
-		},
-	)
-	return courses
-}
-package fixtures
-
-import (
-	"madaurus/dev/material/app/models"
-)
-
-func GetCourse() []models.Course {
-	var courses []models.Course
-	courses = append(courses, models.Course{
-		Name:        "Course 1",
-		Description: "Course 1 Description",
-	},
-		models.Course{
-			Name:        "Course 2",
-			Description: "Course 2 Description",
-		},
-
-		models.Course{
-			Name:        "Course 3",
-			Description: "Course 3 Description",
-		},
-		models.Course{
-			Name:        "Course 4",
-			Description: "Course 4 Description",
-		},
-		models.Course{
-			Name:        "Course 5",
-			Description: "Course 5 Description",
-		},
-		models.Course{
-			Name:        "Course 6",
-			Description: "Course 6 Description",
-		},
-	)
-	return courses
-}
-package fixtures
-
-import (
-	"madaurus/dev/material/app/models"
-)
-
-func GetCourse() []models.Course {
-	var courses []models.Course
-	courses = append(courses, models.Course{
-		Name:        "Course 1",
-		Description: "Course 1 Description",
-	},
-		models.Course{
-			Name:        "Course 2",
-			Description: "Course 2 Description",
-		},
-
-		models.Course{
-			Name:        "Course 3",
-			Description: "Course 3 Description",
-		},
-		models.Course{
-			Name:        "Course 4",
-			Description: "Course 4 Description",
-		},
-		models.Course{
-			Name:        "Course 5",
-			Description: "Course 5 Description",
-		},
-		models.Course{
-			Name:        "Course 6",
-			Description: "Course 6 Description",
-		},
-	)
-	return courses
-}
-package fixtures
-
-import (
-	"madaurus/dev/material/app/models"
-)
-
-func GetCourse() []models.Course {
-	var courses []models.Course
-	courses = append(courses, models.Course{
-		Name:        "Course 1",
-		Description: "Course 1 Description",
-	},
-		models.Course{
-			Name:        "Course 2",
-			Description: "Course 2 Description",
-		},
-
-		models.Course{
-			Name:        "Course 3",
-			Description: "Course 3 Description",
-		},
-		models.Course{
-			Name:        "Course 4",
-			Description: "Course 4 Description",
-		},
-		models.Course{
-			Name:        "Course 5",
-			Description: "Course 5 Description",
-		},
-		models.Course{
-			Name:        "Course 6",
-			Description: "Course 6 Description",
-		},
-	)
-	return courses
-}
-package fixtures
-
-import (
-	"madaurus/dev/material/app/models"
-)
-
-func GetCourse() []models.Course {
-	var courses []models.Course
-	courses = append(courses, models.Course{
-		Name:        "Course 1",
-		Description: "Course 1 Description",
-	},
-		models.Course{
-			Name:        "Course 2",
-			Description: "Course 2 Description",
-		},
-
-		models.Course{
-			Name:        "Course 3",
-			Description: "Course 3 Description",
-		},
-		models.Course{
-			Name:        "Course 4",
-			Description: "Course 4 Description",
-		},
-		models.Course{
-			Name:        "Course 5",
-			Description: "Course 5 Description",
-		},
-		models.Course{
-			Name:        "Course 6",
-			Description: "Course 6 Description",
-		},
-	)
-	return courses
-}
-
-`,
+		Name:      "Lecture 2",
+		Group:     "Group 1",
+		Content:   content,
 		IsPublic:  false,
 		TeacherId: "12",
 	})
 	lectures = append(lectures, models.Lecture{
-		Name: "Lecture 2",
-		Content: `package fixtures
-
-import (
-	"madaurus/dev/material/app/models"
-)
-
-func GetCourse() []models.Course {
-	var courses []models.Course
-	courses = append(courses, models.Course{
-		Name:        "Course 1",
-		Description: "Course 1 Description",
-	},
-		models.Course{
-			Name:        "Course 2",
-			Description: "Course 2 Description",
-		},
-
-		models.Course{
-			Name:        "Course 3",
-			Description: "Course 3 Description",
-		},
-		models.Course{
-			Name:        "Course 4",
-			Description: "Course 4 Description",
-		},
-		models.Course{
-			Name:        "Course 5",
-			Description: "Course 5 Description",
-		},
-		models.Course{
-			Name:        "Course 6",
-			Description: "Course 6 Description",
-		},
-	)
-	return courses
-}
-package fixtures
-
-import (
-	"madaurus/dev/material/app/models"
-)
-
-func GetCourse() []models.Course {
-	var courses []models.Course
-	courses = append(courses, models.Course{
-		Name:        "Course 1",
-		Description: "Course 1 Description",
-	},
-		models.Course{
-			Name:        "Course 2",
-			Description: "Course 2 Description",
-		},
-
-		models.Course{
-			Name:        "Course 3",
-			Description: "Course 3 Description",
-		},
-		models.Course{
-			Name:        "Course 4",
-			Description: "Course 4 Description",
-		},
-		models.Course{
-			Name:        "Course 5",
-			Description: "Course 5 Description",
-		},
-		models.Course{
-			Name:        "Course 6",
-			Description: "Course 6 Description",
-		},
-	)
-	return courses
-}
-package fixtures
-
-import (
-	"madaurus/dev/material/app/models"
-)
-
-func GetCourse() []models.Course {
-	var courses []models.Course
-	courses = append(courses, models.Course{
-		Name:        "Course 1",
-		Description: "Course 1 Description",
-	},
-		models.Course{
-			Name:        "Course 2",
-			Description: "Course 2 Description",
-		},
-
-		models.Course{
-			Name:        "Course 3",
-			Description: "Course 3 Description",
-		},
-		models.Course{
-			Name:        "Course 4",
-			Description: "Course 4 Description",
-		},
-		models.Course{
-			Name:        "Course 5",
-			Description: "Course 5 Description",
-		},
-		models.Course{
-			Name:        "Course 6",
-			Description: "Course 6 Description",
-		},
-	)
-	return courses
-}
-package fixtures
-
-import (
-	"madaurus/dev/material/app/models"
-)
-
-func GetCourse() []models.Course {
-	var courses []models.Course
-	courses = append(courses, models.Course{
-		Name:        "Course 1",
-		Description: "Course 1 Description",
-	},
-		models.Course{
-			Name:        "Course 2",
-			Description: "Course 2 Description",
-		},
-
-		models.Course{
-			Name:        "Course 3",
-			Description: "Course 3 Description",
-		},
-		models.Course{
-			Name:        "Course 4",
-			Description: "Course 4 Description",
-		},
-		models.Course{
-			Name:        "Course 5",
-			Description: "Course 5 Description",
-		},
-		models.Course{
-			Name:        "Course 6",
-			Description: "Course 6 Description",
-		},
-	)
-	return courses
-}
-package fixtures
-
-import (
-	"madaurus/dev/material/app/models"
-)
-
-func GetCourse() []models.Course {
-	var courses []models.Course
-	courses = append(courses, models.Course{
-		Name:        "Course 1",
-		Description: "Course 1 Description",
-	},
-		models.Course{
-			Name:        "Course 2",
-			Description: "Course 2 Description",
-		},
-
-		models.Course{
-			Name:        "Course 3",
-			Description: "Course 3 Description",
-		},
-		models.Course{
-			Name:        "Course 4",
-			Description: "Course 4 Description",
-		},
-		models.Course{
-			Name:        "Course 5",
-			Description: "Course 5 Description",
-		},
-		models.Course{
-			Name:        "Course 6",
-			Description: "Course 6 Description",
-		},
-	)
-	return courses
-}
-package fixtures
-
-import (
-	"madaurus/dev/material/app/models"
-)
-
-func GetCourse() []models.Course {
-	var courses []models.Course
-	courses = append(courses, models.Course{
-		Name:        "Course 1",
-		Description: "Course 1 Description",
-	},
-		models.Course{
-			Name:        "Course 2",
-			Description: "Course 2 Description",
-		},
-
-		models.Course{
-			Name:        "Course 3",
-			Description: "Course 3 Description",
-		},
-		models.Course{
-			Name:        "Course 4",
-			Description: "Course 4 Description",
-		},
-		models.Course{
-			Name:        "Course 5",
-			Description: "Course 5 Description",
-		},
-		models.Course{
-			Name:        "Course 6",
-			Description: "Course 6 Description",
-		},
-	)
-	return courses
-}
-
-`,
+		Name:      "Lecture 2",
+		Content:   content,
 		IsPublic:  false,
 		TeacherId: "15",
 		Group:     "Group 1",

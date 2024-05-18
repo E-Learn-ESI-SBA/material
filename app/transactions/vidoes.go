@@ -40,8 +40,9 @@ func CreateVideo(collection *mongo.Collection, client *mongo.Client, permitApi *
 		sectionId := c.Param("sectionId")
 		sectionIdObj, errD := primitive.ObjectIDFromHex(sectionId)
 		video.TeacherId = user.ID
-		video.Group = c.PostForm("group")
+		video.Groups = c.PostFormArray("groups")
 		video.Name = c.PostForm("name")
+
 		videoFile, errF := c.FormFile("video")
 		if videoFile.Size > 250*1024*1024 {
 			c.JSON(http.StatusRequestEntityTooLarge, gin.H{"message": shared.FILE_TOO_LARGE})

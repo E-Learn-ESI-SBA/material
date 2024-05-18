@@ -49,15 +49,12 @@ func main() {
 	}
 	k := shared.GetSecrets()
 	uri := k.String("database_uri")
+	log.Println("Db Url %v", uri)
 	client, err := models.DBHandler(uri)
 	if err != nil {
 		log.Fatal("Database not connected")
 
 	}
-	/*
-		Enable Permit
-	*/
-
 	PermitConfig := config.NewConfigBuilder(os.Getenv("PERMIT_TOKEN")).WithPdpUrl(os.Getenv("PDP_SERVER")).Build()
 	Permit := permit.NewPermit(PermitConfig)
 	var app models.Application
