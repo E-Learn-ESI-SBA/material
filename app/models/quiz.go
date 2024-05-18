@@ -26,16 +26,16 @@ type Quiz struct {
 }
 
 type Question struct {
-	ID          int 				`json:"id" bson:"_id"`
+	ID          string 				`json:"id" bson:"_id"`
 	Body        string             `json:"body" bson:"body" validate:"required" binding:"required"`
 	Score       float64            `json:"score" bson:"score" validate:"required" binding:"required"`
 	Image       string             `json:"image" bson:"image"`
 	Options     []Option           `json:"options" bson:"options" validate:"required" binding:"required"`
-	CorrectIdxs []int              `json:"correct_idxs" bson:"correct_idxs" validate:"required" binding:"required"`
+	CorrectIdxs []string              `json:"correct_idxs" bson:"correct_idxs" validate:"required" binding:"required"`
 }
 
 type Option struct {
-	ID 		int 	`json:"id" bson:"id"`
+	ID 		string 	`json:"id" bson:"id"`
 	Option 	string 	`json:"option" bson:"option" validate:"required" binding:"required"` 
 }
 
@@ -46,11 +46,11 @@ type Grade struct {
 }
 
 type Answer struct {
-	QuestionId int   `json:"question_id" bson:"question_id" validate:"required" binding:"required"`
-	Choices    []int `json:"choices" bson:"choices" validate:"required" binding:"required"`
-	IsCorrect  bool  `json:"is_correct" bson:"is_correct"`
+	QuestionId string 				 `json:"question_id" bson:"question_id" validate:"required" binding:"required"`
+	Choices    []string             `json:"choices" bson:"choices" validate:"required" binding:"required"`
+	IsCorrect  bool              `json:"is_correct" bson:"is_correct"`
 }
-
+// choices will be compared against correctIdxs in the question
 type Submission struct {
 	ID        primitive.ObjectID `json:"id" bson:"_id"`
 	StudentId string             `json:"student_id" bson:"student_id"`
