@@ -94,7 +94,7 @@ func EditVideo(ctx context.Context, collection *mongo.Collection, video models.V
 	update := bson.M{
 		"$set": bson.A{
 			bson.M{"courses.$[course].sections.$[section].videos.$[video].name": video.Name},
-			bson.M{"courses.$[course].sections.$[section].videos.$[video].group": video.Group},
+			bson.M{"courses.$[course].sections.$[section].videos.$[video].groups": video.Groups},
 		},
 	}
 	arrayFilters := bson.A{

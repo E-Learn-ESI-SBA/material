@@ -44,7 +44,7 @@ func CreateFileTransaction(client *mongo.Client, collection *mongo.Collection) g
 		user := value.(*utils.UserDetails)
 		fileObject.TeacherId = user.ID
 		fileObject.Name = c.PostForm("name")
-		fileObject.Group = c.PostForm("group")
+		fileObject.Groups = c.PostFormArray("groups")
 		fileObject.Type = c.PostForm("type")
 		fileObject.CreatedAt = time.Now()
 		fileObject.UpdatedAt = fileObject.CreatedAt
