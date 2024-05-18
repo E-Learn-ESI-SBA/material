@@ -304,17 +304,6 @@ func GetQuizesResultsByStudentId(
 		cursor.Decode(&submission)
 		submissions = append(submissions, submission)
 	}
-	// cursor, err := submissionsCollection.Find(ctx, bson.M{"student_id": studentID})
-	// if err != nil {
-	// 	log.Printf("Error While Getting Submissions: %v\n", err)
-	// 	return submissions, err
-	// }
-	// defer cursor.Close(ctx)
-	// for cursor.Next(ctx) {
-	// 	var submission models.Submission
-	// 	cursor.Decode(&submission)
-	// 	submissions = append(submissions, submission)
-	// }
 	
 	return submissions, nil
 }
