@@ -25,6 +25,15 @@ type Quiz struct {
 	UpdatedAt     time.Time          `json:"updated_at,omitempty" bson:"updated_at"`
 }
 
+type QuizUpdate struct {
+	Title 	   string             `json:"title" bson:"title" validate:"required" binding:"required"`
+	Instructions string           `json:"instructions" bson:"instructions" validate:"required" binding:"required"`
+	Image 	   string             `json:"image" bson:"image"`
+	StartDate  time.Time          `json:"start_date" bson:"start_date" validate:"required" binding:"required"`
+	EndDate    time.Time          `json:"end_date" bson:"end_date" validate:"required" binding:"required"`
+	Duration   int                `json:"duration" bson:"duration" validate:"required" binding:"required"`
+}
+
 type Question struct {
 	ID          string 				`json:"id" bson:"_id"`
 	Body        string             `json:"body" bson:"body" validate:"required" binding:"required"`

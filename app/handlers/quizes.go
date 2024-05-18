@@ -2,11 +2,11 @@ package handlers
 
 import (
 	"errors"
+	"log"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/services"
 	"madaurus/dev/material/app/shared"
 	"madaurus/dev/material/app/utils"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -55,9 +55,11 @@ func CreateQuiz(collection *mongo.Collection, moduleCollection *mongo.Collection
 // @Router /quizes/update [PUT]
 func UpdateQuiz(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var quiz models.Quiz
+		var quizUpdates models.QuizUpdate
 		user := c.MustGet("user").(*utils.UserDetails)
-		err := c.BindJSON(&quiz)
+		err := c.BindJSON(&quizUpdates)
+		log.Println(quizUpdates)
+		log.Println("handler update quiz")
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
@@ -67,13 +69,7 @@ func UpdateQuiz(collection *mongo.Collection) gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": errors.New("quiz ID is Required")})
 			return
 		}
-		quiz.ID, err = primitive.ObjectIDFromHex(quizID)
-		if err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
-			return
-		}
-		quiz.UpdatedAt = time.Now()
-		err = services.UpdateQuiz(c.Request.Context(), collection, quiz, user.ID)
+		err = services.UpdateQuiz(c.Request.Context(), collection, quizUpdates, quizID, user.ID)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
@@ -125,16 +121,17 @@ func DeleteQuiz(collection *mongo.Collection) gin.HandlerFunc {
 func GetQuiz(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		quizID, errP := c.Params.Get("id")
+		user := c.MustGet("user").(*utils.UserDetails)
 		if !errP {
 			c.JSON(400, gin.H{"error": errors.New("quiz ID is Required")})
 			return
 		}
-		quiz, err := services.GetQuiz(c.Request.Context(), collection, quizID)
+		quiz, err, passed := services.GetQuiz(c.Request.Context(), collection, quizID, user.ID)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(200, quiz)
+		c.JSON(200, gin.H{"quiz": quiz, "passed": passed})
 	}
 }
 
@@ -315,11 +312,11 @@ func GetQuizQuestions(collection *mongo.Collection) gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": errors.New("quiz ID is Required")})
 			return
 		}
-		questions, err := services.GetQuizQuestions(c.Request.Context(), collection, quizID, user.ID)
+		quiz, err := services.GetQuizQuestions(c.Request.Context(), collection, quizID, user.ID)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(200, questions)
+		c.JSON(200, quiz)
 	}
 }
