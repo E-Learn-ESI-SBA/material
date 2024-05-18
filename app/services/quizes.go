@@ -36,6 +36,7 @@ func CreateQuiz(
 	// }
 
 
+	quiz.ID = primitive.NewObjectID()
 	quiz.CreatedAt = time.Now()
 	quiz.UpdatedAt = quiz.CreatedAt
 	_, err = collection.InsertOne(ctx, quiz)
