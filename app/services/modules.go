@@ -60,7 +60,7 @@ func EditModuleVisibility(ctx context.Context, collection *mongo.Collection, mod
 
 func UpdateModule(ctx context.Context, collection *mongo.Collection, module models.Module) error {
 	filter := bson.D{{"_id", module.ID}}
-	update := bson.D{{"$set", module}}
+	update := bson.D{{"$set", bson.D{{"name", module.Name}, {"year", module.Year}, {"plan", module.Plan}, {"image", module.Image}}}}
 	updatedAt := time.Now()
 	module.UpdatedAt = updatedAt
 	newModule, err := collection.UpdateOne(ctx, filter, update)
