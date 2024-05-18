@@ -75,11 +75,28 @@ func GetQuiz(moduleId string) models.Quiz {
     	Duration: 100,
 		Questions: []models.Question{
 			{
-				ID: 0,
+				ID: "0",
 				Body: "what is the capital of france?",
 				Score: 100,
-				Options: []string{"paris", "london", "berlin", "madrid"},
-				CorrectIdxs: []int{0},
+				Options: []models.Option{
+					models.Option{
+						ID: "0",
+						Option: "Paris",
+					},
+					models.Option{
+						ID: "1",
+						Option: "London",
+					},
+					models.Option{
+						ID: "2",
+						Option: "Berlin",
+					},
+					models.Option{
+						ID: "3",
+						Option: "Madrid",
+					},
+				},
+				CorrectIdxs: []string{"0"},
 			},
 		},
 		Grades: []models.Grade{

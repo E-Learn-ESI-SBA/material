@@ -26,7 +26,7 @@ type Quiz struct {
 }
 
 type Question struct {
-	ID          int 				`json:"id" bson:"_id"`
+	ID          string 				`json:"id" bson:"_id"`
 	Body        string             `json:"body" bson:"body" validate:"required" binding:"required"`
 	Score       float64            `json:"score" bson:"score" validate:"required" binding:"required"`
 	Image       string             `json:"image" bson:"image"`
@@ -46,7 +46,7 @@ type Grade struct {
 }
 
 type Answer struct {
-	QuestionId int 				 `json:"question_id" bson:"question_id" validate:"required" binding:"required"`
+	QuestionId string 				 `json:"question_id" bson:"question_id" validate:"required" binding:"required"`
 	Choices    []string             `json:"choices" bson:"choices" validate:"required" binding:"required"`
 	IsCorrect  bool              `json:"is_correct" bson:"is_correct"`
 }

@@ -268,7 +268,7 @@ func TestSubmitQuizAnswers(t *testing.T) {
 		Answers: []models.Answer{
 			{
 				QuestionId: globalQuiz.Questions[0].ID,
-				Choices: []int{0},
+				Choices: []string{"0"},
 			},
 		},
 	}
@@ -299,7 +299,7 @@ func TestSubmitQuizAnswers(t *testing.T) {
 		Answers: []models.Answer{
 			{
 				QuestionId: globalQuiz.Questions[0].ID,
-				Choices: []int{0, 1},
+				Choices: []string{"0", "1"},
 			},
 		},
 	}

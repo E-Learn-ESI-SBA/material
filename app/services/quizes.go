@@ -365,7 +365,7 @@ func GetGrade(score float64, grades []models.Grade) string {
 	return ""
 }
 
-func isIn(val int, arr []int) bool {
+func isIn(val string, arr []string) bool {
 	for _, v := range arr {
 		if v == val {
 			return true
@@ -374,7 +374,7 @@ func isIn(val int, arr []int) bool {
 	return false
 }
 
-func AllIn(arr1 []int, arr2 []int) bool {
+func AllIn(arr1 []string, arr2 []string) bool {
 	for _, v := range arr1 {
 		if !isIn(v, arr2) {
 			return false
