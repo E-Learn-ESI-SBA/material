@@ -3,7 +3,6 @@ package handlers
 import (
 	"errors"
 	"log"
-	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/services"
 	"madaurus/dev/material/app/shared"
@@ -57,22 +56,18 @@ func EditModuleVisibility(collection *mongo.Collection) gin.HandlerFunc {
 // @Router /modules/public [POST]
 func GetPublicFilteredModules(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var filterModule interfaces.ModuleFilter
-		err := c.ShouldBind(&filterModule)
-		if err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
-			return
-		}
-		modules, CursorErr := services.GetModulesByFilter(c.Request.Context(), collection, filterModule, "public", nil)
+		modules, CursorErr := services.GetModulesByFilter(c.Request.Context(), collection)
 		if CursorErr != nil {
-			c.JSON(400, gin.H{"error": CursorErr.Error()})
+			log.Println("Error While Getting Public Modules %v", CursorErr)
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.UNABLE_GET_MODULES})
 			return
 
 		}
-		c.JSON(200, gin.H{"modules": modules})
+		c.JSON(http.StatusOK, gin.H{"data": modules})
 	}
 }
 
+/*
 // @Summary Get Teacher Modules
 // @Description Protected Route used to get teacher modules
 // @Produce json
@@ -106,7 +101,7 @@ func GetTeacherFilterModules(collection *mongo.Collection) gin.HandlerFunc {
 		c.JSON(200, gin.H{"modules": modules})
 	}
 }
-
+*/
 // @Summary Get Module By Teacher
 // @Description Protected Route used to get modules by teacher
 // @Produce json
@@ -124,7 +119,8 @@ func GetModuleByTeacher(collection *mongo.Collection, permit *permit.Client) gin
 			return
 		}
 		user := value.(*utils.UserDetails)
-		RKeys := utils.GetAllowedResources("read", "modules", user.ID, permit)
+		// Change it for #production
+		RKeys := utils.GetAllowedResources("read", "modules", "2", permit)
 		if len(RKeys) == 0 {
 			log.Println("The Key is null")
 			modules, err := services.GetModulesByTeacher(c.Request.Context(), collection, user.ID)
@@ -323,6 +319,17 @@ func GetModuleByStudent(collection *mongo.Collection) gin.HandlerFunc {
 		user := value.(*utils.UserDetails)
 
 		modules, err := services.GetModuleByStudent(context.Request.Context(), collection, user.Year)
+		if err != nil {
+			context.JSON(http.StatusBadRequest, gin.H{"message": shared.UNABLE_GET_MODULE})
+			return
+		}
+		context.JSON(http.StatusOK, gin.H{"data": modules})
+	}
+}
+
+func GetModulesByAdmin(collection *mongo.Collection) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		modules, err := services.GetModulesByAdmin(context.Request.Context(), collection)
 		if err != nil {
 			context.JSON(http.StatusBadRequest, gin.H{"message": shared.UNABLE_GET_MODULE})
 			return

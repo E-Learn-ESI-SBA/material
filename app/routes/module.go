@@ -22,11 +22,13 @@ func ModuleRoute(g *gin.Engine, collection *mongo.Collection, permitApi *permit.
 	moduleRoute.PUT("/visibility/:id", middlewares.Authentication(), handlers.EditModuleVisibility(collection))
 	moduleRoute.GET("/public", middlewares.Authentication(), handlers.GetPublicFilteredModules(collection))
 	moduleRoute.GET("/student", middlewares.Authentication(), middlewares.StaticRBAC(iam.ROLEStudentKey), handlers.GetModuleByStudent(collection))
-	moduleRoute.GET("/public/:id", handlers.GetPublicFilteredModules(collection))
+	// Make it public in #Production
+	moduleRoute.GET("/public/:id", middlewares.Authentication(), handlers.GetPublicFilteredModules(collection))
 	moduleRoute.POST("/many", middlewares.Authentication(), middlewares.BasicRBAC("admin"), handlers.CreateManyModules(collection))
 	moduleRoute.POST("/test", middlewares.Authentication(), func(context *gin.Context) {
 		context.JSON(200, gin.H{"message": "Hello"})
 	})
+	moduleRoute.GET("/admin", middlewares.Authentication(), middlewares.StaticRBAC(iam.ROLEAdminKey), handlers.GetModulesByAdmin(collection))
 	moduleRoute.PATCH("/visibility/:id", middlewares.Authentication(), func(context *gin.Context) {
 		value, _ := context.Get("user")
 		user := value.(*utils.UserDetails)

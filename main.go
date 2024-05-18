@@ -117,7 +117,7 @@ func main() {
 		}
 		token, _ := utils.GenerateToken(user, k.String("JWT_SECRET"))
 		c.Request.Header.Set("Authorization", "Bearer "+token)
-		c.SetCookie("token", token, 3600, "/", "localhost", false, false)
+		c.SetCookie("accessToken", token, 3600, "/", "localhost", false, false)
 		c.JSON(200, gin.H{"token": token})
 	})
 	log.Println("Server Running on Port 8080")

@@ -153,92 +153,39 @@ func DeleteSection(ctx context.Context, collection *mongo.Collection, sectionId 
 	return nil
 }
 
-/*
-func DeleteSection(ctx context.Context, collection *mongo.Collection, sectionId primitive.ObjectID) error {
-	pipeline := bson.A{
-		bson.M{
-			"$match": bson.M{"_id": bson.M{"$eq": sectionId}},
-		},
-		bson.M{
-			"$lookup": bson.M{
-				"from":         "files",
-				"localField":   "_id",
-				"foreignField": "sectionID",
-				"as":           "files",
-			},
-		},
-		bson.M{
-			"$lookup": bson.M{
-				"from":         "videos",
-				"localField":   "_id",
-				"foreignField": "sectionID",
-				"as":           "videos",
-			},
-		},
-		bson.M{
-			"$lookup": bson.M{
-				"from":         "lectures",
-				"localField":   "_id",
-				"foreignField": "sectionID",
-				"as":           "lectures",
-			},
-		},
-		bson.M{
-			"$unwind": bson.M{
-				"path":         "$files",
-				"preserveNull": true,
-			},
-		},
-		bson.M{
-			"$unwind": bson.M{
-				"path":         "$videos",
-				"preserveNull": true,
-			},
-		},
-		bson.M{
-			"$unwind": bson.M{
-				"path":         "$lectures",
-				"preserveNull": true,
-			},
-		},
-		bson.M{
-			"$project": bson.M{
-				"_id": 0, // exclude original document
-				"count": bson.M{
-					"$sum": bson.A{1, "$files", "$videos", "$lectures"},
-				},
-			},
-		},
-		bson.M{
-			"$group": bson.M{
-				"_id":   nil,
-				"total": bson.M{"$sum": "$count"},
-			},
-		},
-	}
-	var count int64 = -1
-	result, err := collection.Aggregate(ctx, pipeline)
-	if err != nil {
-		log.Printf("Error While Trying To Deeply delete Section %v", err.Error())
-
-	}
-
-	errR := result.Decode(&count)
-	if errR != nil {
-		log.Printf("Error While Trying To Deeply delete Section %v", errR.Error())
-	}
-
-	if count > 0 {
-		return errors.New(shared.UNABLE_DELETE_SECTION)
-	}
-	d, err := collection.DeleteOne(ctx, bson.D{{"_id", sectionId}})
-
-	if err != nil || d.DeletedCount < 1 {
-		return errors.New(shared.UNABLE_DELETE_SECTION)
-
-	}
-	return nil
+type SectionWithChapterName struct {
+	ChapterName string
+	models.Section
 }
 
+func GetSectionsByAdmin(ctx context.Context, collection *mongo.Collection) ([]SectionWithChapterName, error) {
+	// Select only sections , and please write  a valid query
+	var modules []models.Module
+	var sections []SectionWithChapterName
 
-*/
+	cursor, err := collection.Find(ctx, bson.D{{}}, options.Find().SetProjection(bson.D{{"courses.sections", 1}}))
+	if err != nil {
+		log.Printf("Error While Getting Sections By Admin: %v\n", err)
+		return sections, err
+	}
+	cursorError := cursor.All(ctx, &modules)
+	if cursorError != nil {
+		log.Printf("Error While Parsing Sections By Admin: %v\n", cursorError)
+		return sections, cursorError
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			log.Println("failed to close cursor")
+		}
+	}(cursor, ctx)
+	// Transform it to sections array
+	for _, module := range modules {
+		for _, course := range module.Courses {
+			for _, section := range course.Sections {
+				sections = append(sections, SectionWithChapterName{ChapterName: course.Name, Section: section})
+			}
+		}
+	}
+	return sections, nil
+}

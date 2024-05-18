@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/shared"
@@ -67,6 +68,46 @@ func GetCoursesByInstructor(ctx context.Context, collection *mongo.Collection, i
 	}
 	cursor.Decode(&modules)
 	return modules, nil
+}
+
+type CourseWithModuleName struct {
+	models.Course
+	ModuleName string `json:"module_name"`
+}
+
+func GetCoursesByAdmin(ctx context.Context, collection *mongo.Collection) ([]CourseWithModuleName, error) {
+	// From the {name:"module name", courses: [course1, course2, course3]} collection, get all courses with the module name , and do not select courses[i].sections
+	var modules []models.Module
+	var courses []CourseWithModuleName
+	options := options.Find().SetProjection(bson.D{{"courses.sections", 0}})
+	cursor, err := collection.Find(ctx, bson.D{}, options)
+	if err != nil {
+		log.Printf("Error While Getting Courses By Admin: %v\n", err)
+		return nil, errors.New(shared.UNABLE_GET_COURSES)
+
+	}
+	cursorError := cursor.All(ctx, &modules)
+	if cursorError != nil {
+		log.Printf("Error While Parsing Courses By Admin: %v\n", cursorError)
+		return nil, errors.New(shared.UNABLE_GET_COURSES)
+
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+
+			log.Println("failed to close cursor")
+
+		}
+
+	}(cursor, ctx)
+	for _, module := range modules {
+		for _, course := range module.Courses {
+			courses = append(courses, CourseWithModuleName{Course: course, ModuleName: module.Name})
+		}
+
+	}
+	return courses, nil
 }
 
 /*

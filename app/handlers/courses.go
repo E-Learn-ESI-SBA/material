@@ -73,7 +73,6 @@ func CreateCourse(collection *mongo.Collection) gin.HandlerFunc {
 // @Failure 400 {object} interfaces.APIResponse
 // @Param module query string true "Module ID"
 // @Router /courses/update [PUT]
-
 func UpdateCourse(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var course models.Course
@@ -177,18 +176,12 @@ func DeleteCourse(collection *mongo.Collection) gin.HandlerFunc {
 // @Router /courses/admin [GET]
 func GetCoursesByAdmin(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		cursor, err := collection.Find(context.TODO(), nil)
+		courses, err := services.GetCoursesByAdmin(c.Request.Context(), collection)
 		if err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		var courses []models.Course
-		err = cursor.All(c.Request.Context(), &courses)
-		if err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(200, gin.H{"courses": courses})
+		c.JSON(http.StatusOK, gin.H{"courses": courses})
 	}
 }
 
@@ -207,23 +200,23 @@ func GetCoursesByTeacher(collection *mongo.Collection) gin.HandlerFunc {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 		claims, errClaim := c.Get("user")
 		if errClaim != false {
-			c.JSON(400, gin.H{"error": errors.New("user Details Claims not Found")})
+			c.JSON(http.StatusBadRequest, gin.H{"error": errors.New("user Details Claims not Found")})
 			cancel()
 			return
 		}
 		user, err := claims.(*utils.UserDetails)
 		if err == true {
-			c.JSON(400, gin.H{"error": errors.New("user Details are not Compatible")})
+			c.JSON(http.StatusBadRequest, gin.H{"error": errors.New("user Details are not Compatible")})
 			cancel()
 			return
 		}
 		courses, errCourses := services.GetCoursesByInstructor(ctx, collection, user.ID)
 		if errCourses != nil {
-			c.JSON(400, gin.H{"error": errCourses.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"message": errCourses.Error()})
 			cancel()
 			return
 		}
-		c.JSON(200, gin.H{"courses": courses})
+		c.JSON(http.StatusOK, gin.H{"courses": courses})
 		defer func() {
 			cancel()
 		}()

@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	handlers "madaurus/dev/material/app/handlers"
 	"madaurus/dev/material/app/middlewares"
+	"madaurus/dev/material/app/shared/iam"
 )
 
 func SectionRouter(engine *gin.Engine, collection *mongo.Collection, permitApi *permit.Client, client *mongo.Client) {
@@ -16,5 +17,6 @@ func SectionRouter(engine *gin.Engine, collection *mongo.Collection, permitApi *
 	section.PUT("/", middlewares.Authentication(), handlers.EditSection(collection))
 	section.DELETE("/:sectionId", middlewares.Authentication(), handlers.DeleteSection(collection))
 	//	section.GET("/notes/:sectionId", middlewares.Authentication(), handlers.GetSectionsByStudent(collection))
+	section.GET("/admin", middlewares.Authentication(), middlewares.StaticRBAC(iam.ROLEAdminKey), handlers.GetSectionByAdmin(collection))
 
 }

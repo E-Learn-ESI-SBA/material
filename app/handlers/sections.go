@@ -223,6 +223,27 @@ func GetSectionsByStudent(collection *mongo.Collection) gin.HandlerFunc {
 			g.JSON(400, gin.H{"error": errP.Error()})
 			return
 		}
-		g.JSON(200, gin.H{"section": data})
+		g.JSON(200, gin.H{"data": data})
+	}
+}
+func GetSectionByAdmin(collection *mongo.Collection) gin.HandlerFunc {
+	return func(g *gin.Context) {
+		sectionId, err := g.Params.Get("sectionId")
+		value, errU := g.Get("user")
+		user := value.(*utils.UserDetails)
+		if !errU {
+			g.JSON(http.StatusInternalServerError, gin.H{"message": shared.USER_NOT_INJECTED})
+		}
+		studentId := user.ID
+		if !err {
+			g.JSON(http.StatusBadRequest, gin.H{"message": shared.UNABLE_GET_SECTION})
+			return
+		}
+		data, errP := services.GetSectionFromStudent(g.Request.Context(), collection, sectionId, studentId)
+		if errP != nil {
+			g.JSON(http.StatusBadRequest, gin.H{"message": errP.Error()})
+			return
+		}
+		g.JSON(200, gin.H{"data": data})
 	}
 }

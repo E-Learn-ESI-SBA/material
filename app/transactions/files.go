@@ -139,7 +139,7 @@ func DeleteFileTransaction(client *mongo.Client, collection *mongo.Collection) g
 			return
 		}
 		// select only the file object
-		rs, err := services.GetFileObject(ctx, collection, fileObjectId)
+		fileObj, err := services.GetFileObject(ctx, collection, fileObjectId)
 		if err != nil {
 			log.Printf("Error getting file object: %v", err.Error())
 			c.JSON(http.StatusNotFound, gin.H{"message": shared.FILE_NOT_DELETED})
@@ -176,7 +176,7 @@ func DeleteFileTransaction(client *mongo.Client, collection *mongo.Collection) g
 			c.JSON(http.StatusBadRequest, gin.H{"message": shared.FILE_NOT_DELETED})
 			return
 		}
-		errDF := services.DeleteSavedFile(rs.Url, dir)
+		errDF := services.DeleteSavedFile(fileObj.Url, dir)
 		if errDF != nil {
 			log.Printf("Error deleting file object: %v", errDF.Error())
 			session.AbortTransaction(ctx)

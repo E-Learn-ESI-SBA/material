@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/shared"
 	"madaurus/dev/material/app/utils"
@@ -20,27 +19,23 @@ import (
 
 // GetModulesByFilter Basic Usage  : GetModulesByFilter(ctx, collection, filterStruct, "public", nil) for public endpoints
 // Advanced Usage: GetModulesByFilter(ctx, collection, filterStruct, "private", &teacherId) for private endpoints
-func GetModulesByFilter(ctx context.Context, collection *mongo.Collection, filterStruct interfaces.ModuleFilter, usage string, teacherId *string) ([]models.Module, error) {
-	var modules []models.Module
-	var filter bson.D
+func GetModulesByFilter(ctx context.Context, collection *mongo.Collection) ([]models.Module, error) {
+	// variable must e pointer to slice
+	modules := &[]models.Module{}
 	opts := options.Find().SetProjection(bson.D{{"courses", 0}})
-	if usage == "public" {
-		filter = bson.D{{"year", filterStruct.Year}, {"semester", filterStruct.Semester}, {"speciality", filterStruct.Speciality}}
-
-	} else if teacherId != nil {
-		filter = bson.D{{"year", filterStruct.Year}, {"semester", filterStruct.Semester}, {"speciality", filterStruct.Speciality}, {
-			"teacher_id", *teacherId}}
-	} else {
-		return nil, errors.New("teacher Id is required for this operation")
-	}
+	filter := bson.D{}
 	cursor, err := collection.Find(ctx, filter, opts)
 	if err != nil {
+		log.Printf("Errro While Getting Module", err.Error())
+
 		return nil, err
 	}
-	cursorError := cursor.All(ctx, &modules)
+	cursorError := cursor.All(ctx, modules)
 	if cursorError != nil {
+		log.Printf("Error While Decoding the Modules %v ", cursorError)
 		return nil, cursorError
 	}
+
 	defer func(cursor *mongo.Cursor, ctx context.Context) {
 		err := cursor.Close(ctx)
 		if err != nil {
@@ -49,7 +44,8 @@ func GetModulesByFilter(ctx context.Context, collection *mongo.Collection, filte
 
 		}
 	}(cursor, ctx)
-	return modules, nil
+
+	return *modules, nil
 }
 
 func EditModuleVisibility(ctx context.Context, collection *mongo.Collection, moduleId string, visibility bool) error {
@@ -358,6 +354,32 @@ func GetModuleByStudent(ctx context.Context, collection *mongo.Collection, year 
 			log.Println("failed to close cursor")
 
 		}
+	}(cursor, ctx)
+	return modules, nil
+}
+
+func GetModulesByAdmin(ctx context.Context, collection *mongo.Collection) ([]models.Module, error) {
+	var modules []models.Module
+	filter := bson.D{}
+	opts := options.Find().SetProjection(bson.D{{"courses", 0}})
+	cursor, err := collection.Find(ctx, filter, opts)
+	if err != nil {
+		log.Printf("Error While Getting the Modules %v", err.Error())
+		return modules, errors.New(shared.UNABLE_GET_MODULES)
+	}
+	cursorError := cursor.All(ctx, &modules)
+	if cursorError != nil {
+		log.Printf("Error While Getting the Modules %v", cursorError.Error())
+		return modules, errors.New(shared.UNABLE_GET_MODULES)
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+
+			log.Println("failed to close cursor")
+
+		}
+
 	}(cursor, ctx)
 	return modules, nil
 }
