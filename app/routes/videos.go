@@ -10,6 +10,7 @@ import (
 
 func VideoRouter(e *gin.Engine, collection *mongo.Collection, permitApi *permit.Client, client *mongo.Client) {
 	videos := e.Group("/videos")
+	videos.GET("/stream/:id", middlewares.Authentication(), handlers.GetStreamVideo(collection))
 	videos.GET("/:id", middlewares.Authentication(), handlers.GetVideo(collection))
 	videos.PUT("/:id", middlewares.Authentication(), handlers.EditVideo(collection))
 

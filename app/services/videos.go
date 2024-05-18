@@ -73,6 +73,36 @@ func GetVideo(ctx context.Context, collection *mongo.Collection, videoId primiti
 	return video, nil
 
 }
+func GetDetailVideo(ctx context.Context, collection *mongo.Collection, videoId primitive.ObjectID) (models.Video, error) {
+	var videoResponse VideoQueryResponse
+	var video models.Video
+	pipeline := bson.A{
+		bson.M{"$unwind": "$courses"},
+		bson.M{"$unwind": "$courses.sections"},
+		bson.M{"$unwind": "$courses.sections.videos"},
+		bson.M{"$match": bson.M{"courses.sections.videos._id": videoId}},
+		bson.M{"$replaceRoot": bson.M{"newRoot": bson.M{"$mergeObjects": []interface{}{"$$ROOT", bson.M{"video": bson.M{"_id": "$courses.sections.videos._id", "name": "$courses.sections.videos.name", "url": "$courses.sections.videos.url", "groups": "$courses.sections.videos.groups", "teacher_id": "$courses.sections.videos.teacher_id", "created_at": "$courses.sections.videos.created_at", "updated_at": "$courses.sections.videos.updated_at"}}}}}},
+		bson.M{"$project": bson.M{"courses": 0}},
+	}
+	cursor, err := collection.Aggregate(ctx, pipeline)
+	if err != nil {
+
+		log.Printf("Error while aggregate videos %v", err.Error())
+		return video, errors.New(shared.UNABLE_TO_GET_VIDEO)
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		err := cursor.Decode(&videoResponse)
+		if err != nil {
+			return models.Video{}, errors.New(shared.UNABLE_TO_GET_VIDEO)
+		}
+
+	}
+	video = videoResponse.Video
+	return video, nil
+
+}
 
 func GetVideoFile(videoUrl string) (os.File, error) {
 	dir, errD := utils.GetStorageFile("videos")
