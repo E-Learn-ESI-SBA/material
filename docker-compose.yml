@@ -13,9 +13,9 @@ services:
     restart: always
     ports:
       - 27017:27017
-    volumes:
-      - mongo:/data/db
-      - storage:/app/storage
+    # volumes:
+    #   - mongo:/data/db
+    #   - storage:/app/storage
     environment:
       - MONGO_INITDB_NAME=materials
       - JWT_SECRET=aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K
@@ -35,12 +35,12 @@ services:
       - PDP_DEBUG=True
 
 
-volumes:
-  mongo:
-    driver: flocker
-    driver_opts:
-      size: "1GiB"
-  storage:
-    driver: flocker
-    driver_opts:
-      size: "2GiB"
+# volumes:
+#   mongo:
+#     driver: flocker
+#     driver_opts:
+#       size: "1GiB"
+#   storage:
+#     driver: flocker
+#     driver_opts:
+#       size: "2GiB"

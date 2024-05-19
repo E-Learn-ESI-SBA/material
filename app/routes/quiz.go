@@ -25,6 +25,6 @@ func QuizRoute(
 	quizRoute.POST("/:id/submit", middlewares.Authentication(), handlers.SubmitQuizAnswers(collection, submissionsCollection))
 	quizRoute.GET("/:id/teacher", middlewares.Authentication(), handlers.GetQuizResults(collection, submissionsCollection))
 	quizRoute.GET("/student", middlewares.Authentication(), handlers.GetQuizesResultsByStudentId(collection, submissionsCollection))
-	quizRoute.GET("/:id/student", middlewares.Authentication(), handlers.GetQuizResultByStudentId(collection, submissionsCollection))
+	quizRoute.GET("/:id/student", middlewares.Authentication(), handlers.GetQuizResultByStudentId(collection, submissionsCollection, moduleCollection))
 	quizRoute.GET("/admin", middlewares.Authentication(), handlers.GetQuizesByAdmin(collection))
 }

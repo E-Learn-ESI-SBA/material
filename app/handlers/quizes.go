@@ -258,7 +258,11 @@ func GetQuizResults(collection *mongo.Collection, SubmissionsCollection *mongo.C
 // @Success 200 {object} models.QuizResults
 // @Failure 400 {object} interfaces.APiError
 // @Router /quizes/:id/student/result [GET]
-func GetQuizResultByStudentId(collection *mongo.Collection, SubmissionsCollection *mongo.Collection) gin.HandlerFunc {
+func GetQuizResultByStudentId(
+	collection *mongo.Collection, 
+	SubmissionsCollection *mongo.Collection,
+	moduleCollection *mongo.Collection,
+	) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user := c.MustGet("user").(*utils.UserDetails)
 		quizID, errP := c.Params.Get("id")
@@ -266,12 +270,12 @@ func GetQuizResultByStudentId(collection *mongo.Collection, SubmissionsCollectio
 			c.JSON(400, gin.H{"error": errors.New("quiz ID is Required")})
 			return
 		}
-		quizResults, err := services.GetQuizResultByStudentId(c.Request.Context(), collection, SubmissionsCollection, quizID, user.ID)
+		submission, quiz, module_name, err := services.GetQuizResultByStudentId(c.Request.Context(), collection, SubmissionsCollection, moduleCollection, quizID, user.ID)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(200, quizResults)
+		c.JSON(200, gin.H{"submission": submission, "quiz": quiz, "module_name": *module_name})
 	}
 }
 
