@@ -118,7 +118,10 @@ func GetQuiz(
 		return quiz, err, false
 	}
 	filter := bson.D{{"_id", objectId}}
-	projection := bson.D{{"questions", 0}}
+	projection := bson.D{
+		{"questions", 0},
+		{"grades", 0},
+	}
 	err = collection.FindOne(ctx, filter, options.FindOne().SetProjection(projection)).Decode(&quiz)
 	if err != nil {
 		log.Printf("Error While Getting Quiz: %v\n", err)
@@ -247,7 +250,7 @@ func SubmitQuizAnswers(
 	questions := quiz.Questions
 	submission.ID = primitive.NewObjectID()
 	submission.CreatedAt = time.Now()
-	submission.Score = CalcFinalScore(questions, submission.Answers)
+	submission.Score, submission.Answers = CalcFinalScore(questions, submission.Answers)
 	submission.Grade = GetGrade(submission.Score, quiz.Grades)
 	if submission.Score >= quiz.MinScore {
 		submission.IsPassed = true
@@ -265,35 +268,43 @@ func GetQuizResultByStudentId(
 	ctx context.Context,
 	collection *mongo.Collection,
 	submissionsCollection *mongo.Collection,
+	moduleCollection *mongo.Collection,
 	quizID string,
 	studentID string,
-) (models.Submission, error) {
+) (models.Submission, models.Quiz, *string, error) {
 	objectId, err := primitive.ObjectIDFromHex(quizID)
 	if err != nil {
 		log.Printf("Error While Converting ID: %v\n", err)
-		return models.Submission{}, err
+		return models.Submission{}, models.Quiz{}, nil, err
 	}
 	// check if the quiz exists
 	var quiz models.Quiz
 	filter := bson.D{{"_id", objectId}}
 	_ = collection.FindOne(ctx, filter).Decode(&quiz)
 	if quiz.ID.IsZero() {
-		return models.Submission{}, errors.New(shared.QUIZ_NOT_FOUND)
+		return models.Submission{}, models.Quiz{}, nil, errors.New(shared.QUIZ_NOT_FOUND)
 	}
 	// check if quiz has ended
 	if time.Now().Before(quiz.EndDate) {
-		return models.Submission{}, errors.New(shared.QUIZ_STILL_ONGOING)
+		return models.Submission{}, models.Quiz{}, nil, errors.New(shared.QUIZ_STILL_ONGOING)
 	}
 	filter = bson.D{{"quiz_id", objectId}, {"student_id", studentID}}
 	var submission models.Submission
 	err = submissionsCollection.FindOne(ctx, filter).Decode(&submission)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return submission, errors.New(shared.QUIZ_ANSWER_NOT_FOUND)
+			return submission, models.Quiz{}, nil, errors.New(shared.QUIZ_ANSWER_NOT_FOUND)
 		}
-		return submission, err
+		return submission, models.Quiz{}, nil, err
 	}
-	return submission, nil
+
+	// get module name
+	var module models.Module
+	options := options.FindOne().SetProjection(bson.M{"name": 1})
+	_ = moduleCollection.FindOne(ctx, bson.M{"_id": quiz.ModuleId}, options).Decode(&module)
+	
+
+	return submission, quiz, &module.Name, nil
 }
 
 func GetQuizesResultsByStudentId(
@@ -369,23 +380,23 @@ func GetQuizQuestions(
 	return quiz, nil
 }
 
-func CalcFinalScore(questions []models.Question, answers []models.Answer) float64 {
+func CalcFinalScore(questions []models.Question, answers []models.Answer) (float64, []models.Answer) {
 	var totalScore float64
 	// i have 0 brain cells left
 	for _, question := range questions {
-		for _, answer := range answers {
-			if question.ID == answer.QuestionId {
-				if AllIn(question.CorrectIdxs, answer.Choices) && len(question.CorrectIdxs) == len(answer.Choices) {
-					totalScore += question.Score
-					answer.IsCorrect = true
-				} else {
-					answer.IsCorrect = false
-				}
-				break
-			}
-		}
+	 for i, _ := range answers {
+	  if question.ID == answers[i].QuestionId {
+	   if AllIn(question.CorrectIdxs, answers[i].Choices) && len(question.CorrectIdxs) == len(answers[i].Choices) {
+		totalScore += question.Score
+		answers[i].IsCorrect = true
+	   } else {
+		answers[i].IsCorrect = false
+	   }
+	   break
+	  }
+	 }
 	}
-	return totalScore
+	return totalScore, answers
 }
 
 func GetGrade(score float64, grades []models.Grade) string {
