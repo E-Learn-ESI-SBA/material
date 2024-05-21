@@ -64,7 +64,7 @@ func GetAllowedResources(actionName string, resourceType string, userKey string,
 
 	}
 
-	allowedResources, err := GetFilterObject(user, action, permitApi, resourcesBuilders...)
+	allowedResources, err := GetFilterObject(user, action, permitApi, requestContext, resourcesBuilders...)
 	if err != nil {
 		log.Printf("Error While Checking the Permission: %v\n", err)
 		return []string{}
@@ -82,15 +82,21 @@ func GetAllowedResources(actionName string, resourceType string, userKey string,
 
 }
 
-func GetFilterObject(user enforcement.User, action enforcement.Action, permitApi *permit.Client, resources ...enforcement.Resource) ([]enforcement.Resource, error) {
+func GetFilterObject(user enforcement.User, action enforcement.Action, permitApi *permit.Client, ctx map[string]string, resources ...enforcement.Resource) ([]enforcement.Resource, error) {
 	allowedResources := make([]enforcement.Resource, 0)
+	var checkRes []enforcement.CheckRequest
 	for _, resource := range resources {
-		decision, err := permitApi.Check(user, action, resource)
-		if err != nil {
-			return nil, err
-		}
-		if decision {
-			allowedResources = append(allowedResources, resource)
+		checkR := enforcement.NewCheckRequest(user, action, resource, ctx)
+		checkRes = append(checkRes, *checkR)
+	}
+	checks, err := permitApi.BulkCheck(checkRes...)
+	if err != nil {
+		return allowedResources, err
+	}
+	for i, check := range checks {
+		if check {
+			allowedResources = append(allowedResources, resources[i])
+
 		}
 	}
 	return allowedResources, nil
