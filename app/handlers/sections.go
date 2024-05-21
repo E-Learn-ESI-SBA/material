@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/permitio/permit-golang/pkg/permit"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"madaurus/dev/material/app/models"
@@ -77,7 +78,7 @@ func GetSectionDetails(collection *mongo.Collection) gin.HandlerFunc {
 // @Failure 400 {object} interfaces.APIResponse
 // @Failure 500 {object} interfaces.APIResponse
 // @Failure 401 {object} interfaces.APIResponse
-func CreateSection(collection *mongo.Collection) gin.HandlerFunc {
+func CreateSection(collection *mongo.Collection, client *mongo.Client, permitApi *permit.Client) gin.HandlerFunc {
 	return func(g *gin.Context) {
 		var section models.Section
 		// Block
@@ -108,7 +109,7 @@ func CreateSection(collection *mongo.Collection) gin.HandlerFunc {
 			g.JSON(http.StatusBadRequest, gin.H{"message": shared.INVALID_BODY})
 			return
 		}
-		err = services.CreateSection(g.Request.Context(), collection, section, objectCourseId)
+		err = services.CreateSection(g.Request.Context(), collection, section, objectCourseId, permitApi, client)
 		if err != nil {
 			g.JSON(http.StatusInternalServerError, gin.H{"message": shared.UNABLE_CREATE_SECTION})
 			return

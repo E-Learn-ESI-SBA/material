@@ -11,7 +11,7 @@ import (
 func LectureRoute(c *gin.Engine, collection *mongo.Collection, permitApi *permit.Client, client *mongo.Client) {
 	group := c.Group("/lecture", middlewares.Authentication())
 	group.GET("/:lectureId", handlers.GetLecture(collection))
-	group.POST("", handlers.CreateLecture(collection))
+	group.POST("", handlers.CreateLecture(collection, client, permitApi))
 	group.PUT("", handlers.UpdateLecture(collection))
 	group.DELETE("/:lectureId", handlers.DeleteLecture(collection))
 

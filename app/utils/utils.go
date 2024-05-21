@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/permitio/permit-golang/pkg/enforcement"
+	"github.com/permitio/permit-golang/pkg/models"
 	"github.com/permitio/permit-golang/pkg/permit"
 	"log"
 	"madaurus/dev/material/app/shared"
@@ -40,14 +41,24 @@ func GetAllowedResources(actionName string, resourceType string, userKey string,
 	}
 	user := enforcement.UserBuilder(userKey).Build()
 	action := enforcement.Action(actionName)
-	resources, errR := permitApi.Api.ResourceInstances.ListDetailed(ctx, 1, 100, iam.TENANT, resourceType, "")
-	if errR != nil {
-		log.Printf("Error While Checking the Permission: %v\n", errR)
-		return []string{}
+	// For loop to get all the resources
+	var resourcesArr []models.ResourceInstanceRead
+	// for loop to get to append the resources
+	for i := 1; i < 10; i++ {
+		log.Printf("it,%v", i)
+		resources, err := permitApi.Api.ResourceInstances.ListDetailed(ctx, i, 100, iam.TENANT, resourceType, "")
+		if err != nil {
+			log.Printf("Error While Checking the Permission: %v\n", err)
+			break
+		}
+		// append the resources
+		// Add resources array to resourcesArr
+		resourcesArr = append(resourcesArr, *resources...)
 	}
+
 	var singleResourceBuilder enforcement.Resource
 	var resourcesBuilders []enforcement.Resource
-	for _, resource := range *resources {
+	for _, resource := range resourcesArr {
 		singleResourceBuilder = enforcement.ResourceBuilder(resourceType).WithKey(resource.Key).WithTenant(enforcement.DefaultTenant).WithContext(requestContext).Build()
 		resourcesBuilders = append(resourcesBuilders, singleResourceBuilder)
 

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/permitio/permit-golang/pkg/permit"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
@@ -57,7 +58,7 @@ func GetLecture(collection *mongo.Collection) gin.HandlerFunc {
 // @Failure 400 {object} interfaces.APIResponse
 // @Failure 500 {object} interfaces.APIResponse
 // @Param Authorization header string true "Auth Token"
-func CreateLecture(collection *mongo.Collection) gin.HandlerFunc {
+func CreateLecture(collection *mongo.Collection, client *mongo.Client, permitApi *permit.Client) gin.HandlerFunc {
 	return func(g *gin.Context) {
 		value, errU := g.Get("user")
 		if errU != true {
@@ -83,7 +84,7 @@ func CreateLecture(collection *mongo.Collection) gin.HandlerFunc {
 			return
 		}
 		lecture.TeacherId = user.ID
-		err = services.CreateLecture(collection, g.Request.Context(), lecture, sectionObj)
+		err = services.CreateLecture(collection, g.Request.Context(), lecture, sectionObj, permitApi, client)
 		if err != nil {
 			log.Printf("Error creating lecture: %v", err.Error())
 			g.JSON(http.StatusBadRequest, gin.H{"message": shared.LECTURE_NOT_CREATED})

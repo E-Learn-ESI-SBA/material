@@ -13,7 +13,7 @@ func CourseRoute(c *gin.Engine, collection *mongo.Collection, permitApi *permit.
 	courseRoute := c.Group("/courses")
 	courseRoute.GET("/", middlewares.Authentication(), handlers.GetCoursesByTeacher(collection))
 	courseRoute.GET("/admin", middlewares.Authentication(), middlewares.StaticRBAC(iam.ROLEAdminKey), handlers.GetCoursesByAdmin(collection))
-	courseRoute.POST("/", middlewares.Authentication(), handlers.CreateCourse(collection))
+	courseRoute.POST("/", middlewares.Authentication(), handlers.CreateCourse(collection, client, permitApi))
 	courseRoute.PUT("/", middlewares.Authentication(), handlers.UpdateCourse(collection))
 	courseRoute.DELETE("/:id", middlewares.Authentication(), handlers.DeleteCourse(collection))
 

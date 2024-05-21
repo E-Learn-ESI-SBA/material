@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/permitio/permit-golang/pkg/permit"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
@@ -26,7 +27,7 @@ import (
 // @Failure 400 {object} interfaces.APIResponse
 // @Failure 500 {object} interfaces.APIResponse
 // @Router /courses [POST]
-func CreateCourse(collection *mongo.Collection) gin.HandlerFunc {
+func CreateCourse(collection *mongo.Collection, client *mongo.Client, permitApi *permit.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var course models.Course
 		err := c.ShouldBind(&course)
@@ -48,7 +49,7 @@ func CreateCourse(collection *mongo.Collection) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"message": shared.REQUIRED_ID})
 			return
 		}
-		err = services.CreateCourse(c.Request.Context(), collection, course, id)
+		err = services.CreateCourse(c.Request.Context(), collection, course, id, permitApi, client)
 		if err != nil {
 			log.Printf("Error in creating course: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
