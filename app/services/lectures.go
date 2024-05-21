@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"github.com/permitio/permit-golang/pkg/permit"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -10,6 +11,8 @@ import (
 	"log"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/shared"
+	"madaurus/dev/material/app/shared/iam"
+	"madaurus/dev/material/app/utils"
 	"time"
 )
 
@@ -47,29 +50,48 @@ func GetTeacherLecture(collection *mongo.Collection, ctx context.Context, lectur
 	return lecture.lecture, nil
 }
 
-func CreateLecture(collection *mongo.Collection, ctx context.Context, lecture models.Lecture, sectionId primitive.ObjectID) error {
-	lecture.ID = primitive.NewObjectID()
-	lecture.CreatedAt = time.Now()
-	log.Printf("Section id: %v\n", sectionId)
-	lecture.UpdatedAt = lecture.CreatedAt
-	filter := bson.M{"courses.sections._id": sectionId}
-	update := bson.M{
-		"$push": bson.M{
-			"courses.$[course].sections.$[section].lectures": lecture,
-		},
-	}
-	arrayFilters := bson.A{
-		bson.M{"course.sections._id": sectionId},
-		bson.M{"section._id": sectionId},
-	}
-	opts := options.FindOneAndUpdate().SetArrayFilters(options.ArrayFilters{Filters: arrayFilters})
-	rs := collection.FindOneAndUpdate(ctx, filter, update, opts)
-	err := rs.Err()
+func CreateLecture(collection *mongo.Collection, ctx context.Context, lecture models.Lecture, sectionId primitive.ObjectID, permitApi *permit.Client, client *mongo.Client) error {
+	session, err := client.StartSession()
 	if err != nil {
 		log.Printf("Error While Creating Lecture: %v\n", err)
 		return errors.New(shared.LECTURE_NOT_CREATED)
+
 	}
-	return nil
+	defer session.EndSession(ctx)
+	_, err = session.WithTransaction(ctx, func(sessionContext mongo.SessionContext) (interface{}, error) {
+
+		lecture.ID = primitive.NewObjectID()
+		lecture.CreatedAt = time.Now()
+		log.Printf("Section id: %v\n", sectionId)
+		lecture.UpdatedAt = lecture.CreatedAt
+		filter := bson.M{"courses.sections._id": sectionId}
+		update := bson.M{
+			"$push": bson.M{
+				"courses.$[course].sections.$[section].lectures": lecture,
+			},
+		}
+		arrayFilters := bson.A{
+			bson.M{"course.sections._id": sectionId},
+			bson.M{"section._id": sectionId},
+		}
+		opts := options.FindOneAndUpdate().SetArrayFilters(options.ArrayFilters{Filters: arrayFilters})
+		rs := collection.FindOneAndUpdate(ctx, filter, update, opts)
+		err = rs.Err()
+		if err != nil {
+			sessionContext.AbortTransaction(ctx)
+			log.Printf("Error While Creating Lecture: %v\n", err)
+			return nil, errors.New(shared.LECTURE_NOT_CREATED)
+		}
+		sectionIdStr := sectionId.Hex()
+		err = utils.CreateResourceInstance(permitApi, "lectures", lecture.ID.Hex(), &sectionIdStr, &iam.SECTIONS, &iam.PARENT)
+		if err != nil {
+			sessionContext.AbortTransaction(ctx)
+			log.Printf("Error While Creating Resource Instance: %v\n", err)
+			return nil, errors.New(shared.LECTURE_NOT_CREATED)
+		}
+		return nil, nil
+	})
+	return err
 }
 
 func UpdateLecture(collection *mongo.Collection, ctx context.Context, lecture models.Lecture) error {

@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"time"
 
@@ -33,8 +34,41 @@ func DBHandler(uri string) (*mongo.Client, error) {
 }
 
 func ModuleCollection(client *mongo.Client, CollectionName string) *mongo.Collection {
-	return client.Database("materials").Collection(CollectionName)
+	collection := client.Database("materials").Collection(CollectionName)
 
+	indexModels := []mongo.IndexModel{
+		{
+			Keys:    bson.D{{Key: "_id", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+		{
+			Keys:    bson.D{{Key: "courses._id", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+		{
+			Keys:    bson.D{{Key: "courses.sections._id", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+		{
+			Keys:    bson.D{{Key: "courses.sections.files._id", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+		{
+			Keys:    bson.D{{Key: "courses.sections.videos._id", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+		{
+			Keys:    bson.D{{Key: "courses.sections.lectures._id", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+	}
+
+	_, err := collection.Indexes().CreateMany(context.Background(), indexModels)
+	if err != nil {
+		log.Printf("Failed to create indexes: %v", err)
+	}
+
+	return collection
 }
 
 /*

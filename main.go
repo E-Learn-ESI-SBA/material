@@ -4,7 +4,6 @@ import (
 	"log"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/routes"
-	"madaurus/dev/material/app/shared"
 	"madaurus/dev/material/app/utils"
 	"net/http"
 	"os"
@@ -47,8 +46,12 @@ func main() {
 		AllowHeaders:    []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-CSRF-Token", "hx-request", "hx-current-url"},
 		MaxAge:          12 * time.Hour,
 	}
-	k := shared.GetSecrets()
-	uri := k.String("database_uri")
+	//	k := shared.GetSecrets()
+	uri := os.Getenv("database_uri")
+	if uri == "" {
+		log.Fatal("Database URI not set")
+	}
+
 	log.Println("Db Url %v", uri)
 	client, err := models.DBHandler(uri)
 	if err != nil {
@@ -65,7 +68,7 @@ func main() {
 	}
 	server := gin.New()
 	errSentry := sentry.Init(sentry.ClientOptions{
-		Dsn:           k.String("sentry_dsn"),
+		Dsn:           os.Getenv("sentry_dsn"),
 		EnableTracing: true,
 		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
 			if hint.Context != nil {
@@ -77,11 +80,6 @@ func main() {
 		},
 		Debug: true,
 	})
-	err = os.Setenv("JWT_SECRET", k.String("JWT_SECRET"))
-	if err != nil {
-		log.Fatal("JWT_SECRET not set")
-
-	}
 
 	if errSentry != nil {
 		log.Fatalf("sentry.Init: %s", errSentry)
@@ -115,7 +113,7 @@ func main() {
 			Avatar:   "",
 			Year:     "3",
 		}
-		token, _ := utils.GenerateToken(user, k.String("JWT_SECRET"))
+		token, _ := utils.GenerateToken(user, os.Getenv("JWT_SECRET"))
 		c.Request.Header.Set("Authorization", "Bearer "+token)
 		c.SetCookie("accessToken", token, 3600, "/", "localhost", false, false)
 		c.JSON(200, gin.H{"token": token})

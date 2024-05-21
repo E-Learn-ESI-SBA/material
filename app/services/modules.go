@@ -306,17 +306,19 @@ func GetModulesByTeacher(ctx context.Context, collection *mongo.Collection, teac
 }
 func ModuleSelector(ctx context.Context, collection *mongo.Collection, modulesId []string) ([]models.Module, error) {
 	var modules []models.Module
-	modulesIds := make([]primitive.ObjectID, len(modulesId))
+	modulesIds := make([]primitive.ObjectID, len(modulesId)+1, len(modulesId)+1)
 	for i, module := range modulesId {
 		modulesIds[i], _ = primitive.ObjectIDFromHex(module)
 	}
-	opts := options.Find().SetProjection(bson.D{{"courses", 0}})
+	log.Printf("Len %v", modulesIds)
+	opts := options.Find().SetProjection(bson.D{{"courses", 0}}).SetSort(bson.D{{"year", 1}})
 	filter := bson.D{{"_id", bson.D{{"$in", modulesIds}}}}
 	cursor, err := collection.Find(ctx, filter, opts)
 	if err != nil {
 		log.Printf("Error While Getting the Modules %v", err.Error())
 		return modules, errors.New(shared.UNABLE_GET_MODULES)
 	}
+
 	cursorError := cursor.All(ctx, &modules)
 	if cursorError != nil {
 		log.Printf("Error While Getting the Modules %v", cursorError.Error())

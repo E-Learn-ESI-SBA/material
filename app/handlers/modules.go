@@ -120,7 +120,7 @@ func GetModuleByTeacher(collection *mongo.Collection, permit *permit.Client) gin
 		}
 		user := value.(*utils.UserDetails)
 		// Change it for #production
-		RKeys := utils.GetAllowedResources("read", "modules", "2", permit)
+		RKeys := utils.GetAllowedResources("read", "modules", user.ID, permit)
 		if len(RKeys) == 0 {
 			log.Println("The Key is null")
 			modules, err := services.GetModulesByTeacher(c.Request.Context(), collection, user.ID)

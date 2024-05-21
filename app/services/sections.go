@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"github.com/permitio/permit-golang/pkg/permit"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -10,6 +11,8 @@ import (
 	"log"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/shared"
+	"madaurus/dev/material/app/shared/iam"
+	"madaurus/dev/material/app/utils"
 )
 
 func GetSectionsByCourse(ctx context.Context, collection *mongo.Collection, moduleId string) ([]models.Section, error) {
@@ -124,17 +127,36 @@ func EditSection(ctx context.Context, collection *mongo.Collection, section mode
 	return nil
 }
 
-func CreateSection(ctx context.Context, collection *mongo.Collection, section models.Section, courseId primitive.ObjectID) error {
+func CreateSection(ctx context.Context, collection *mongo.Collection, section models.Section, courseId primitive.ObjectID, premitApi *permit.Client, client *mongo.Client) error {
 	section.Files = []models.Files{}
 	section.Videos = []models.Video{}
 	section.Lectures = []models.Lecture{}
-	rs := collection.FindOneAndUpdate(ctx, bson.D{{"courses._id", courseId}}, bson.D{{"$push", bson.D{{"courses.$.sections", section}}}})
-	err := rs.Err()
+	session, err := client.StartSession()
 	if err != nil {
-		log.Printf("Error inserting section: %v", err)
+		log.Printf("Error starting session: %v", err)
 		return errors.New(shared.UNABLE_CREATE_SECTION)
+
 	}
-	return nil
+	defer session.EndSession(ctx)
+	_, err = session.WithTransaction(ctx, func(sessionCtx mongo.SessionContext) (interface{}, error) {
+		rs := collection.FindOneAndUpdate(ctx, bson.D{{"courses._id", courseId}}, bson.D{{"$push", bson.D{{"courses.$.sections", section}}}})
+		err = rs.Err()
+		if err != nil {
+			sessionCtx.AbortTransaction(ctx)
+			log.Printf("Error inserting section: %v", err)
+			return nil, errors.New(shared.UNABLE_CREATE_SECTION)
+		}
+		courseIdStr := courseId.Hex()
+		err = utils.CreateResourceInstance(premitApi, "sections", section.ID.Hex(), &courseIdStr, &iam.CHAPTERS, &iam.PARENT)
+		if err != nil {
+			sessionCtx.AbortTransaction(ctx)
+			log.Printf("Error creating resource instance: %v", err)
+			return nil, errors.New(shared.UNABLE_CREATE_SECTION)
+		}
+		return nil, nil
+	})
+
+	return err
 }
 
 func DeleteSection(ctx context.Context, collection *mongo.Collection, sectionId primitive.ObjectID, teacherId string) error {

@@ -3,43 +3,65 @@ package services
 import (
 	"context"
 	"errors"
+	"github.com/permitio/permit-golang/pkg/permit"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/shared"
+	"madaurus/dev/material/app/shared/iam"
+	"madaurus/dev/material/app/utils"
 	"time"
 )
 
-func CreateCourse(ctx context.Context, collection *mongo.Collection, course models.Course, moduleId primitive.ObjectID) error {
+func CreateCourse(ctx context.Context, collection *mongo.Collection, course models.Course, moduleId primitive.ObjectID, permitApi *permit.Client, client *mongo.Client) error {
 	// instead of insert , find the module from moduleId  , then insert the course in the courses array of the module
 	course.ID = primitive.NewObjectID()
 	createdAt := time.Now()
 	course.CreatedAt = createdAt
 	course.UpdatedAt = createdAt
+	session, errS := client.StartSession()
+	if errS != nil {
+		log.Printf("Error While Creating Course: %v\n", errS)
+		return errS
+	}
+	transactionOption := options.Transaction().SetReadPreference(readpref.Primary())
+	session.StartTransaction(transactionOption)
 	course.Sections = []models.Section{}
 	rs, err := collection.UpdateOne(ctx, bson.D{{"_id", moduleId}}, bson.D{{"$push", bson.D{{"courses", course}}}})
 	if err != nil {
+		session.AbortTransaction(ctx)
 		log.Printf("Error While Creating Course: %v\n", err)
 		return err
 
 	}
 	if rs.ModifiedCount == 0 {
+		session.AbortTransaction(ctx)
 		log.Printf("No Course Created: %v\n", err)
 		return errors.New(shared.UNABLE_CREATE_COURSE)
 	}
 
-	/*
-		result, err := collection.InsertOne(ctx, course)
-		log.Printf("Course Created: %v\n", result.InsertedID)
-		if err != nil {
-			log.Printf("Error While Creating Course: %v\n", err)
-			return err
-		}
+	moduleIdstr := moduleId.Hex()
+	err = utils.CreateResourceInstance(permitApi, iam.CHAPTERS, course.ID.Hex(), &moduleIdstr, &iam.MODULES, &iam.PARENT)
+	if err != nil {
+		session.AbortTransaction(ctx)
+		log.Printf("Error While Creating Course: %v\n", err)
+		return err
 
-	*/
+	}
+	err = session.CommitTransaction(ctx)
+	if err != nil {
+		log.Printf("Error While Creating Course: %v\n", err)
+		return err
+	}
+	defer func() {
+		session.EndSession(ctx)
+
+	}()
+
 	return nil
 }
 func UpdateCourse(ctx context.Context, collection *mongo.Collection, course models.Course, teacherId string, moduleId primitive.ObjectID) error {

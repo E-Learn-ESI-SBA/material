@@ -49,11 +49,11 @@ func GetLectures() []models.Lecture {
 		Content:   content,
 		TeacherId: "12",
 		IsPublic:  false,
-		Group:     "Group 1",
+		Groups:    "Group 1",
 	})
 	lectures = append(lectures, models.Lecture{
 		Name:      "Lecture 2",
-		Group:     "Group 1",
+		Groups:    "Group 1",
 		Content:   content,
 		IsPublic:  false,
 		TeacherId: "12",
@@ -63,7 +63,7 @@ func GetLectures() []models.Lecture {
 		Content:   content,
 		IsPublic:  false,
 		TeacherId: "15",
-		Group:     "Group 1",
+		Groups:    "Group 1",
 	})
 	return lectures
 }

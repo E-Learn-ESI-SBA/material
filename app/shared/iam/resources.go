@@ -1,9 +1,9 @@
 package iam
 
-const (
-	TENANT   = "default"
-	MODULES  = "modules"
-	CHAPTERS = "chapters"
-	LECTURES = "lectures"
-	FILES    = "files"
-)
+var TENANT = "default"
+var MODULES = "modules"
+var CHAPTERS = "chapters"
+var LECTURES = "lectures"
+var FILES = "files"
+var VIDEOS = "videos"
+var SECTIONS = "sections"
