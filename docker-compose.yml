@@ -15,7 +15,7 @@ services:
       - 27017:27017
     # volumes:
     #   - mongo:/data/db
-    #   - storage:/app/storage
+    #   - storage:/startup/storage
     environment:
       - MONGO_INITDB_NAME=materials
       - JWT_SECRET=aTZ6czFOcTFHekRrZEJHUTB5cFlZZ0M1aXQyR3FiNlltaWx5aDJFUWpIQT0K

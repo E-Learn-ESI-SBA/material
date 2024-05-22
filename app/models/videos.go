@@ -11,6 +11,7 @@ type Video struct {
 	Url       string             `json:"url" bson:"url" validate:"required"`
 	TeacherId string             `json:"teacher_id" bson:"teacher_id"`
 	Name      string             `json:"name" bson:"name"  binding:"required"`
+	Score     int                `json:"score" bson:"score"  `
 	CreatedAt time.Time          `json:"created_at,omitempty" bson:"created_at"`
 	UpdatedAt time.Time          `json:"updated_at,omitempty" bson:"updated_at"`
 }

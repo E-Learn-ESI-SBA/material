@@ -182,3 +182,7 @@ func DeletePhysicalVideo(videoUrl string) error {
 	}
 	return nil
 }
+func OnCompleteVideo(ctx context.Context, collection *mongo.Collection, videoId primitive.ObjectID) error {
+
+	return nil
+}

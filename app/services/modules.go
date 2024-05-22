@@ -385,3 +385,14 @@ func GetModulesByAdmin(ctx context.Context, collection *mongo.Collection) ([]mod
 	}(cursor, ctx)
 	return modules, nil
 }
+
+func GetModuleByIdOverview(ctx context.Context, collection *mongo.Collection, moduleId primitive.ObjectID) (models.Module, error) {
+	var module models.Module
+	opts := options.FindOne().SetProjection(bson.D{{"courses", 0}})
+	err := collection.FindOne(ctx, bson.D{{"_id", moduleId}}, opts).Decode(&module)
+	if err != nil {
+		log.Printf("Error while retriving the single module:  %v", err.Error())
+		return module, errors.New(shared.UNABLE_GET_MODULE)
+	}
+	return module, nil
+}

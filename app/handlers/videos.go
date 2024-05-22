@@ -92,3 +92,18 @@ func EditVideo(collection *mongo.Collection) gin.HandlerFunc {
 
 	}
 }
+
+func OnCompleteVideo(collection *mongo.Collection) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		videoId := c.Param("id")
+		videoObjId, errD := primitive.ObjectIDFromHex(videoId)
+		if errD != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.REQUIRED_ID})
+			return
+		}
+		err := services.OnCompleteVideo(c.Request.Context(), collection, videoObjId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		}
+	}
+}

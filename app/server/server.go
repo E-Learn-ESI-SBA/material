@@ -1,0 +1,122 @@
+package server
+
+import (
+	"context"
+	"fmt"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/permitio/permit-golang/pkg/permit"
+	"go.mongodb.org/mongo-driver/mongo"
+	"madaurus/dev/material/app/interfaces"
+	"madaurus/dev/material/app/logs"
+	"madaurus/dev/material/app/middlewares"
+	"madaurus/dev/material/app/routes"
+	"madaurus/dev/material/app/startup"
+	"math/rand"
+	"net/http"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
+)
+
+type GracefulServer struct {
+	httpServer  *http.Server
+	stopping    chan bool
+	status      bool //server 状态
+	App         *interfaces.Application
+	MongoClient *mongo.Client
+	Permit      *permit.Client
+	sync.Mutex
+}
+
+func NewGracefulServer() *GracefulServer {
+	return &GracefulServer{
+		stopping: make(chan bool),
+		status:   false,
+	}
+}
+
+func (s *GracefulServer) Run() *GracefulServer {
+	s.Lock()
+	defer s.Unlock()
+	if s.status {
+		return s
+	}
+
+	s.status = true
+	s.onBoot()
+	go s.listenSign()
+	go s.runServer()
+	return s
+}
+
+func (s *GracefulServer) listenSign() {
+	listener := make(chan os.Signal)
+	signal.Notify(listener, syscall.SIGTERM, syscall.SIGINT)
+	<-listener
+	s.stopping <- true
+}
+
+func (s *GracefulServer) runServer() {
+	defer func() {
+		if err := recover(); err != nil {
+			s.stopping <- false
+		}
+	}()
+	gin.ForceConsoleColor()
+	engine := gin.New()
+	s.initMiddleware(engine)
+	routes.InitRoutes(s.App, s.Permit, s.MongoClient, engine)
+	Addr := fmt.Sprintf(":%d", startup.ServerSetting.HttpPort)
+	s.httpServer = &http.Server{
+		Addr:              Addr,
+		Handler:           engine,
+		ReadTimeout:       6 * time.Second,
+		WriteTimeout:      6 * time.Second,
+		ReadHeaderTimeout: 500 * time.Millisecond,
+		MaxHeaderBytes:    1 << 20, // 1 MB
+	}
+
+	err := s.httpServer.ListenAndServe()
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
+func (s *GracefulServer) Wait() {
+	if ok := <-s.stopping; ok {
+		logs.Info("The application is exiting...")
+	} else {
+		logs.Warn("The application has an exception and is exiting...")
+	}
+
+	ctx, cancelTimer := context.WithTimeout(context.Background(), 10*time.Second)
+	defer func() {
+		cancelTimer()
+		s.onShutDown()
+	}()
+
+	err := s.httpServer.Shutdown(ctx)
+	if err != nil {
+		logs.Error("The application shutdown error")
+	}
+}
+
+func (s *GracefulServer) initMiddleware(engine *gin.Engine) {
+	engine.Use(gin.Logger())
+	engine.Use(middlewares.Time())
+	engine.Use(cors.Default())
+}
+
+func (s *GracefulServer) onBoot() {
+	rand.NewSource(time.Now().UnixNano())
+	var conf *interfaces.Conf
+	s.MongoClient, s.App, s.Permit, conf = startup.Setup()
+	logs.Setup(conf.App)
+}
+
+func (s *GracefulServer) onShutDown() {
+
+}

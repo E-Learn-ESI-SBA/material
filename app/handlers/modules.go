@@ -326,7 +326,22 @@ func GetModuleByStudent(collection *mongo.Collection) gin.HandlerFunc {
 		context.JSON(http.StatusOK, gin.H{"data": modules})
 	}
 }
-
+func GetModuleByIdOverview(collection *mongo.Collection) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+		moduleId, errD := primitive.ObjectIDFromHex(id)
+		if errD != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.REQUIRED_ID})
+			return
+		}
+		module, err := services.GetModuleByIdOverview(c.Request.Context(), collection, moduleId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"data": module})
+	}
+}
 func GetModulesByAdmin(collection *mongo.Collection) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		modules, err := services.GetModulesByAdmin(context.Request.Context(), collection)

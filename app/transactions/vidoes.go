@@ -14,6 +14,7 @@ import (
 	"madaurus/dev/material/app/utils"
 	"net/http"
 	"path"
+	"strconv"
 	"time"
 )
 
@@ -41,8 +42,14 @@ func CreateVideo(collection *mongo.Collection, client *mongo.Client, permitApi *
 		sectionIdObj, errD := primitive.ObjectIDFromHex(sectionId)
 		video.TeacherId = user.ID
 		video.Groups = c.PostFormArray("groups")
-		video.Name = c.PostForm("name")
+		// Convert score string to integer
 
+		score, errC := strconv.Atoi(c.PostForm("score"))
+		if errC != nil {
+			score = 0
+		}
+		video.Score = score
+		video.Name = c.PostForm("name")
 		videoFile, errF := c.FormFile("video")
 		if videoFile.Size > 250*1024*1024 {
 			c.JSON(http.StatusRequestEntityTooLarge, gin.H{"message": shared.FILE_TOO_LARGE})

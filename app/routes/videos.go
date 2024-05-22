@@ -13,5 +13,6 @@ func VideoRouter(e *gin.Engine, collection *mongo.Collection, permitApi *permit.
 	videos.GET("/stream/:id", middlewares.Authentication(), handlers.GetStreamVideo(collection))
 	videos.GET("/:id", handlers.GetVideo(collection))
 	videos.PUT("/:id", middlewares.Authentication(), handlers.EditVideo(collection))
+	videos.PATCH("/complete/:id", middlewares.Authentication(), handlers.OnCompleteVideo(collection))
 
 }
