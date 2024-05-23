@@ -20,15 +20,10 @@ var DatabaseSetting = &interfaces.Database{}
 
 var RedisSetting = &interfaces.Redis{}
 
-type Kafka struct {
-	Host         string
-	DefaultTopic string
-}
-
 var AppSetting = &interfaces.App{}
 
 var SentrySetting = &interfaces.Sentry{}
-var KafkaSetting = &Kafka{}
+var KafkaSetting = &interfaces.Kafka{}
 
 var cfg *ini.File
 

@@ -76,3 +76,8 @@ type GracefulServer struct {
 	Permit      *permit.Client
 	sync.Mutex
 }
+
+type Kafka struct {
+	Host         string
+	DefaultTopic string
+}
