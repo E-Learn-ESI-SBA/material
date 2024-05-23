@@ -87,13 +87,13 @@ type Application struct {
 	SubmissionsCollection *mongo.Collection
 }
 
-func (p *Application) NewApp(client *mongo.Client) {
-	p = &Application{
+func NewApp(client *mongo.Client) *Application {
+	return &Application{
 		ModuleCollection:      ModuleCollection(client, "modules"),
 		CommentsCollection:    CommentCollection(client, "comments"),
 		UserCollection:        UserCollection(client, "users"),
 		QuizesCollection:      QuizesCollection(client, "quizes"),
-		SubmissionsCollection: GradesCollection(client, "submissions"),
+		SubmissionsCollection: CommentCollection(client, "submissions"),
 	}
 
 }

@@ -43,79 +43,82 @@ func GetSectionsByCourse(ctx context.Context, collection *mongo.Collection, modu
 	return sections, nil
 }
 
-func GetSectionDetailsById(ctx context.Context, collection *mongo.Collection, sectionId string, pips ...bson.M) (models.ExtendedSection, error) {
-	var sections models.ExtendedSection
-	id, errId := primitive.ObjectIDFromHex(sectionId)
-	if errId != nil {
-		log.Printf("Error While Parsing Section ID: %v\n", errId)
-		return sections, errId
-	}
-	pipeline := bson.A{
-		bson.M{
-			"$match": bson.M{"_id": id},
-		},
-		bson.M{
-			"$lookup": bson.M{
-				"from":         "videos",
-				"localField":   "_id",
-				"foreignField": "section_id",
-				"as":           "videos",
-			},
-		}, bson.M{
-			"$lookup": bson.M{
-				"from":         "files",
-				"localField":   "_id",
-				"foreignField": "section_id",
-				"as":           "files",
-			}}, bson.M{
-			"$lookup": bson.M{
-				"from":         "lectures",
-				"localField":   "_id",
-				"foreignField": "section_id",
-				"as":           "lectures",
-			},
-		},
-	}
-	for _, pip := range pips {
-		pipeline = append(pipeline, pip)
-	}
-	cursor, err := collection.Aggregate(ctx, pipeline)
-	if err != nil {
-		log.Printf("Error While Getting Lectures By Module: %v\n", err)
-		return sections, err
-
-	}
-	cursorError := cursor.All(ctx, &sections)
-	if cursorError != nil {
-		log.Printf("Error While Parsing Lectures By Module: %v\n", cursorError)
-		return sections, cursorError
-	}
-	return sections, nil
-}
-func GetSectionFromStudent(ctx context.Context, SectionCollection *mongo.Collection, sectionId string, studentId string) (models.ExtendedSection, error) {
-	pip := bson.M{
-		"$lookup": bson.M{
-			"from":         "student_notes",
-			"localField":   "_id",
-			"foreignField": "section_id",
-			"as":           "notes",
-		},
-	}
-	extendedSection, err := GetSectionDetailsById(ctx, SectionCollection, sectionId, pip)
-	if err != nil {
-		log.Printf("Error While Getting Section By Student: %v\n", err)
-		return models.ExtendedSection{}, err
-	}
-	filteredNotes := make([]models.StudentNote, 0)
-	notes := extendedSection.Notes
-	for _, note := range *notes {
-		if note.StudentID == studentId {
-			filteredNotes = append(filteredNotes, note)
+/*
+	func GetSectionDetailsById(ctx context.Context, collection *mongo.Collection, sectionId string, pips ...bson.M) (models.ExtendedSection, error) {
+		var sections models.ExtendedSection
+		id, errId := primitive.ObjectIDFromHex(sectionId)
+		if errId != nil {
+			log.Printf("Error While Parsing Section ID: %v\n", errId)
+			return sections, errId
 		}
+		pipeline := bson.A{
+			bson.M{
+				"$match": bson.M{"_id": id},
+			},
+			bson.M{
+				"$lookup": bson.M{
+					"from":         "videos",
+					"localField":   "_id",
+					"foreignField": "section_id",
+					"as":           "videos",
+				},
+			}, bson.M{
+				"$lookup": bson.M{
+					"from":         "files",
+					"localField":   "_id",
+					"foreignField": "section_id",
+					"as":           "files",
+				}}, bson.M{
+				"$lookup": bson.M{
+					"from":         "lectures",
+					"localField":   "_id",
+					"foreignField": "section_id",
+					"as":           "lectures",
+				},
+			},
+		}
+		for _, pip := range pips {
+			pipeline = append(pipeline, pip)
+		}
+		cursor, err := collection.Aggregate(ctx, pipeline)
+		if err != nil {
+			log.Printf("Error While Getting Lectures By Module: %v\n", err)
+			return sections, err
+
+		}
+		cursorError := cursor.All(ctx, &sections)
+		if cursorError != nil {
+			log.Printf("Error While Parsing Lectures By Module: %v\n", cursorError)
+			return sections, cursorError
+		}
+		return sections, nil
 	}
-	extendedSection.Notes = &filteredNotes
-	return extendedSection, nil
-}
+
+	func GetSectionFromStudent(ctx context.Context, SectionCollection *mongo.Collection, sectionId string, studentId string) (models.ExtendedSection, error) {
+		pip := bson.M{
+			"$lookup": bson.M{
+				"from":         "student_notes",
+				"localField":   "_id",
+				"foreignField": "section_id",
+				"as":           "notes",
+			},
+		}
+		extendedSection, err := GetSectionDetailsById(ctx, SectionCollection, sectionId, pip)
+		if err != nil {
+			log.Printf("Error While Getting Section By Student: %v\n", err)
+			return models.ExtendedSection{}, err
+		}
+		filteredNotes := make([]models.StudentNote, 0)
+		notes := extendedSection.Notes
+		for _, note := range *notes {
+			if note.StudentID == studentId {
+				filteredNotes = append(filteredNotes, note)
+			}
+		}
+		extendedSection.Notes = &filteredNotes
+		return extendedSection, nil
+	}
+*/
 func EditSection(ctx context.Context, collection *mongo.Collection, section models.Section, sectionId primitive.ObjectID, teacherId string) error {
 	// update only the name
 	rs := collection.FindOneAndUpdate(ctx, bson.D{{"courses.sections._id", sectionId}, {"teacher_id", teacherId}}, bson.D{{"$set", bson.D{{"courses.sections.$.name", section.Name}}}})
@@ -176,7 +179,7 @@ func DeleteSection(ctx context.Context, collection *mongo.Collection, sectionId 
 }
 
 type SectionWithChapterName struct {
-	ChapterName string
+	ChapterName string `json:"chapter_name"`
 	models.Section
 }
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"madaurus/dev/material/app/configs"
-	"madaurus/dev/material/app/interfaces"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -18,9 +17,12 @@ var (
 	DefaultPrefix      = ""
 	DefaultCallerDepth = 2
 
-	logger     *log.Logger
-	logPrefix  = ""
-	levelFlags = []string{"DEBUG", "INFO", "WARN", "ERROR", "FATAL"}
+	logger      *log.Logger
+	InfoLogger  *log.Logger = log.New(os.Stdout, "INFO", log.LstdFlags)
+	ErrorLogger *log.Logger = log.New(os.Stderr, "ERROR", log.LstdFlags)
+	DebugLogger *log.Logger = log.New(os.Stdout, "DEBUG", log.LstdFlags)
+	logPrefix               = ""
+	levelFlags              = []string{"DEBUG", "INFO", "WARN", "ERROR", "FATAL"}
 )
 
 const (
@@ -31,10 +33,10 @@ const (
 	FATAL
 )
 
-func Setup(AppSetting *interfaces.App) {
+func Setup() {
 	var err error
-	filePath := getLogFilePath(AppSetting)
-	fileName := getLogFileName(AppSetting)
+	filePath := getLogFilePath()
+	fileName := getLogFileName()
 	log.Printf("filePath: %s", filePath)
 	F, err := configs.MustOpen(fileName, filePath)
 	if err != nil {
@@ -46,24 +48,31 @@ func Setup(AppSetting *interfaces.App) {
 func Debug(v ...interface{}) {
 	setPrefix(DEBUG)
 	logger.Println(v)
+	return
+
 }
 
 // output logs at info level
 func Info(v ...interface{}) {
 	setPrefix(INFO)
-	logger.Println(v)
+	InfoLogger.Println(v)
+	return
+
 }
 
 // output logs at warn level
 func Warn(v ...interface{}) {
 	setPrefix(WARNING)
 	logger.Println(v)
+	return
+
 }
 
 // output logs at error level
 func Error(v ...interface{}) {
 	setPrefix(ERROR)
-	logger.Println(v)
+	ErrorLogger.Println(v)
+	return
 }
 
 // output logs at fatal level

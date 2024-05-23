@@ -19,8 +19,7 @@ func InitRoutes(App *interfaces.Application, permitApi *permit.Client, MongoClie
 	FileRouter(engine, App.ModuleCollection, permitApi, MongoClient)
 	VideoRouter(engine, App.ModuleCollection, permitApi, MongoClient)
 	QuizRoute(engine, App.QuizesCollection, App.ModuleCollection, App.SubmissionsCollection)
-	url := "http://localhost:8080/swagger/doc.json"
-	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler, ginSwagger.URL(url)))
+	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	engine.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "Welcome to Madaurus Material Services"})
 	})

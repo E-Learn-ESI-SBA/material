@@ -40,6 +40,7 @@ func GetSections(collection *mongo.Collection) gin.HandlerFunc {
 	}
 }
 
+/*
 // @Summary Get Section Details
 // @Description Protected Route Get Section Details
 // @Accept json
@@ -66,7 +67,7 @@ func GetSectionDetails(collection *mongo.Collection) gin.HandlerFunc {
 		g.JSON(200, gin.H{"section": section})
 	}
 }
-
+*/
 // @Summary Create Section
 // @Description Protected Route Create Section
 // @Accept json
@@ -203,48 +204,39 @@ func DeleteSection(collection *mongo.Collection) gin.HandlerFunc {
 	}
 }
 
-func GetSectionsByStudent(collection *mongo.Collection) gin.HandlerFunc {
-	return func(g *gin.Context) {
-		sectionId, err := g.Params.Get("sectionId")
-		value, errU := g.Get("user")
-		user := value.(*utils.UserDetails)
-		if !errU {
-			g.JSON(401, gin.H{"error": "Session Not Found"})
+/*
+	func GetSectionsByStudent(collection *mongo.Collection) gin.HandlerFunc {
+		return func(g *gin.Context) {
+			sectionId, err := g.Params.Get("sectionId")
+			value, errU := g.Get("user")
+			user := value.(*utils.UserDetails)
+			if !errU {
+				g.JSON(401, gin.H{"error": "Session Not Found"})
 
-		}
-		studentId := user.ID
+			}
+			studentId := user.ID
 
-		if !err {
-			g.JSON(400, gin.H{"error": "SectionId is required"})
-			return
-		}
+			if !err {
+				g.JSON(400, gin.H{"error": "SectionId is required"})
+				return
+			}
 
-		data, errP := services.GetSectionFromStudent(g.Request.Context(), collection, sectionId, studentId)
-		if errP != nil {
-			g.JSON(400, gin.H{"error": errP.Error()})
-			return
+			data, errP := services.GetSectionFromStudent(g.Request.Context(), collection, sectionId, studentId)
+			if errP != nil {
+				g.JSON(400, gin.H{"error": errP.Error()})
+				return
+			}
+			g.JSON(200, gin.H{"data": data})
 		}
-		g.JSON(200, gin.H{"data": data})
 	}
-}
-func GetSectionByAdmin(collection *mongo.Collection) gin.HandlerFunc {
+*/
+func GetSectionsByAdmin(collection *mongo.Collection) gin.HandlerFunc {
 	return func(g *gin.Context) {
-		sectionId, err := g.Params.Get("sectionId")
-		value, errU := g.Get("user")
-		user := value.(*utils.UserDetails)
-		if !errU {
-			g.JSON(http.StatusInternalServerError, gin.H{"message": shared.USER_NOT_INJECTED})
-		}
-		studentId := user.ID
-		if !err {
-			g.JSON(http.StatusBadRequest, gin.H{"message": shared.UNABLE_GET_SECTION})
-			return
-		}
-		data, errP := services.GetSectionFromStudent(g.Request.Context(), collection, sectionId, studentId)
+		data, errP := services.GetSectionsByAdmin(g.Request.Context(), collection)
 		if errP != nil {
 			g.JSON(http.StatusBadRequest, gin.H{"message": errP.Error()})
 			return
 		}
-		g.JSON(200, gin.H{"data": data})
+		g.JSON(http.StatusOK, gin.H{"data": data})
 	}
 }

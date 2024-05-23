@@ -14,5 +14,5 @@ func SectionRouter(engine *gin.Engine, collection *mongo.Collection, permitApi *
 	section.POST("/", middlewares.Authentication(), handlers.CreateSection(collection, client, permitApi))
 	section.PUT("/", middlewares.Authentication(), handlers.EditSection(collection))
 	section.DELETE("/:sectionId", middlewares.Authentication(), handlers.DeleteSection(collection))
-	section.GET("/admin", middlewares.Authentication(), middlewares.StaticRBAC(iam.ROLEAdminKey), handlers.GetSectionByAdmin(collection))
+	section.GET("/admin", middlewares.Authentication(), middlewares.StaticRBAC(iam.ROLEAdminKey), handlers.GetSectionsByAdmin(collection))
 }

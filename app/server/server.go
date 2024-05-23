@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/permitio/permit-golang/pkg/permit"
 	"go.mongodb.org/mongo-driver/mongo"
+	"log"
 	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/logs"
 	"madaurus/dev/material/app/middlewares"
@@ -112,9 +113,9 @@ func (s *GracefulServer) initMiddleware(engine *gin.Engine) {
 
 func (s *GracefulServer) onBoot() {
 	rand.NewSource(time.Now().UnixNano())
-	var conf *interfaces.Conf
-	s.MongoClient, s.App, s.Permit, conf = startup.Setup()
-	logs.Setup(conf.App)
+	s.MongoClient, s.App, s.Permit = startup.Setup()
+	logs.Setup()
+	log.Printf("Server is running on port: %d", s.App.ModuleCollection.Name())
 }
 
 func (s *GracefulServer) onShutDown() {

@@ -238,7 +238,7 @@ func GetModuleById(collection *mongo.Collection) gin.HandlerFunc {
 			c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
 			return
 		}
-		c.JSON(200, gin.H{"module": module})
+		c.JSON(200, gin.H{"data": module})
 	}
 }
 

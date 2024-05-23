@@ -177,8 +177,7 @@ func vGetModuleById(ctx context.Context, collection *mongo.Collection, moduleId 
 func GetModuleById(ctx context.Context, collection *mongo.Collection, moduleId primitive.ObjectID) (models.Module, error) {
 
 	var module models.Module
-	opts := options.FindOne().SetProjection(bson.D{{"courses", 1}})
-	err := collection.FindOne(ctx, bson.D{{"_id", moduleId}}, opts).Decode(&module)
+	err := collection.FindOne(ctx, bson.D{{"_id", moduleId}}).Decode(&module)
 	if err != nil {
 		log.Printf("Error while retriving the single module:  %v", err.Error())
 		return module, errors.New(shared.UNABLE_GET_MODULE)
@@ -305,10 +304,12 @@ func GetModulesByTeacher(ctx context.Context, collection *mongo.Collection, teac
 	return modules, nil
 }
 func ModuleSelector(ctx context.Context, collection *mongo.Collection, modulesId []string) ([]models.Module, error) {
+	log.Printf("Debugging the Modules")
 	var modules []models.Module
-	modulesIds := make([]primitive.ObjectID, len(modulesId)+1, len(modulesId)+1)
-	for i, module := range modulesId {
-		modulesIds[i], _ = primitive.ObjectIDFromHex(module)
+	modulesIds := make([]primitive.ObjectID, len(modulesId), len(modulesId))
+	for _, module := range modulesId {
+		modulesIdsObj, _ := primitive.ObjectIDFromHex(module)
+		modulesIds = append(modulesIds, modulesIdsObj)
 	}
 	log.Printf("Len %v", modulesIds)
 	opts := options.Find().SetProjection(bson.D{{"courses", 0}}).SetSort(bson.D{{"year", 1}})

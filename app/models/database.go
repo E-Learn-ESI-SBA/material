@@ -11,7 +11,6 @@ import (
 )
 
 func Setup(database *interfaces.Database) (*mongo.Client, *interfaces.Application, error) {
-
 	println("Connecting... to the database")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -31,9 +30,8 @@ func Setup(database *interfaces.Database) (*mongo.Client, *interfaces.Applicatio
 		return nil, nil, err
 	}
 	log.Println("Successfully Connected to the mongodb")
-	var app interfaces.Application
-	app.NewApp(client)
-	return client, &app, nil
+	app := interfaces.NewApp(client)
+	return client, app, nil
 
 }
 

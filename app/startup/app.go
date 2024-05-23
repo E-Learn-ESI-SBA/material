@@ -33,7 +33,7 @@ var KafkaSetting = &Kafka{}
 var cfg *ini.File
 
 // init the configuration instance
-func Setup() (*mongo.Client, *interfaces.Application, *permit.Client, *interfaces.Conf) {
+func Setup() (*mongo.Client, *interfaces.Application, *permit.Client) {
 	var err error
 	cfg, err = ini.Load("config/conf.ini")
 	if err != nil {
@@ -69,14 +69,10 @@ func Setup() (*mongo.Client, *interfaces.Application, *permit.Client, *interface
 	if err != nil {
 		log.Fatal("Database not connected")
 	}
-	PermitConfig := config.NewConfigBuilder(os.Getenv(ServerSetting.PDP_TOKEN)).WithPdpUrl(os.Getenv(ServerSetting.PDP_SERVER)).Build()
+	PermitConfig := config.NewConfigBuilder(ServerSetting.PDP_TOKEN).WithPdpUrl(ServerSetting.PDP_SERVER).Build()
 	Permit := permit.NewPermit(PermitConfig)
 
-	return client, app, Permit, &interfaces.Conf{
-		Database: DatabaseSetting,
-		Server:   ServerSetting,
-		App:      AppSetting,
-	}
+	return client, app, Permit
 }
 
 func mapTo(section string, v interface{}) {
