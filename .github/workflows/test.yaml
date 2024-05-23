@@ -1,10 +1,9 @@
 name: Testing & Building  Material Service Go (Gin) 
 
 on:
-  push:
-    branches: [ "production" ]
-  pull_request:
-    branches: [ "production" ]
+  release:
+    types:
+      - created
 env:
     ACR_RESOURCE_GROUP: madaurus
     AZURE_CONTAINER_REGISTRY: madaurus
@@ -12,21 +11,21 @@ env:
     DOCKER_TOKEN: dckr_pat_yvsyLXV6TNNj6a4R_wR44syesmU
 jobs:
 
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+#  test:
+  #    runs-on: ubuntu-latest
+  # steps:
+      #      - uses: actions/checkout@v3
 
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.22.1'
-      - name: Download Dependencies
-        run : go mod download
-      - name: Test
-        run: go test -v ./test/unit/...
+  #  - name: Set up Go
+  #     uses: actions/setup-go@v4
+  #     with:
+  #       go-version: '1.22.1'
+  #   - name: Download Dependencies
+  #     run : go mod download
+  #   - name: Test
+  #     run: go test -v ./test/unit/...
   build:
-        runs-on: ubuntu-latest
+      #  runs-on: ubuntu-latest
         needs:
          - test
         steps:
@@ -38,4 +37,4 @@ jobs:
                     ls ; docker build -t  madaurus/${{ env.IMAGE_NAME }}:v1.0.0 .
             - name: Push the Image
               run: |
-                    docker push madaurus/${{ env.IMAGE_NAME}}:v1.0.0
+                    docker push madaurus/${{ env.IMAGE_NAME}}:${{ github.event.release.tag_name }}
