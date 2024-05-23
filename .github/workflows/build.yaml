@@ -4,6 +4,7 @@ on:
   release:
     types:
       - created
+      - edited
 env:
     ACR_RESOURCE_GROUP: madaurus
     AZURE_CONTAINER_REGISTRY: madaurus
