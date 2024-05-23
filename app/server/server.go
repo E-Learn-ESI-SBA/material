@@ -121,7 +121,10 @@ func (s *GracefulServer) onBoot() {
 	logs.Setup()
 	log.Printf("Server is running on port: %d", s.App.ModuleCollection.Name())
 	kafka.ExampleProducer(s.Kafka.Producer)
-	go kafka.ExampleConsumer(s.Kafka.Consumer)
+	//	go kafka.ExampleConsumer(s.Kafka.Consumer)
+	go func() {
+		kafka.UserMutationHandler(s.Kafka.Consumer, s.App.UserCollection)
+	}()
 
 }
 
