@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"madaurus/dev/material/app/interfaces"
+	"madaurus/dev/material/app/kafka"
 	"madaurus/dev/material/app/logs"
 	"madaurus/dev/material/app/middlewares"
 	"madaurus/dev/material/app/routes"
@@ -29,6 +30,7 @@ type GracefulServer struct {
 	App         *interfaces.Application
 	MongoClient *mongo.Client
 	Permit      *permit.Client
+	Kafka       *kafka.KafkaInstance
 	sync.Mutex
 }
 
@@ -89,8 +91,10 @@ func (s *GracefulServer) runServer() {
 func (s *GracefulServer) Wait() {
 	if ok := <-s.stopping; ok {
 		logs.Info("The application is exiting...")
+		log.Println("The application is exiting...")
 	} else {
 		logs.Warn("The application has an exception and is exiting...")
+		log.Println("The application has an exception and is exiting...")
 	}
 
 	ctx, cancelTimer := context.WithTimeout(context.Background(), 10*time.Second)
@@ -113,11 +117,22 @@ func (s *GracefulServer) initMiddleware(engine *gin.Engine) {
 
 func (s *GracefulServer) onBoot() {
 	rand.NewSource(time.Now().UnixNano())
-	s.MongoClient, s.App, s.Permit = startup.Setup()
+	s.MongoClient, s.App, s.Permit, s.Kafka = startup.Setup()
 	logs.Setup()
 	log.Printf("Server is running on port: %d", s.App.ModuleCollection.Name())
+	kafka.ExampleProducer(s.Kafka.Producer)
+	go kafka.ExampleConsumer(s.Kafka.Consumer)
+
 }
 
 func (s *GracefulServer) onShutDown() {
-
+	ctx := context.TODO()
+	s.Kafka.Producer.Close()
+	s.Kafka.Consumer.Close()
+	err := s.MongoClient.Disconnect(ctx)
+	if err != nil {
+		ctx.Err()
+	}
+	os.Exit(0)
+	defer ctx.Done()
 }

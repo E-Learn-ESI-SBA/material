@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"madaurus/dev/material/app/interfaces"
+	"madaurus/dev/material/app/kafka"
 	"madaurus/dev/material/app/models"
 	"os"
 	"time"
@@ -28,7 +29,7 @@ var KafkaSetting = &interfaces.Kafka{}
 var cfg *ini.File
 
 // init the configuration instance
-func Setup() (*mongo.Client, *interfaces.Application, *permit.Client) {
+func Setup() (*mongo.Client, *interfaces.Application, *permit.Client, *kafka.KafkaInstance) {
 	var err error
 	cfg, err = ini.Load("config/conf.ini")
 	if err != nil {
@@ -40,6 +41,8 @@ func Setup() (*mongo.Client, *interfaces.Application, *permit.Client) {
 	mapTo("database", DatabaseSetting)
 	mapTo("kafka", KafkaSetting)
 	mapTo("sentry", SentrySetting)
+	mapTo("kafka", KafkaSetting)
+
 	if ServerSetting.RunMode == "release" {
 		DatabaseSetting.Host = os.Getenv("database_uri")
 		KafkaSetting.Host = os.Getenv("kafka_uri")
@@ -61,13 +64,14 @@ func Setup() (*mongo.Client, *interfaces.Application, *permit.Client) {
 	RedisSetting.IdleTimeout = RedisSetting.IdleTimeout * time.Second
 	InitSentry(SentrySetting)
 	client, app, err := models.Setup(DatabaseSetting)
+
 	if err != nil {
 		log.Fatal("Database not connected")
 	}
 	PermitConfig := config.NewConfigBuilder(ServerSetting.PDP_TOKEN).WithPdpUrl(ServerSetting.PDP_SERVER).Build()
 	Permit := permit.NewPermit(PermitConfig)
-
-	return client, app, Permit
+	kafka := kafka.KafkaInit(*KafkaSetting)
+	return client, app, Permit, kafka
 }
 
 func mapTo(section string, v interface{}) {
