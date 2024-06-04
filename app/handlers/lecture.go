@@ -6,6 +6,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
+	"madaurus/dev/material/app/kafka"
+	"madaurus/dev/material/app/logs"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/services"
 	"madaurus/dev/material/app/shared"
@@ -24,8 +26,14 @@ import (
 // @Failure 400 {object} interfaces.APIResponse
 // @Failure 500 {object} interfaces.APIResponse
 // @Param Authorization header string true "Auth Token"
-func GetLecture(collection *mongo.Collection) gin.HandlerFunc {
+func GetLecture(collection *mongo.Collection, instance *kafka.KafkaInstance) gin.HandlerFunc {
 	return func(g *gin.Context) {
+		user, errU := utils.GetUserPayload(g)
+		if errU != nil {
+			g.JSON(http.StatusBadRequest, gin.H{"message": shared.INVALID_TOKEN})
+			logs.Error(errU.Error())
+			return
+		}
 		lectureId, errP := g.Params.Get("lectureId")
 		if errP != true {
 			g.JSON(http.StatusBadRequest, gin.H{"message": shared.REQUIRED_ID})
@@ -41,7 +49,9 @@ func GetLecture(collection *mongo.Collection) gin.HandlerFunc {
 			g.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
 			return
 		}
+		go instance.EvaluationProducer(user, int32(15))
 		g.JSON(http.StatusOK, gin.H{"lecture": lecture})
+
 	}
 }
 

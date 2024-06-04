@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"madaurus/dev/material/app/configs"
+	"madaurus/dev/material/app/interfaces"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -33,10 +34,10 @@ const (
 	FATAL
 )
 
-func Setup() {
+func Setup(AppSettings *interfaces.App) {
 	var err error
-	filePath := getLogFilePath()
-	fileName := getLogFileName()
+	filePath := getLogFilePath(AppSettings)
+	fileName := getLogFileName(AppSettings)
 	log.Printf("filePath: %s", filePath)
 	F, err := configs.MustOpen(fileName, filePath)
 	if err != nil {

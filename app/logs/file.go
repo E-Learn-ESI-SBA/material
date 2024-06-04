@@ -2,20 +2,20 @@ package logs
 
 import (
 	"fmt"
-	"madaurus/dev/material/app/startup"
+	"madaurus/dev/material/app/interfaces"
 	"time"
 )
 
 // get the log file save path
-func getLogFilePath() string {
-	return fmt.Sprintf("%s%s", startup.AppSetting.RuntimeRootPath, startup.AppSetting.LogSavePath)
+func getLogFilePath(AppSettings *interfaces.App) string {
+	return fmt.Sprintf("%s%s", AppSettings.RuntimeRootPath, AppSettings.LogSavePath)
 }
 
 // get the save name of the log file
-func getLogFileName() string {
+func getLogFileName(AppSettings *interfaces.App) string {
 	return fmt.Sprintf("%s%s.%s",
-		startup.AppSetting.LogSaveName,
-		time.Now().Format(startup.AppSetting.TimeFormat),
-		startup.AppSetting.LogFileExt,
+		AppSettings.LogSaveName,
+		time.Now().Format(AppSettings.TimeFormat),
+		AppSettings.LogFileExt,
 	)
 }

@@ -2,10 +2,12 @@ package kafka
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/IBM/sarama"
 	"log"
 	"madaurus/dev/material/app/interfaces"
+	"madaurus/dev/material/app/utils"
 	"time"
 )
 
@@ -78,17 +80,85 @@ func (h HandlerMapConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSe
 	return nil
 }
 
-func ProduceMessage(producer sarama.AsyncProducer, topic string, message string) {
-	producer.Input() <- &sarama.ProducerMessage{
+func (kafkaInstance *KafkaInstance) ProduceMessage(topic string, message string) error {
+	kafkaInstance.Producer.Input() <- &sarama.ProducerMessage{
 		Topic: topic,
 		Value: sarama.StringEncoder(message),
 	}
-
 	select {
-	case success := <-producer.Successes():
+	case success := <-kafkaInstance.Producer.Successes():
 		fmt.Printf("Message produced: offset=%d, timestamp=%v, partitions=%d\n", success.Offset, success.Timestamp, success.Partition)
-	case err := <-producer.Errors():
+	case err := <-kafkaInstance.Producer.Errors():
 		fmt.Printf("Failed to produce message: %v\n", err)
+		return err
 	}
-	return
+	return nil
+}
+
+func (kafkaInstance *KafkaInstance) EvaluationProducer(user *utils.UserDetails, evaluationPoint int32) error {
+
+	evaluation := interfaces.EvaluationConsumer{
+		UserId:          user.ID,
+		EvaluationPoint: evaluationPoint,
+		Date:            time.Now().Format("2006-01-02"),
+	}
+
+	// Marshal the evaluation object as string
+	evaluationBytes, err := json.Marshal(evaluation)
+	if err != nil {
+		log.Printf("Error while marshalling the evaluation object: %v", err)
+		return err
+	}
+	evaluationString := string(evaluationBytes)
+	log.Println("Evaluation String: ", evaluationString)
+	err = kafkaInstance.ProduceMessage(EVALUATION, evaluationString)
+
+	if err != nil {
+		return err
+	}
+	notification := NotificationEvent{
+		Group: user.Group,
+		Year:  user.Year,
+		// Say congratulation  to username for completing the video and earning evaluation point
+		Message:     fmt.Sprintf("Congratulations %s for completing the video and earning %d evaluation points", user.Username, evaluationPoint),
+		UserId:      user.ID,
+		Role:        user.Role,
+		EnablePush:  true,
+		PushTo:      USER_NOTIFICATION_TYPE,
+		Title:       "Video Completion",
+		EnableEmail: false,
+	}
+	notificationBytes, err := json.Marshal(notification)
+	if err != nil {
+		log.Printf("Error while marshalling the notification object: %v", err)
+		return err
+	}
+	notificationString := string(notificationBytes)
+	log.Println("Notification String: ", notificationString)
+	err = kafkaInstance.ProduceMessage(NOTIFICATION_TOPIC, notificationString)
+	return err
+}
+
+func (kafkaInstance *KafkaInstance) ResourceCreatingProducer(user *utils.UserDetails, resourceType string, resourceName string, notificationType string) error {
+	notification := NotificationEvent{
+		Group: user.Group,
+		Year:  user.Year,
+		// Say congratulation  to username for creating the resource
+		Message:     fmt.Sprintf("New %s Created, Named  %s", resourceType, resourceName),
+		UserId:      user.ID,
+		Role:        user.Role,
+		EnablePush:  true,
+		PushTo:      notificationType,
+		Title:       fmt.Sprintf("New %s Created", resourceType),
+		EnableEmail: false,
+	}
+	notificationBytes, err := json.Marshal(notification)
+	if err != nil {
+		log.Printf("Error while marshalling the notification object: %v", err)
+		return err
+	}
+	notificationString := string(notificationBytes)
+	log.Println("Notification String: ", notificationString)
+	err = kafkaInstance.ProduceMessage(NOTIFICATION_TOPIC, notificationString)
+	return err
 }

@@ -40,13 +40,13 @@ func GetStorageFile(dir string) (string, error) {
 	return storageFilesPath, nil
 }
 
-func GetUserPayload(c *gin.Context) (UserDetails, error) {
+func GetUserPayload(c *gin.Context) (*UserDetails, error) {
 	var user *UserDetails
 	value, err := c.Get("user")
 	if !err {
 		log.Printf("Error getting user from context: ")
-		return *user, errors.New(shared.USER_NOT_INJECTED)
+		return user, errors.New(shared.USER_NOT_INJECTED)
 	}
 	user = value.(*UserDetails)
-	return *user, nil
+	return user, nil
 }

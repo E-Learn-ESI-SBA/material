@@ -182,7 +182,13 @@ func DeletePhysicalVideo(videoUrl string) error {
 	}
 	return nil
 }
-func OnCompleteVideo(ctx context.Context, collection *mongo.Collection, videoId primitive.ObjectID) error {
-
-	return nil
+func OnCompleteVideo(ctx context.Context, collection *mongo.Collection, videoId primitive.ObjectID) (int32, error) {
+	var video models.Video
+	filter := bson.D{{"courses.sections.videos._id", videoId}}
+	err := collection.FindOne(ctx, filter).Decode(&video)
+	if err != nil {
+		log.Printf("Error getting video object: %v", err.Error())
+		return -1, errors.New(shared.UNABLE_TO_GET_VIDEO)
+	}
+	return video.Score, nil
 }

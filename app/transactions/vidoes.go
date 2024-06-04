@@ -48,7 +48,7 @@ func CreateVideo(collection *mongo.Collection, client *mongo.Client, permitApi *
 		if errC != nil {
 			score = 0
 		}
-		video.Score = score
+		video.Score = int32(score)
 		video.Name = c.PostForm("name")
 		videoFile, errF := c.FormFile("video")
 		if videoFile.Size > 250*1024*1024 {

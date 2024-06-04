@@ -29,7 +29,7 @@ var KafkaSetting = &interfaces.Kafka{}
 var cfg *ini.File
 
 // init the configuration instance
-func Setup() (*mongo.Client, *interfaces.Application, *permit.Client, *kafka.KafkaInstance) {
+func Setup() (*mongo.Client, *interfaces.Application, *permit.Client, *kafka.KafkaInstance, *interfaces.App) {
 	var err error
 	cfg, err = ini.Load("config/conf.ini")
 	if err != nil {
@@ -71,7 +71,7 @@ func Setup() (*mongo.Client, *interfaces.Application, *permit.Client, *kafka.Kaf
 	PermitConfig := config.NewConfigBuilder(ServerSetting.PDP_TOKEN).WithPdpUrl(ServerSetting.PDP_SERVER).Build()
 	Permit := permit.NewPermit(PermitConfig)
 	kafka := kafka.KafkaInit(*KafkaSetting)
-	return client, app, Permit, kafka
+	return client, app, Permit, kafka, AppSetting
 }
 
 func mapTo(section string, v interface{}) {

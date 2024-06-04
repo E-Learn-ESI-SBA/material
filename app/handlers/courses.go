@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
+	"madaurus/dev/material/app/kafka"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/services"
 	"madaurus/dev/material/app/shared"
@@ -27,8 +28,9 @@ import (
 // @Failure 400 {object} interfaces.APIResponse
 // @Failure 500 {object} interfaces.APIResponse
 // @Router /courses [POST]
-func CreateCourse(collection *mongo.Collection, client *mongo.Client, permitApi *permit.Client) gin.HandlerFunc {
+func CreateCourse(collection *mongo.Collection, client *mongo.Client, permitApi *permit.Client, instance *kafka.KafkaInstance) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		user, _ := utils.GetUserPayload(c)
 		var course models.Course
 		err := c.ShouldBind(&course)
 		if err != nil {
@@ -57,7 +59,7 @@ func CreateCourse(collection *mongo.Collection, client *mongo.Client, permitApi 
 		}
 
 		log.Printf("Course Created Successfully: %v", course.ID.Hex())
-
+		instance.ResourceCreatingProducer(user, "Chapter", course.Name, kafka.PROMO_NOTIFICATION_TYPE)
 		c.JSON(http.StatusCreated, gin.H{"message": shared.CREATE_COURSE})
 	}
 }

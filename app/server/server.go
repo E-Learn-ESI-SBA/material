@@ -31,6 +31,7 @@ type GracefulServer struct {
 	MongoClient *mongo.Client
 	Permit      *permit.Client
 	Kafka       *kafka.KafkaInstance
+	AppSetting  *interfaces.App
 	sync.Mutex
 }
 
@@ -71,7 +72,7 @@ func (s *GracefulServer) runServer() {
 	gin.ForceConsoleColor()
 	engine := gin.New()
 	s.initMiddleware(engine)
-	routes.InitRoutes(s.App, s.Permit, s.MongoClient, engine)
+	routes.InitRoutes(s.App, s.Permit, s.MongoClient, engine, s.Kafka)
 	Addr := fmt.Sprintf(":%d", startup.ServerSetting.HttpPort)
 	s.httpServer = &http.Server{
 		Addr:              Addr,
@@ -117,8 +118,8 @@ func (s *GracefulServer) initMiddleware(engine *gin.Engine) {
 
 func (s *GracefulServer) onBoot() {
 	rand.NewSource(time.Now().UnixNano())
-	s.MongoClient, s.App, s.Permit, s.Kafka = startup.Setup()
-	logs.Setup()
+	s.MongoClient, s.App, s.Permit, s.Kafka, s.AppSetting = startup.Setup()
+	logs.Setup(s.AppSetting)
 	log.Printf("Server is running on port: %d", s.App.ModuleCollection.Name())
 	kafka.ExampleProducer(s.Kafka.Producer)
 	//	go kafka.ExampleConsumer(s.Kafka.Consumer)

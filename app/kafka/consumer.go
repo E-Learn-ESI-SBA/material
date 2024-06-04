@@ -6,7 +6,6 @@ import (
 	"github.com/IBM/sarama"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
-	"madaurus/dev/material/app/logs"
 	"madaurus/dev/material/app/services"
 	"madaurus/dev/material/app/utils"
 )
@@ -38,17 +37,16 @@ func UserMutationHandler(consumer sarama.Consumer, collection *mongo.Collection)
 		// Parse the message as a user from json
 		err = json.Unmarshal(msg.Value, &user)
 		if err != nil {
-			logs.Warn("Error While Unmarshalling the User %v", err)
+			log.Printf("Error While Unmarshalling the User %v", err)
 			log.Printf("Error While Unmarshalling the User: %v\n", err)
 			continue
 		}
 		err = services.EditUser(ctx, user, collection)
 		if err != nil {
-			logs.Error("\t Event : Unable to edit the user from the ")
+			log.Printf("\t Event : Unable to edit the user from the ")
 			log.Println("\t Event : Unable to edit the user from the ")
 			return
 		}
-		// Commit the message
 	}
-	
+
 }

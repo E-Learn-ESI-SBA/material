@@ -4,6 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"madaurus/dev/material/app/kafka"
+	"madaurus/dev/material/app/logs"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/services"
 	"madaurus/dev/material/app/shared"
@@ -40,8 +42,14 @@ func EditFile(collection *mongo.Collection) gin.HandlerFunc {
 
 // @Summary Get a file by id
 // @Description Get a file by id
-func GetFileById(collection *mongo.Collection) gin.HandlerFunc {
+func GetFileById(collection *mongo.Collection, kafkaInstance *kafka.KafkaInstance) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		user, err := utils.GetUserPayload(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.INVALID_TOKEN})
+			logs.Error(err.Error())
+			return
+		}
 		fileId := c.Param("id")
 		fileObjectId, errD := primitive.ObjectIDFromHex(fileId)
 		if errD != nil {
@@ -59,5 +67,7 @@ func GetFileById(collection *mongo.Collection) gin.HandlerFunc {
 		c.Header("Content-Type", "application/"+objectFile.Type)
 		// Send the file to the client
 		c.File(filePath)
+		var evaluationPoint int32 = 15
+		go kafkaInstance.EvaluationProducer(user, evaluationPoint)
 	}
 }

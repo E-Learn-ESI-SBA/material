@@ -6,9 +6,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"io"
 	"log"
+	"madaurus/dev/material/app/kafka"
+	"madaurus/dev/material/app/logs"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/services"
 	"madaurus/dev/material/app/shared"
+	"madaurus/dev/material/app/utils"
 	"net/http"
 )
 
@@ -93,17 +96,25 @@ func EditVideo(collection *mongo.Collection) gin.HandlerFunc {
 	}
 }
 
-func OnCompleteVideo(collection *mongo.Collection) gin.HandlerFunc {
+func OnCompleteVideo(collection *mongo.Collection, kafkaInstance *kafka.KafkaInstance) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		user, errU := utils.GetUserPayload(c)
+		if errU != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": shared.INVALID_TOKEN})
+			log.Printf("Error while getting user %v", errU.Error())
+			logs.Error(errU.Error())
+			return
+		}
 		videoId := c.Param("id")
 		videoObjId, errD := primitive.ObjectIDFromHex(videoId)
 		if errD != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"message": shared.REQUIRED_ID})
 			return
 		}
-		err := services.OnCompleteVideo(c.Request.Context(), collection, videoObjId)
+		evaluationPoint, err := services.OnCompleteVideo(c.Request.Context(), collection, videoObjId)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		}
+		kafkaInstance.EvaluationProducer(user, evaluationPoint)
 	}
 }
