@@ -68,7 +68,7 @@ func GetLecture(collection *mongo.Collection, instance *kafka.KafkaInstance) gin
 // @Failure 400 {object} interfaces.APIResponse
 // @Failure 500 {object} interfaces.APIResponse
 // @Param Authorization header string true "Auth Token"
-func CreateLecture(collection *mongo.Collection, client *mongo.Client, permitApi *permit.Client) gin.HandlerFunc {
+func CreateLecture(collection *mongo.Collection, client *mongo.Client, permitApi *permit.Client, instance *kafka.KafkaInstance) gin.HandlerFunc {
 	return func(g *gin.Context) {
 		value, errU := g.Get("user")
 		if errU != true {
@@ -100,6 +100,7 @@ func CreateLecture(collection *mongo.Collection, client *mongo.Client, permitApi
 			g.JSON(http.StatusBadRequest, gin.H{"message": shared.LECTURE_NOT_CREATED})
 			return
 		}
+		instance.ResourceCreatingProducer(user, "Lecture", lecture.Name, kafka.PROMO_NOTIFICATION_TYPE)
 		g.JSON(http.StatusCreated, gin.H{"message": "Lecture Created Successfully"})
 	}
 }

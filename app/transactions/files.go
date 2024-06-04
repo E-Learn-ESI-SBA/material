@@ -3,6 +3,7 @@ package transactions
 import (
 	"context"
 	"log"
+	"madaurus/dev/material/app/kafka"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/services"
 	"madaurus/dev/material/app/shared"
@@ -22,7 +23,7 @@ import (
 // @Description Create a file
 // @Tags Files
 // @Params sectionId query string true
-func CreateFileTransaction(client *mongo.Client, collection *mongo.Collection) gin.HandlerFunc {
+func CreateFileTransaction(client *mongo.Client, collection *mongo.Collection, instance *kafka.KafkaInstance) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// start  Mongo session
 		// define the request size
@@ -69,6 +70,7 @@ func CreateFileTransaction(client *mongo.Client, collection *mongo.Collection) g
 		}
 		defer func() {
 			session.EndSession(c.Request.Context())
+			instance.ResourceCreatingProducer(user, "File", fileObject.Name, kafka.PROMO_NOTIFICATION_TYPE)
 			return
 		}()
 		transactionOption := options.Transaction().SetReadPreference(readpref.Primary())

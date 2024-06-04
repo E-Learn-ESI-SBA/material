@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
+	"madaurus/dev/material/app/kafka"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/services"
 	"madaurus/dev/material/app/shared"
@@ -29,7 +30,7 @@ import (
 // @Security Bearer
 // @Router /videos/{sectionId} [post]
 
-func CreateVideo(collection *mongo.Collection, client *mongo.Client, permitApi *permit.Client) gin.HandlerFunc {
+func CreateVideo(collection *mongo.Collection, client *mongo.Client, permitApi *permit.Client, instance *kafka.KafkaInstance) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var video models.Video
 		user, errU := utils.GetUserPayload(c)
@@ -117,6 +118,7 @@ func CreateVideo(collection *mongo.Collection, client *mongo.Client, permitApi *
 		c.JSON(http.StatusCreated, gin.H{"message": shared.VIDEO_CREATED})
 		defer func() {
 			session.EndSession(c.Request.Context())
+			instance.ResourceCreatingProducer(user, "Video", video.Name, kafka.PROMO_NOTIFICATION_TYPE)
 			return
 		}()
 

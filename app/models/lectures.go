@@ -32,6 +32,7 @@ type Lecture struct {
 	IsPublic  bool               `json:"is_public" bson:"is_public"`
 	CreatedAt time.Time          `json:"created_at,omitempty" bson:"created_at"`
 	UpdatedAt time.Time          `json:"updated_at,omitempty" bson:"updated_at"`
+	Year      string             `json:"year" bson:"year", binding:"required"`
 }
 
 type StudentNote struct {
