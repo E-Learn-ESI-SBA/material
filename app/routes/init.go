@@ -16,7 +16,7 @@ func InitRoutes(App *interfaces.Application, permitApi *permit.Client, MongoClie
 	CourseRoute(engine, App.ModuleCollection, permitApi, MongoClient, instance)
 	SectionRouter(engine, App.ModuleCollection, permitApi, MongoClient)
 	LectureRoute(engine, App.ModuleCollection, permitApi, MongoClient, instance)
-	TransactionRoute(engine, MongoClient, App.ModuleCollection, permitApi)
+	TransactionRoute(engine, MongoClient, App.ModuleCollection, permitApi, instance)
 	FileRouter(engine, App.ModuleCollection, permitApi, MongoClient, instance)
 	VideoRouter(engine, App.ModuleCollection, permitApi, MongoClient, instance)
 	QuizRoute(engine, App.QuizesCollection, App.ModuleCollection, App.SubmissionsCollection)
