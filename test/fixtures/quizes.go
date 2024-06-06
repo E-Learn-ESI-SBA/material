@@ -5,8 +5,6 @@ import (
 	"madaurus/dev/material/app/shared/iam"
 	"madaurus/dev/material/app/utils"
 	"time"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 
@@ -63,7 +61,6 @@ func GetAdmins() []utils.LightUser {
 
 func GetQuiz(moduleId string) models.Quiz {
 	return models.Quiz{
-		ID: primitive.NewObjectID(),
 		ModuleId: moduleId,
 		Title: "quiz_goes_brr",
     	Instructions: "some instructions...",
@@ -73,6 +70,7 @@ func GetQuiz(moduleId string) models.Quiz {
     	StartDate: time.Now(),
     	EndDate: time.Now().Add(time.Second * 2), // after two seconds
     	Duration: 100,
+		Promo: "some promo here",
 		Questions: []models.Question{
 			{
 				ID: "0",

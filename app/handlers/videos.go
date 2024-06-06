@@ -1,9 +1,6 @@
 package handlers
 
 import (
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"io"
 	"log"
 	"madaurus/dev/material/app/kafka"
@@ -13,6 +10,10 @@ import (
 	"madaurus/dev/material/app/shared"
 	"madaurus/dev/material/app/utils"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func GetStreamVideo(collection *mongo.Collection) gin.HandlerFunc {
@@ -115,6 +116,6 @@ func OnCompleteVideo(collection *mongo.Collection, kafkaInstance *kafka.KafkaIns
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		}
-		kafkaInstance.EvaluationProducer(user, evaluationPoint)
+		go kafkaInstance.EvaluationProducer(user, evaluationPoint)
 	}
 }
