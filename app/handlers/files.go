@@ -1,9 +1,6 @@
 package handlers
 
 import (
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"madaurus/dev/material/app/kafka"
 	"madaurus/dev/material/app/logs"
 	"madaurus/dev/material/app/models"
@@ -12,6 +9,10 @@ import (
 	"madaurus/dev/material/app/utils"
 	"net/http"
 	"path"
+
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func EditFile(collection *mongo.Collection) gin.HandlerFunc {
@@ -68,6 +69,6 @@ func GetFileById(collection *mongo.Collection, kafkaInstance *kafka.KafkaInstanc
 		// Send the file to the client
 		c.File(filePath)
 		var evaluationPoint int32 = 15
-		go kafkaInstance.EvaluationProducer(user, evaluationPoint)
+		go kafkaInstance.EvaluationProducer(user, "File", evaluationPoint)
 	}
 }

@@ -167,17 +167,17 @@ func GetQuizesByStudentId(
 	student *utils.UserDetails,
 ) ([]models.Quiz, error) {
 	var quizes []models.Quiz
-	// fetch quizes where time.Now() > quiz.start_date
-	// fetch quizes where user.promo == quiz.promo
-	// pipeline from quizes not from modules
-	pipeline := bson.A{
-		bson.M{
-			"$match": bson.M{
-				"start_date": bson.M{"$lte": time.Now()},
-				"year":      student.Year,
+
+	pipeline := mongo.Pipeline{
+		{{
+			Key: "$match",
+			Value: bson.D{
+				{Key: "start_date", Value: bson.D{{Key: "$lte", Value: time.Now()}}},
+				{Key: "year", Value: student.Year},
 			},
-		},
+		}},
 	}
+
 	cursor, err := collection.Aggregate(ctx, pipeline, options.Aggregate().SetAllowDiskUse(true))
 	if err != nil {
 		return nil, err
@@ -192,6 +192,7 @@ func GetQuizesByStudentId(
 		quizes = append(quizes, quiz)
 	}
 
+	// Check if there was an error during iteration
 	if err := cursor.Err(); err != nil {
 		return nil, err
 	}
@@ -285,7 +286,7 @@ func SubmitQuizAnswers(
 	collection *mongo.Collection,
 	SubmissionsCollection *mongo.Collection,
 	submission models.Submission,
-) error {
+) (int32, error) {
 
 	// check if the quiz exists
 	var quiz models.Quiz
@@ -293,11 +294,11 @@ func SubmitQuizAnswers(
 	err := collection.FindOne(ctx, filter).Decode(&quiz)
 	if err != nil {
 		log.Printf("Error While Getting Quiz: %v\n", err)
-		return err
+		return 0, err
 	}
 
 	if time.Now().Before(quiz.StartDate) || time.Now().After(quiz.EndDate) {
-		return errors.New("quiz is not ongoing")
+		return 0, errors.New("quiz is not ongoing")
 	}
 	log.Printf("quiz id %v\n", quiz.ID)
 	log.Printf("student id %v\n", submission.StudentId)
@@ -307,7 +308,7 @@ func SubmitQuizAnswers(
 	var existingSubmission models.Submission
 	err = SubmissionsCollection.FindOne(ctx, filter).Decode(&existingSubmission)
 	if err == nil {
-		return errors.New(shared.QUIZ_ANSWER_ALREADY_SUBMITTED)
+		return 0, errors.New(shared.QUIZ_ANSWER_ALREADY_SUBMITTED)
 	}
 
 	questions := quiz.Questions
@@ -321,10 +322,10 @@ func SubmitQuizAnswers(
 	_, err = SubmissionsCollection.InsertOne(ctx, submission)
 	if err != nil {
 		log.Printf("Error While Submitting Quiz Answers: %v\n", err)
-		return err
+		return 0, err
 	}
 
-	return nil
+	return int32(submission.Score), nil
 }
 
 func GetQuizResultByStudentId(
