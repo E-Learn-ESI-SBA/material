@@ -70,7 +70,7 @@ func GetQuiz(moduleId string) models.Quiz {
     	StartDate: time.Now(),
     	EndDate: time.Now().Add(time.Second * 2), // after two seconds
     	Duration: 100,
-		Promo: "some promo here",
+		Year: "some year here",
 		Questions: []models.Question{
 			{
 				ID: "0",

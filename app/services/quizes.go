@@ -174,7 +174,7 @@ func GetQuizesByStudentId(
 		bson.M{
 			"$match": bson.M{
 				"start_date": bson.M{"$lte": time.Now()},
-				"promo":      student.Promo,
+				"year":      student.Year,
 			},
 		},
 	}
