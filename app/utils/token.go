@@ -3,10 +3,11 @@ package utils
 import (
 	"errors"
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
 	"log"
 	"madaurus/dev/material/app/shared"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type LightUser struct {
@@ -17,6 +18,7 @@ type LightUser struct {
 	Avatar   string `json:"avatar"`
 	Group    string `json:"group"`
 	Year     string `json:"year"`
+	Promo    string `json:"promo"`
 }
 type UserDetails struct {
 	LightUser

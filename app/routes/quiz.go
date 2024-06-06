@@ -17,6 +17,7 @@ func QuizRoute(
 	) {
 	quizRoute := c.Group("/quizes")
 	quizRoute.POST("", middlewares.Authentication(), handlers.CreateQuiz(collection, moduleCollection))
+	quizRoute.GET("/teacher", middlewares.Authentication(), handlers.GetManyQuizesByTeacherId(collection))
 	quizRoute.PUT("/:id", middlewares.Authentication(), handlers.UpdateQuiz(collection))
 	quizRoute.DELETE("/:id", middlewares.Authentication(), handlers.DeleteQuiz(collection))
 	quizRoute.GET("/:id", middlewares.Authentication(), handlers.GetQuiz(collection))

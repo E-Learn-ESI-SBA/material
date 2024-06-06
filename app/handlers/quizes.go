@@ -181,6 +181,51 @@ func GetQuizesByModuleId(collection *mongo.Collection) gin.HandlerFunc {
 	}
 }
 
+// @Summary Get Many Quizes By Teacher ID
+// @Description Protected Route used to get all quizes by teacher ID
+// @Produce json
+// @Tags Quizes
+// @Accept json
+// @Success 200 {object} models.Quiz
+// @Failure 400 {object} interfaces.APiError
+// @Router /quizes/teacher [GET]
+func GetManyQuizesByTeacherId(collection *mongo.Collection) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user := c.MustGet("user").(*utils.UserDetails)
+		if (user.Role != "teacher") {
+			c.JSON(400, gin.H{"error": errors.New("Only Teachers can access this route")})
+			return
+		}
+		quizes, err := services.GetManyQuizesByTeacherId(c.Request.Context(), collection, user.ID)
+		if err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(200, quizes)
+	}
+}
+
+
+// @Summary Get Quizes By Student ID
+// @Description Protected Route used to get all quizes by student ID
+// @Produce json
+// @Tags Quizes
+// @Accept json
+// @Success 200 {object} models.Quiz
+// @Failure 400 {object} interfaces.APiError
+// @Router /quizes/student [GET]
+func GetQuizesByStudentId(collection *mongo.Collection, SubmissionsCollection *mongo.Collection) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user := c.MustGet("user").(*utils.UserDetails)
+		quizes, err := services.GetQuizesByStudentId(c.Request.Context(), collection, user)
+		if err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(200, quizes)
+	}
+}
+
 
 // @Summary Submit Quiz Answers
 // @Description Protected Route used to submit quiz answers by a student
@@ -321,6 +366,10 @@ func GetQuizQuestions(collection *mongo.Collection) gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(200, quiz)
+		c.JSON(200, gin.H{
+			"questions": quiz.Questions,
+			"duration": quiz.Duration,
+			"title": quiz.Title,
+		})
 	}
 }

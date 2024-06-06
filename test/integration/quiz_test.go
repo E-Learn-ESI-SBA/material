@@ -205,15 +205,20 @@ func TestGetQuizQuestions(t *testing.T) {
 	responseData, _ := io.ReadAll(res.Body)
 
 	log.Printf("Response: %v\n", string(responseData))
-	var quiz models.Quiz
-	err := json.Unmarshal(responseData, &quiz)
+
+	var questionsRes struct {
+		Questions []models.Question
+		Duration int
+		Title string
+	}
+
+	err := json.Unmarshal(responseData, &questionsRes)
 	if err != nil {
 		t.Errorf("Error unmarshalling response body: %v", err)
 	}
 
-
 	assert.Equal(t, http.StatusOK, res.StatusCode)
-	assert.Equal(t, globalQuiz.Questions[0].Body, quiz.Questions[0].Body)
+	assert.Equal(t, globalQuiz.Questions[0].Body, questionsRes.Questions[0].Body)
 }
 
 func TestUpdateQuiz(t *testing.T) {
@@ -304,6 +309,8 @@ func TestSubmitQuizAnswers(t *testing.T) {
 	res, _ := http.DefaultClient.Do(req)
 	responseData, _ := io.ReadAll(res.Body)
 
+	log.Printf("Response: %v\n", string(responseData))
+
 	var resRes interfaces.APiSuccess
 	err = json.Unmarshal(responseData, &resRes)
 	if err != nil {
@@ -333,6 +340,8 @@ func TestSubmitQuizAnswers(t *testing.T) {
 	res, _ = http.DefaultClient.Do(req)
 	responseData, _ = io.ReadAll(res.Body)
 
+	log.Printf("Response: %v\n", string(responseData))
+
 	err = json.Unmarshal(responseData, &resRes)
 	if err != nil {
 		t.Errorf("Error unmarshalling response body: %v", err)
@@ -346,6 +355,8 @@ func TestSubmitQuizAnswers(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer " + student1Token)
 	res, _ = http.DefaultClient.Do(req)
 	responseData, _ = io.ReadAll(res.Body)
+	
+	log.Printf("Response: %v\n", string(responseData))
 
 	var resErr interfaces.APiError
 	err = json.Unmarshal(responseData, &resErr)
@@ -451,32 +462,32 @@ func TestGetQuizesResultByStudentId(t *testing.T) {
 	assert.Equal(t, student1.ID, resResults[0].StudentId)
 }
 
-// func TestDeleteQuiz(t *testing.T) {
+func TestDeleteQuiz(t *testing.T) {
 
-// 	url := "http://localhost:8080/quizes/" + globalQuiz.ID.Hex()
-// 	req, _ := http.NewRequest("DELETE", url, nil)
-// 	req.Header.Set("Authorization", "Bearer " + teacher2Token)
-// 	//this should return an error
-// 	res, _ := http.DefaultClient.Do(req)
-// 	responseData, _ := io.ReadAll(res.Body)
-// 	var resErr interfaces.APiError
-// 	err := json.Unmarshal(responseData, &resErr)
-// 	if err != nil {
-// 		t.Errorf("Error unmarshalling response body: %v", err)
-// 	}
-// 	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-// 	assert.Equal(t, shared.UNAUTHORIZED, resErr.Error)
+	url := "http://localhost:8080/quizes/" + globalQuiz.ID.Hex()
+	req, _ := http.NewRequest("DELETE", url, nil)
+	req.Header.Set("Authorization", "Bearer " + teacher2Token)
+	//this should return an error
+	res, _ := http.DefaultClient.Do(req)
+	responseData, _ := io.ReadAll(res.Body)
+	var resErr interfaces.APiError
+	err := json.Unmarshal(responseData, &resErr)
+	if err != nil {
+		t.Errorf("Error unmarshalling response body: %v", err)
+	}
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+	assert.Equal(t, shared.UNAUTHORIZED, resErr.Error)
 
-// 	// this should succeed
-// 	req.Header.Set("Authorization", "Bearer " + teacher1Token)
-// 	res, _ = http.DefaultClient.Do(req)
-// 	responseData, _ = io.ReadAll(res.Body)
+	// this should succeed
+	req.Header.Set("Authorization", "Bearer " + teacher1Token)
+	res, _ = http.DefaultClient.Do(req)
+	responseData, _ = io.ReadAll(res.Body)
 	
-// 	var resRes interfaces.APiSuccess
-// 	err = json.Unmarshal(responseData, &resRes)
-// 	if err != nil {
-// 		t.Errorf("Error unmarshalling response body: %v", err)
-// 	}
-// 	assert.Equal(t, http.StatusOK, res.StatusCode)
-// 	assert.Equal(t, shared.QUIZ_DELETED, resRes.Message)
-// }
+	var resRes interfaces.APiSuccess
+	err = json.Unmarshal(responseData, &resRes)
+	if err != nil {
+		t.Errorf("Error unmarshalling response body: %v", err)
+	}
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Equal(t, shared.QUIZ_DELETED, resRes.Message)
+}

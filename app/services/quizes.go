@@ -6,6 +6,7 @@ import (
 	"log"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/shared"
+	"madaurus/dev/material/app/utils"
 	"math"
 	"time"
 
@@ -139,6 +140,66 @@ func GetQuiz(
 	return quiz, nil, true
 }
 
+func GetManyQuizesByTeacherId(
+	ctx context.Context,
+	collection *mongo.Collection,
+	teacherID string,
+) ([]models.Quiz, error) {
+	var quizes []models.Quiz
+	cursor, err := collection.Find(ctx, bson.M{"teacher_id": teacherID})
+	if err != nil {
+		log.Printf("Error While Getting Quizes: %v\n", err)
+		return quizes, err
+	}
+	defer cursor.Close(ctx)
+	for cursor.Next(ctx) {
+		var quiz models.Quiz
+		cursor.Decode(&quiz)
+		quizes = append(quizes, quiz)
+	}
+	return quizes, nil
+}
+
+
+func GetQuizesByStudentId(
+	ctx context.Context,
+	collection *mongo.Collection,
+	student *utils.UserDetails,
+) ([]models.Quiz, error) {
+	var quizes []models.Quiz
+	// fetch quizes where time.Now() > quiz.start_date
+	// fetch quizes where user.promo == quiz.promo
+	// pipeline from quizes not from modules
+	pipeline := bson.A{
+		bson.M{
+			"$match": bson.M{
+				"start_date": bson.M{"$lte": time.Now()},
+				"promo":      student.Promo,
+			},
+		},
+	}
+	cursor, err := collection.Aggregate(ctx, pipeline, options.Aggregate().SetAllowDiskUse(true))
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var quiz models.Quiz
+		if err := cursor.Decode(&quiz); err != nil {
+			return nil, err
+		}
+		quizes = append(quizes, quiz)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return quizes, nil
+}
+
+
 func GetQuizesByModuleId(
 	ctx context.Context,
 	collection *mongo.Collection,
@@ -238,6 +299,8 @@ func SubmitQuizAnswers(
 	if time.Now().Before(quiz.StartDate) || time.Now().After(quiz.EndDate) {
 		return errors.New("quiz is not ongoing")
 	}
+	log.Printf("quiz id %v\n", quiz.ID)
+	log.Printf("student id %v\n", submission.StudentId)
 
 	// check if the student already submitted the quiz answers
 	filter = bson.D{{"quiz_id", submission.QuizId}, {"student_id", submission.StudentId}}
@@ -361,15 +424,11 @@ func GetQuizQuestions(
 	}
 	// check if the quiz exists
 	var quiz models.Quiz
-	opts := options.FindOne().SetProjection(bson.M{
-		"questions": 1,
-		"duration": 1,
-		"title": 1,
-	})
-	_ = collection.FindOne(ctx, bson.M{"_id": objectId}, opts).Decode(&quiz)
+	_ = collection.FindOne(ctx, bson.M{"_id": objectId}).Decode(&quiz)
 	if quiz.ID.IsZero() {
 		return models.Quiz{}, errors.New("quiz not found")
 	}
+
 
 	//check if start date is before now
 	if time.Now().Before(quiz.StartDate) {
