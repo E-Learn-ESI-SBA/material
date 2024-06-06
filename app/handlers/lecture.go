@@ -49,7 +49,7 @@ func GetLecture(collection *mongo.Collection, instance *kafka.KafkaInstance) gin
 			g.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
 			return
 		}
-		go instance.EvaluationProducer(user, int32(15))
+		go instance.EvaluationProducer(user, "Lecture", int32(5))
 		g.JSON(http.StatusOK, gin.H{"lecture": lecture})
 
 	}

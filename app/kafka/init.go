@@ -95,7 +95,7 @@ func (kafkaInstance *KafkaInstance) ProduceMessage(topic string, message string)
 	return nil
 }
 
-func (kafkaInstance *KafkaInstance) EvaluationProducer(user *utils.UserDetails, evaluationPoint int32) error {
+func (kafkaInstance *KafkaInstance) EvaluationProducer(user *utils.UserDetails, resourceType string, evaluationPoint int32) error {
 
 	evaluation := interfaces.EvaluationConsumer{
 		UserId:          user.ID,
@@ -120,7 +120,7 @@ func (kafkaInstance *KafkaInstance) EvaluationProducer(user *utils.UserDetails, 
 		Group: user.Group,
 		Year:  user.Year,
 		// Say congratulation  to username for completing the video and earning evaluation point
-		Message:     fmt.Sprintf("Congratulations %s for completing the video and earning %d evaluation points", user.Username, evaluationPoint),
+		Message:     fmt.Sprintf("Congratulations %s for completing the %s and earning %d evaluation points", user.Username, resourceType, evaluationPoint),
 		UserId:      user.ID,
 		Role:        user.Role,
 		EnablePush:  true,
