@@ -13,7 +13,7 @@ type Quiz struct {
 	Title         string             `json:"title" bson:"title" validate:"required" binding:"required"`
 	Instructions  string             `json:"instructions" bson:"instructions" validate:"required" binding:"required"`
 	Image 		  string			 `json:"image" bson:"image"`
-	Promo 		  string			 `json:"promo" bson:"promo" validate:"required" binding:"required"`
+	Year 		  string			 `json:"promo" bson:"promo" validate:"required" binding:"required"`
 	QuestionCount int                `json:"question_count" bson:"question_count" validate:"required" binding:"required"`
 	MaxScore      float64            `json:"max_score" bson:"max_score" validate:"required" binding:"required"`
 	MinScore      float64            `json:"min_score" bson:"min_score" validate:"required" binding:"required"`
