@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"log"
+	"madaurus/dev/material/app/kafka"
 	"madaurus/dev/material/app/models"
 	"madaurus/dev/material/app/services"
 	"madaurus/dev/material/app/shared"
@@ -23,7 +24,7 @@ import (
 // @Failure 400 {object} interfaces.APiError
 // @Failure 500 {object} interfaces.APiError
 // @Router /quizes [POST]
-func CreateQuiz(collection *mongo.Collection, moduleCollection *mongo.Collection) gin.HandlerFunc {
+func CreateQuiz(collection *mongo.Collection, moduleCollection *mongo.Collection, instance *kafka.KafkaInstance) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var quiz models.Quiz
 		err := c.BindJSON(&quiz)
@@ -38,6 +39,7 @@ func CreateQuiz(collection *mongo.Collection, moduleCollection *mongo.Collection
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
+		go instance.ResourceCreatingProducer(user, "Quiz", quiz.Title, kafka.USER_NOTIFICATION_TYPE)
 		c.JSON(200, gin.H{"message": shared.QUIZ_CREATED})
 	}
 }
@@ -214,7 +216,7 @@ func GetManyQuizesByTeacherId(collection *mongo.Collection) gin.HandlerFunc {
 // @Success 200 {object} models.Quiz
 // @Failure 400 {object} interfaces.APiError
 // @Router /quizes/student [GET]
-func GetQuizesByStudentId(collection *mongo.Collection, SubmissionsCollection *mongo.Collection) gin.HandlerFunc {
+func GetQuizesByStudentId(collection *mongo.Collection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user := c.MustGet("user").(*utils.UserDetails)
 		quizes, err := services.GetQuizesByStudentId(c.Request.Context(), collection, user)
@@ -237,7 +239,7 @@ func GetQuizesByStudentId(collection *mongo.Collection, SubmissionsCollection *m
 // @Success 200 {object} interfaces.APiSuccess
 // @Failure 400 {object} interfaces.APiError
 // @Router /quizes/submit/{id} [POST]
-func SubmitQuizAnswers(collection *mongo.Collection, SubmissionsCollection *mongo.Collection) gin.HandlerFunc {
+func SubmitQuizAnswers(collection *mongo.Collection, SubmissionsCollection *mongo.Collection, instance *kafka.KafkaInstance) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user := c.MustGet("user").(*utils.UserDetails)
 		var submission models.Submission
@@ -257,11 +259,12 @@ func SubmitQuizAnswers(collection *mongo.Collection, SubmissionsCollection *mong
 			return
 		}
 		submission.StudentId = user.ID
-		err = services.SubmitQuizAnswers(c.Request.Context(), collection, SubmissionsCollection, submission)
+		score, err := services.SubmitQuizAnswers(c.Request.Context(), collection, SubmissionsCollection, submission)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
+		go instance.EvaluationProducer(user, "Quiz", score)
 		c.JSON(200, gin.H{"message": "Quiz Answer Submitted Successfully"})
 	}
 }
