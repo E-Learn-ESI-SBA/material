@@ -35,22 +35,23 @@ func Setup() (*mongo.Client, *interfaces.Application, *permit.Client, *kafka.Kaf
 	if err != nil {
 		log.Fatalf("settinf.Setup,fail to parse 'conf.ini': %v", err)
 	}
-
 	mapTo("app", AppSetting)
 	mapTo("server", ServerSetting)
 	mapTo("database", DatabaseSetting)
 	mapTo("kafka", KafkaSetting)
 	mapTo("sentry", SentrySetting)
 	mapTo("kafka", KafkaSetting)
-
-	if ServerSetting.RunMode == "release" {
+	environment := os.Getenv("environment")
+	if environment == "production" {
+		gin.SetMode(gin.ReleaseMode)
 		DatabaseSetting.Host = os.Getenv("database_uri")
-		KafkaSetting.Host = os.Getenv("kafka_uri")
+		KafkaSetting.Host = os.Getenv("KAFKA_BROKER")
 		ServerSetting.PDP_SERVER = os.Getenv("PDP_SERVER")
-		ServerSetting.PDP_TOKEN = os.Getenv("PDP_TOKEN")
+		ServerSetting.PDP_TOKEN = os.Getenv("PERMIT_TOKEN")
 		SentrySetting.DNS = os.Getenv("sentry_dsn")
 		AppSetting.JwtSecret = os.Getenv("JWT_SECRET")
 	} else {
+		gin.SetMode(gin.DebugMode)
 		log.Printf("Server setting: %v", ServerSetting)
 		log.Println("Running in debug mode")
 		gin.SetMode(gin.DebugMode)
