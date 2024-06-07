@@ -109,6 +109,7 @@ func DeleteQuiz(
 func GetQuiz(
 	ctx context.Context,
 	collection *mongo.Collection,
+	submissionsCollection *mongo.Collection,
 	quizID string,
 	studentId string,
 ) (models.Quiz, error, bool) {
@@ -131,9 +132,12 @@ func GetQuiz(
 
 	// check if submissuion exists
 	var submission models.Submission
-	filter = bson.D{{"quiz_id", quizID}, {"student_id", studentId}}
-	err = collection.FindOne(ctx, filter).Decode(&submission)
-	if (err == mongo.ErrNoDocuments) {
+	filter = bson.D{{"quiz_id", objectId}, {"student_id", studentId}}
+	err = submissionsCollection.FindOne(ctx, filter).Decode(&submission)
+	log.Printf("submission: %v\n", submission)
+	log.Printf(("quiz id: %v\n"), quiz.ID)
+	log.Printf("student id: %v\n", studentId)
+	if (submission.ID.IsZero()) {
 		return quiz, nil, false
 	}
 
@@ -346,6 +350,7 @@ func GetQuizResultByStudentId(
 	filter := bson.D{{"_id", objectId}}
 	_ = collection.FindOne(ctx, filter).Decode(&quiz)
 	if quiz.ID.IsZero() {
+		log.Printf("Quiz Not Found\n")
 		return models.Submission{}, models.Quiz{}, nil, errors.New(shared.QUIZ_NOT_FOUND)
 	}
 	// check if quiz has ended
@@ -366,7 +371,11 @@ func GetQuizResultByStudentId(
 	var module models.Module
 	options := options.FindOne().SetProjection(bson.M{"name": 1})
 	_ = moduleCollection.FindOne(ctx, bson.M{"_id": quiz.ModuleId}, options).Decode(&module)
-	
+	var module_name string
+	if module.ID.IsZero() {
+		module_name = "placeholder"
+		return submission, quiz, &module_name, nil
+	}
 
 	return submission, quiz, &module.Name, nil
 }
@@ -389,6 +398,9 @@ func GetQuizesResultsByStudentId(
 		}}},
 		bson.D{{"$unwind", "$quiz"}},
 		bson.D{{"$match", bson.D{{"quiz.end_date", bson.D{{"$lt", time.Now()}}}}}},
+		bson.D{{"$project", bson.D{
+			{"answers", 0}, // Exclude the answers field
+		}}},
 	}
 	cursor, err := submissionsCollection.Aggregate(ctx, pipe)
 	if err != nil {
@@ -408,6 +420,7 @@ func GetQuizesResultsByStudentId(
 func GetQuizQuestions(
 	ctx context.Context,
 	collection *mongo.Collection,
+	submissionCollection *mongo.Collection,
 	quizID string,
 	studentID string,
 ) (models.Quiz, error) {
@@ -419,7 +432,7 @@ func GetQuizQuestions(
 	// check if submissuion exists
 	var submission models.Submission
 	filter := bson.D{{"quiz_id", objectId}, {"student_id", studentID}}
-	_ = collection.FindOne(ctx, filter).Decode(&submission)
+	_ = submissionCollection.FindOne(ctx, filter).Decode(&submission)
 	if (!submission.ID.IsZero()) {
 		return models.Quiz{}, errors.New(shared.QUIZ_ANSWER_ALREADY_SUBMITTED)
 	}
@@ -439,6 +452,47 @@ func GetQuizQuestions(
 	
 	return quiz, nil
 }
+
+
+func GetSubmissionDetails(
+	ctx context.Context,
+	collection *mongo.Collection,
+	moduleCollection *mongo.Collection,
+	submissionsCollection *mongo.Collection,
+	submissionID string,
+) (models.Submission, *string, models.Quiz, error) {
+	objectId, err := primitive.ObjectIDFromHex(submissionID)
+	if err != nil {
+		log.Printf("Error While Converting ID: %v\n", err)
+		return models.Submission{}, nil, models.Quiz{}, err
+	}
+	
+	var submission models.Submission
+	_ = submissionsCollection.FindOne(ctx, bson.M{"_id": objectId}).Decode(&submission)
+	if submission.ID.IsZero() {
+		return models.Submission{}, nil, models.Quiz{}, errors.New("submission not found")
+	}
+
+	// fetch quiz
+	var quiz models.Quiz
+	_ = collection.FindOne(ctx, bson.M{"_id": submission.QuizId}).Decode(&quiz)
+	if quiz.ID.IsZero() {
+		return models.Submission{}, nil, models.Quiz{}, errors.New("quiz not found")
+	}
+
+	// fetch module name return placeholder if module not found
+	var module models.Module
+	options := options.FindOne().SetProjection(bson.M{"name": 1})
+	_ = collection.FindOne(ctx, bson.M{"_id": quiz.ModuleId}, options).Decode(&module)
+	var module_name string
+	if module.ID.IsZero() {
+		module_name = "placeholder"
+		return submission, &module_name, quiz, nil
+	}
+
+	return submission, &module.Name, quiz, nil
+}
+
 
 func CalcFinalScore(questions []models.Question, answers []models.Answer) (float64, []models.Answer) {
 	var totalScore float64

@@ -3,10 +3,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	"github.com/permitio/permit-golang/pkg/permit"
-	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"madaurus/dev/material/app/interfaces"
 	"madaurus/dev/material/app/kafka"
@@ -21,6 +17,11 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/permitio/permit-golang/pkg/permit"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type GracefulServer struct {
@@ -111,9 +112,18 @@ func (s *GracefulServer) Wait() {
 }
 
 func (s *GracefulServer) initMiddleware(engine *gin.Engine) {
+	configCors := cors.Config{
+		AllowAllOrigins: true,
+		AllowMethods:    []string{"GET", "POST", "PUT", "DELETE", "PATCH"},
+		AllowFiles:      true,
+		AllowHeaders:    []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-CSRF-Token", "hx-request", "hx-current-url"},
+		MaxAge:          12 * time.Hour,
+	}
+
 	engine.Use(gin.Logger())
 	engine.Use(middlewares.Time())
-	engine.Use(cors.Default())
+	engine.Use(cors.New(configCors))
+	
 }
 
 func (s *GracefulServer) onBoot() {
