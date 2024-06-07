@@ -1,11 +1,11 @@
 services:
-  materials:
-    build: .
-    depends_on:
-      - mongo
-      - pdp
-    ports:
-      - 8080:8080
+  # materials:
+  #   build: .
+  #   depends_on:
+  #     - mongo
+  #     - pdp
+  #   ports:
+  #     - 8080:8080
 
 
   mongo:
@@ -26,13 +26,13 @@ services:
       - PDP_SERVER=http://pdp:7766
 
 
-  pdp:
-    image: permitio/pdp-v2:latest
-    ports:
-      - 7766:7000
-    environment:
-      - PDP_API_KEY=permit_key_dyl2zhOIm2EXssDKP33JGbqGKKPiZarQjl0AcL7ZYvsYsLz2zFGDWcdRghccmR0EEJF5TS8c99g5ItDHl87alV
-      - PDP_DEBUG=True
+  # pdp:
+  #   image: permitio/pdp-v2:latest
+  #   ports:
+  #     - 7766:7000
+  #   environment:
+  #     - PDP_API_KEY=permit_key_dyl2zhOIm2EXssDKP33JGbqGKKPiZarQjl0AcL7ZYvsYsLz2zFGDWcdRghccmR0EEJF5TS8c99g5ItDHl87alV
+  #     - PDP_DEBUG=True
 
 
 # volumes:
