@@ -11,7 +11,7 @@ import (
 )
 
 func Setup(database *interfaces.Database) (*mongo.Client, *interfaces.Application, error) {
-	println("Connecting... to the database")
+	log.Println("Connecting... to the database with : %v", database.Host)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
